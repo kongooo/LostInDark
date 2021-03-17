@@ -1,9 +1,10 @@
 // import { vsSource, fsSource } from "../shaders/RectShader";
-import vsSource from '../shaders/vsSource.glsl';
-import fsSource from '../shaders/fsSource.glsl';
-import skyFsSource from '../shaders/skyFsSource.glsl';
-import skyVsSource from '../shaders/skyVsSource.glsl';
+import vsSource from '../shaders/StarShaders/vsSource.glsl';
+import fsSource from '../shaders/StarShaders/fsSource.glsl';
+import skyFsSource from '../shaders/SkyShaders/skyFsSource.glsl';
+import skyVsSource from '../shaders/SkyShaders/skyVsSource.glsl';
 import { mat4 } from 'gl-matrix';
+import imgSource from '../../../image/avatar.jpg';
 
 export { drawRect };
 
@@ -18,41 +19,51 @@ const drawShape = (gl: WebGL2RenderingContext) => {
 
     const skyShaderProgram = initShaderProgram(gl, skyVsSource, skyFsSource);
     const skyPosAttributeLoaction = gl.getAttribLocation(skyShaderProgram, 'a_position');
+    const skyTexAttributeLoaction = gl.getAttribLocation(skyShaderProgram, 'a_texCoord');
     const colorAttributeLoaction = gl.getAttribLocation(skyShaderProgram, 'a_color');
     const skyResolutionUniformLocation = gl.getUniformLocation(skyShaderProgram, 'u_resolution');
+    const skyImageUniformLocation = gl.getUniformLocation(skyShaderProgram, 'u_image');
 
 
     const shaderProgram = initShaderProgram(gl, vsSource, fsSource);
     const positionAttributeLoaction = gl.getAttribLocation(shaderProgram, 'a_position');
+    const starTexAttributeLoaction = gl.getAttribLocation(shaderProgram, 'a_texCoord');
     const resolutionUniformLocation = gl.getUniformLocation(shaderProgram, 'u_resolution');
     const translationUniformLocation = gl.getUniformLocation(shaderProgram, 'u_translation');
     const scaleUniformLocation = gl.getUniformLocation(shaderProgram, 'u_scale');
 
-    const rectVAO = getRectangleVAO(gl, skyPosAttributeLoaction, colorAttributeLoaction, 0, 0, gl.canvas.width, gl.canvas.height);//gl.canvas.width, gl.canvas.height);
-    const circleVAO = getCircleVAO(gl, positionAttributeLoaction, 0, 0, 3, circleCount);
 
-    gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+    const image = new Image();
+    image.src = imgSource;
+    image.onload = () => {
 
-    gl.clearColor(0, 0, 0, 1);
-    gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
+        const rectVAO = getRectangleVAO(gl, skyPosAttributeLoaction, 0, 0, gl.canvas.width, gl.canvas.height, colorAttributeLoaction, skyTexAttributeLoaction, image);//gl.canvas.width, gl.canvas.height);
+        gl.useProgram(skyShaderProgram);
+        gl.uniform2f(skyResolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+        gl.uniform1i(skyImageUniformLocation, 0);
+        gl.bindVertexArray(rectVAO);
+        gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
 
-    gl.useProgram(skyShaderProgram);
-    gl.uniform2f(skyResolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-    gl.bindVertexArray(rectVAO);
-    gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
-    // gl.drawArrays(gl.TRIANGLES, 0, 6);
+        // const circleVAO = getCircleVAO(gl, positionAttributeLoaction, 0, 0, 3, circleCount);
 
+        const UVCircleVAO = getUVCircleVAO(gl, positionAttributeLoaction, starTexAttributeLoaction, 20);
+        gl.useProgram(shaderProgram);
+        gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
+        gl.bindVertexArray(UVCircleVAO);
 
-    gl.useProgram(shaderProgram);
-    gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-    gl.bindVertexArray(circleVAO);
-
-    for (let i = 0; i < 150; i++) {
-        gl.uniform2f(translationUniformLocation, randomInt(gl.canvas.width), randomInt(gl.canvas.height));
-        gl.uniform1f(scaleUniformLocation, Math.random());
-        gl.drawArrays(gl.TRIANGLES, 0, 6 * circleCount);
+        for (let i = 0; i < 150; i++) {
+            gl.uniform2f(translationUniformLocation, randomInt(gl.canvas.width), randomInt(gl.canvas.height));
+            gl.uniform1f(scaleUniformLocation, Math.random());
+            gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+        }
     }
+
 }
 
 const initShaderProgram = (gl: WebGL2RenderingContext, vsSource: string, fsSource: string) => {
@@ -84,26 +95,42 @@ const loadShader = (gl: WebGL2RenderingContext, type: number, source: string) =>
     return shader;
 }
 
-const getRectangleVAO = (gl: WebGL2RenderingContext, positionAttributeLoaction: number, colorAttributeLoaction: number, x: number, y: number, width: number, height: number) => {
+const getRectangleVAO = (gl: WebGL2RenderingContext, positionAttributeLoaction: number, x: number, y: number, width: number, height: number, colorAttributeLoaction: number, texAttributeLocation: number, img?: HTMLImageElement) => {
     const x1 = x, x2 = x + width, y1 = y, y2 = y + height;
+    const FLOAT_SIZE = 4;
     let vao = gl.createVertexArray();
     gl.bindVertexArray(vao);
     const positionBuffer = gl.createBuffer();
     gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        x1, y1, 0, 0, 0,
-        x2, y1, 100, 100, 100,
-        x2, y2, 200, 200, 200,
+        x1, y1, 0, 0, 0, 0, 0,
+        x2, y1, 100, 100, 100, 1, 0,
+        x2, y2, 200, 200, 200, 1, 1,
         // x1, y1,//
         // x2, y2,//
-        x1, y2, 150, 150, 150,
+        x1, y2, 150, 150, 150, 0, 1
     ]), gl.STATIC_DRAW);
+
+    const texture = gl.createTexture();
+    gl.activeTexture(gl.TEXTURE0 + 0);
+    gl.bindTexture(gl.TEXTURE_2D, texture);
+    // Set the parameters so we can render any size image.
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
+
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
+    gl.generateMipmap(gl.TEXTURE_2D);
+
 
     bindEBO(gl);
     gl.enableVertexAttribArray(positionAttributeLoaction);
-    gl.vertexAttribPointer(positionAttributeLoaction, 2, gl.FLOAT, false, 5 * 4, 0);
+    gl.vertexAttribPointer(positionAttributeLoaction, 2, gl.FLOAT, false, 7 * FLOAT_SIZE, 0);
     gl.enableVertexAttribArray(colorAttributeLoaction);
-    gl.vertexAttribPointer(colorAttributeLoaction, 3, gl.FLOAT, false, 5 * 4, 2 * 4);
+    gl.vertexAttribPointer(colorAttributeLoaction, 3, gl.FLOAT, false, 7 * FLOAT_SIZE, 2 * FLOAT_SIZE);
+    gl.enableVertexAttribArray(texAttributeLocation);
+    gl.vertexAttribPointer(texAttributeLocation, 2, gl.FLOAT, false, 7 * FLOAT_SIZE, 5 * FLOAT_SIZE);
     return vao;
 }
 
@@ -132,6 +159,26 @@ const getCircleVAO = (gl: WebGL2RenderingContext, positionAttributeLoaction: num
     setAttribPointer(gl, positionAttributeLoaction, 2, 0);
     return vao;
 
+}
+
+const getUVCircleVAO = (gl: WebGL2RenderingContext, positionAttributeLoaction: number, texAttributeLocation: number, radius: number) => {
+    const vao = gl.createVertexArray();
+    const FLOAT_SIZE = 4;
+    gl.bindVertexArray(vao);
+    const positionBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
+        0, 0, 0, 0,
+        radius * 2, 0, 1, 0,
+        radius * 2, radius * 2, 1, 1,
+        0, radius * 2, 0, 1
+    ]), gl.STATIC_DRAW);
+    bindEBO(gl);
+    gl.enableVertexAttribArray(positionAttributeLoaction);
+    gl.vertexAttribPointer(positionAttributeLoaction, 2, gl.FLOAT, false, 4 * FLOAT_SIZE, 0);
+    gl.enableVertexAttribArray(texAttributeLocation);
+    gl.vertexAttribPointer(texAttributeLocation, 2, gl.FLOAT, false, 4 * FLOAT_SIZE, 2 * FLOAT_SIZE);
+    return vao;
 }
 
 const setAttribPointer = (gl: WebGL2RenderingContext, positionAttributeLoaction: number, abbrSize: number, abbrOffset: number) => {

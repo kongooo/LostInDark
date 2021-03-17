@@ -32,7 +32,13 @@ module.exports = {
             {
                 test: /\.(glsl|vs|fs)$/,
                 use: 'ts-shader-loader'
-            }
+            },
+            {
+                test: /\.(png|jpe?g|gif)$/i,
+                use: [{
+                    loader: 'file-loader',
+                }, ],
+            },
         ],
     },
     plugins: [

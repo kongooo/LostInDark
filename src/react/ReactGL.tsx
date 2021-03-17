@@ -28,6 +28,11 @@ function ReactGL(props: GLProps) {
           break;
       }
     }
+    // const update = () => {
+    //   drawRect(gl);
+    //   requestAnimationFrame(update);
+    // };
+    // update();
     drawRect(gl);
   });
 
