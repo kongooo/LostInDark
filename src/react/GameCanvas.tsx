@@ -2,9 +2,9 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import * as ReactDOM from "react-dom";
 
-import { drawRect } from "./GLFunc/initRect";
+import { gameStart } from "./Game";
 
-export { ReactGL };
+export { GameCanvas };
 
 interface GLProps {
   children?: JSX.Element[];
@@ -12,7 +12,7 @@ interface GLProps {
   height: number;
 }
 
-function ReactGL(props: GLProps) {
+function GameCanvas(props: GLProps) {
   const canvasRef = React.useRef(null);
   useEffect(() => {
     const gl = canvasRef.current.getContext("webgl2") as WebGL2RenderingContext;
@@ -20,7 +20,7 @@ function ReactGL(props: GLProps) {
       console.error("can't init webgl");
       return;
     }
-    drawRect(gl);
+    gameStart(gl);
   });
 
   return (

@@ -1,14 +1,14 @@
 import * as React from "react";
 import * as ReactDOM from "react-dom";
-import { ReactGL } from "./ReactGL";
+import { GameCanvas } from "./GameCanvas";
 import "../css/main.css";
 
 function DrawCanvas() {
   return (
-    <ReactGL
+    <GameCanvas
       width={document.body.clientWidth}
       height={document.body.clientHeight}
-    ></ReactGL>
+    ></GameCanvas>
   );
 }
 
