@@ -20,19 +20,6 @@ function ReactGL(props: GLProps) {
       console.error("can't init webgl");
       return;
     }
-    let shapes = props.children;
-    for (let shape of shapes) {
-      switch (shape.type.name) {
-        case "Rect":
-          console.log("find rect");
-          break;
-      }
-    }
-    // const update = () => {
-    //   drawRect(gl);
-    //   requestAnimationFrame(update);
-    // };
-    // update();
     drawRect(gl);
   });
 
@@ -43,8 +30,6 @@ function ReactGL(props: GLProps) {
       height={props.height}
       style={{ width: props.width, height: props.height }}
       ref={canvasRef}
-    >
-      {props.children.map((child) => child)}
-    </canvas>
+    ></canvas>
   );
 }
