@@ -1,4 +1,4 @@
-export { Attrib, AttribLocationObj }
+export { Attrib, AttribLocationObj, UniformLocationObj }
 
 interface Attrib {
     name: string;
@@ -8,4 +8,9 @@ interface Attrib {
 interface AttribLocationObj {
     attribLocation: number;
     size: number;
+}
+
+interface UniformLocationObj {
+    name: string;
+    data: Array<number>;
 }
