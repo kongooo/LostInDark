@@ -14,35 +14,50 @@ export { gameStart };
 
 const gameStart = (gl: WebGL2RenderingContext) => {
 
-    const skyShaderProgram = WebGL.initShaderProgram(gl, rectVsSource, rectFsSource);
-    const skyPosAttributeLoaction = gl.getAttribLocation(skyShaderProgram, 'a_position');
-    const skyTexAttributeLoaction = gl.getAttribLocation(skyShaderProgram, 'a_texCoord');
-    const colorAttributeLoaction = gl.getAttribLocation(skyShaderProgram, 'a_color');
-    const skyResolutionUniformLocation = gl.getUniformLocation(skyShaderProgram, 'u_resolution');
-    const skyImageUniformLocation = gl.getUniformLocation(skyShaderProgram, 'u_image');
-
-
-    const shaderProgram = WebGL.initShaderProgram(gl, lightVsSource, lightFsSource);
-    const positionAttributeLoaction = gl.getAttribLocation(shaderProgram, 'a_position');
-    const starTexAttributeLoaction = gl.getAttribLocation(shaderProgram, 'a_texCoord');
-    const resolutionUniformLocation = gl.getUniformLocation(shaderProgram, 'u_resolution');
-    const translationUniformLocation = gl.getUniformLocation(shaderProgram, 'u_translation');
-    const scaleUniformLocation = gl.getUniformLocation(shaderProgram, 'u_scale');
-
     const renderResults = renderLightToTexture(gl);
     const frameBuffer = renderResults[0];
     const targetTexture = renderResults[1];
 
-    const UVCircleVAO = getUVCircleVAO(gl, positionAttributeLoaction, starTexAttributeLoaction, 100, 100, 100);
-    const rectVAO = getRectangleVAO(gl, skyPosAttributeLoaction, 0, 0, gl.canvas.width, gl.canvas.height, skyTexAttributeLoaction);//gl.canvas.width, gl.canvas.height);
+    const TestVaryMesh = new VaryMesh(gl, rectVsSource, rectFsSource);
+    TestVaryMesh.getAttributeLocations([
+        { name: 'a_position', size: 2 },
+        { name: 'a_texCoord', size: 2 }
+    ])
+    TestVaryMesh.getUniformLocations(['u_resolution', 'u_image']);
+    TestVaryMesh.getBuffer();
 
-    const testRectBuffer = getRectBuffer(gl, positionAttributeLoaction, skyTexAttributeLoaction);
 
+    const TestRectMesh = new StaticMesh(gl, rectVsSource, rectFsSource);
+    TestRectMesh.getAttributeLocations([
+        { name: 'a_position', size: 2 },
+        { name: 'a_texCoord', size: 2 }
+    ])
+    TestRectMesh.getUniformLocations(['u_resolution', 'u_image']);
+    TestRectMesh.getVAO([
+        0, 0, 0, 0,
+        gl.canvas.width, 0, 1, 0,
+        gl.canvas.width, gl.canvas.height, 1, 1,
+        0, gl.canvas.height, 0, 1
+    ], [0, 1, 2, 0, 2, 3]);
 
     let dirX = 0, dirY = 0;
     const speed = 10;
 
-    const draw = (x: number, y: number, skyTexture: WebGLTexture) => {
+
+    const LightMesh = new StaticMesh(gl, lightVsSource, lightFsSource);
+    LightMesh.getAttributeLocations([
+        { name: 'a_position', size: 2 },
+        { name: 'a_texCoord', size: 2 }
+    ])
+    LightMesh.getUniformLocations(['u_resolution', 'u_translation', 'u_scale']);
+    LightMesh.getVAO([
+        0, 0, 0, 0,
+        200, 0, 1, 0,
+        200, 200, 1, 1,
+        0, 200, 0, 1
+    ], [0, 1, 2, 0, 2, 3]);
+
+    const draw = (x: number, y: number, texture: WebGLTexture) => {
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         {
@@ -50,44 +65,30 @@ const gameStart = (gl: WebGL2RenderingContext) => {
             gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
             gl.clearColor(0, 0, 0, 1);
             gl.clear(gl.COLOR_BUFFER_BIT);
-            // gl.bindFramebuffer(gl.FRAMEBUFFER, null);
 
-            // gl.useProgram(shaderProgram);
-            // gl.uniform2f(resolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-            // gl.bindVertexArray(UVCircleVAO);
-            // gl.uniform2f(translationUniformLocation, x, y);
-            // gl.uniform1f(scaleUniformLocation, 2);
-            // gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+            LightMesh.drawWithAVO([
+                { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
+                { name: 'u_translation', data: [x, y] },
+                { name: 'u_scale', data: [1] }
+            ])
         }
 
         {
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            gl.bindTexture(gl.TEXTURE_2D, skyTexture);
-            gl.useProgram(skyShaderProgram);
-            gl.uniform2f(skyResolutionUniformLocation, gl.canvas.width, gl.canvas.height);
-            gl.activeTexture(gl.TEXTURE0 + 0);
-            gl.uniform1f(skyImageUniformLocation, 0);
-            // gl.bindVertexArray(rectVAO);
 
-            gl.bindBuffer(gl.ARRAY_BUFFER, testRectBuffer);
-            gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-                0, 0, 0, 0,
-                x, 0, 1, 0,
-                x, -y, 1, 1,
-                0, 0, 0, 0,
-                x, -y, 1, 1,
-                0, -y, 0, 1
-            ]), gl.STATIC_DRAW)
-            gl.drawArrays(gl.TRIANGLES, 0, 6);
-            // gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+            TestRectMesh.drawWithAVO([
+                { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
+                { name: 'u_image', data: [0] }
+            ], texture);
         }
-
-        // {
-        //     gl.enable(gl.BLEND);
-        //     gl.blendFunc(gl.DST_COLOR, 0);
-        //     gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-        //     gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
-        // }
+        {
+            gl.enable(gl.BLEND);
+            gl.blendFunc(gl.DST_COLOR, 0);
+            TestRectMesh.drawWithAVO([
+                { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
+                { name: 'u_image', data: [0] }
+            ], targetTexture);
+        }
     }
 
 
@@ -123,62 +124,6 @@ const gameStart = (gl: WebGL2RenderingContext) => {
         // draw(0, 0, skyTexture);
     }
 
-}
-
-const getRectangleVAO = (gl: WebGL2RenderingContext, positionAttributeLoaction: number, x: number, y: number, width: number, height: number, texAttributeLocation: number) => {
-    const x1 = x, x2 = x + width, y1 = y, y2 = y + height;
-    const FLOAT_SIZE = 4;
-    let vao = gl.createVertexArray();
-    gl.bindVertexArray(vao);
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        x1, y1, 0, 0,
-        x2, y1, 1, 0,
-        x2, y2, 1, 1,
-        // x1, y1,//
-        // x2, y2,//
-        x1, y2, 0, 1
-    ]), gl.STATIC_DRAW);
-
-
-    WebGL.bindEBO(gl, [0, 1, 2, 0, 2, 3]);
-    gl.enableVertexAttribArray(positionAttributeLoaction);
-    gl.vertexAttribPointer(positionAttributeLoaction, 2, gl.FLOAT, false, 4 * FLOAT_SIZE, 0);
-    gl.enableVertexAttribArray(texAttributeLocation);
-    gl.vertexAttribPointer(texAttributeLocation, 2, gl.FLOAT, false, 4 * FLOAT_SIZE, 2 * FLOAT_SIZE);
-    return vao;
-}
-
-const getRectBuffer = (gl: WebGL2RenderingContext, positionAttributeLoaction: number, texAttributeLocation: number) => {
-    const buffer = gl.createBuffer();
-    const FLOAT_SIZE = 4;
-    gl.bindBuffer(gl.ARRAY_BUFFER, buffer);
-    gl.enableVertexAttribArray(positionAttributeLoaction);
-    gl.vertexAttribPointer(positionAttributeLoaction, 2, gl.FLOAT, false, 4 * FLOAT_SIZE, 0);
-    gl.enableVertexAttribArray(texAttributeLocation);
-    gl.vertexAttribPointer(texAttributeLocation, 2, gl.FLOAT, false, 4 * FLOAT_SIZE, 2 * FLOAT_SIZE);
-    return buffer;
-}
-
-const getUVCircleVAO = (gl: WebGL2RenderingContext, positionAttributeLoaction: number, texAttributeLocation: number, x: number, y: number, radius: number) => {
-    const vao = gl.createVertexArray();
-    const FLOAT_SIZE = 4;
-    gl.bindVertexArray(vao);
-    const positionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-        x, y, 0, 0,
-        x + radius * 2, y, 1, 0,
-        radius * 2 + x, radius * 2 + y, 1, 1,
-        x, radius * 2 + y, 0, 1
-    ]), gl.STATIC_DRAW);
-    WebGL.bindEBO(gl, [0, 1, 2, 0, 2, 3]);
-    gl.enableVertexAttribArray(positionAttributeLoaction);
-    gl.vertexAttribPointer(positionAttributeLoaction, 2, gl.FLOAT, false, 4 * FLOAT_SIZE, 0);
-    gl.enableVertexAttribArray(texAttributeLocation);
-    gl.vertexAttribPointer(texAttributeLocation, 2, gl.FLOAT, false, 4 * FLOAT_SIZE, 2 * FLOAT_SIZE);
-    return vao;
 }
 
 const renderLightToTexture = (gl: WebGL2RenderingContext) => {

@@ -2,8 +2,6 @@
 
 precision mediump float;
 
-uniform vec4 u_color;
-
 in vec4 v_color;
 in vec2 v_texCoord;
 

@@ -8,11 +8,11 @@ class StaticMesh extends Mesh {
         super(gl, vsSource, fsSource);
     }
 
-    vao: WebGLVertexArrayObject;
-    elementEnable: boolean;
-    vertexCount: number;
-    vertics: Array<number>;
-    indices: Array<number>;
+    private vao: WebGLVertexArrayObject;
+    private elementEnable: boolean;
+    private vertexCount: number;
+    private vertics: Array<number>;
+    private indices: Array<number>;
 
     getVAO = (vertics: Array<number>, indices?: Array<number>) => {
         const gl = this.gl;
@@ -25,8 +25,7 @@ class StaticMesh extends Mesh {
             WebGL.bindEBO(gl, indices);
             this.elementEnable = true;
         }
-        const length = this.attributeLocationObjs.reduce((pre, cur) => ({ attribLocation: pre.attribLocation, size: pre.size + cur.size })).size;
-        this.vertexCount = indices ? indices.length : vertics.length / length;
+        this.vertexCount = indices ? indices.length : vertics.length / this.vertexSize;
         this.setAttribPointer();
         this.vao = vao;
         this.vertics = vertics;
@@ -34,15 +33,15 @@ class StaticMesh extends Mesh {
         return this.vao;
     }
 
-    drawWithAVO = (uniforms: Array<UniformLocationObj>) => {
+    drawWithAVO = (uniforms: Array<UniformLocationObj>, texture?: WebGLTexture) => {
         const gl = this.gl;
         gl.useProgram(this.shaderProgram);
-        if (this.texture) {
-            gl.bindTexture(gl.TEXTURE_2D, this.texture);
-            gl.activeTexture(gl.TEXTURE0 + 0);
-        }
         gl.bindVertexArray(this.vao);
         this.setUniformLocation(uniforms);
+        if (texture) {
+            gl.bindTexture(gl.TEXTURE_2D, texture);
+            gl.activeTexture(gl.TEXTURE0 + 0);
+        }
         if (this.elementEnable) {
             gl.drawElements(gl.TRIANGLES, this.vertexCount, gl.UNSIGNED_SHORT, 0);
         } else {
