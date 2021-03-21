@@ -6,26 +6,22 @@ import rectFsSource from '../shaders/RectShader/fsSource.glsl';
 import imgSource from '../../../image/girl.png';
 
 import { WebGL } from '../Tools/WebGLUtils';
+import KeyPress from '../Tools/Event/KeyEvent';
 
 import StaticMesh from '../Tools/Mesh/StaticMesh';
 import VaryMesh from '../Tools/Mesh/VaryMesh';
+
+import PerlinMap from './Map/index';
 
 export { gameStart };
 
 const gameStart = (gl: WebGL2RenderingContext) => {
 
-    const renderResults = renderLightToTexture(gl);
-    const frameBuffer = renderResults[0];
-    const targetTexture = renderResults[1];
+    let deltaTime = 0;
 
-    const TestVaryMesh = new VaryMesh(gl, rectVsSource, rectFsSource);
-    TestVaryMesh.getAttributeLocations([
-        { name: 'a_position', size: 2 },
-        { name: 'a_texCoord', size: 2 }
-    ])
-    TestVaryMesh.getUniformLocations(['u_resolution', 'u_image']);
-    TestVaryMesh.getBuffer();
+    const map = new PerlinMap(gl, randomInt(0, 1000), { x: gl.canvas.width / 2, y: gl.canvas.height / 2 });
 
+    const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
 
     const TestRectMesh = new StaticMesh(gl, rectVsSource, rectFsSource);
     TestRectMesh.getAttributeLocations([
@@ -40,8 +36,8 @@ const gameStart = (gl: WebGL2RenderingContext) => {
         0, gl.canvas.height, 0, 1
     ], [0, 1, 2, 0, 2, 3]);
 
-    let dirX = 0, dirY = 0;
-    const speed = 10;
+    let dirX = 1000, dirY = 1000;
+    const speed = 5;
 
 
     const LightMesh = new StaticMesh(gl, lightVsSource, lightFsSource);
@@ -58,114 +54,81 @@ const gameStart = (gl: WebGL2RenderingContext) => {
     ], [0, 1, 2, 0, 2, 3]);
 
     const draw = (x: number, y: number, texture: WebGLTexture) => {
+        move();
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         {
-            gl.disable(gl.BLEND);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, frameBuffer);
-            gl.clearColor(0, 0, 0, 1);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-
-            LightMesh.drawWithAVO([
-                { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
-                { name: 'u_translation', data: [x, y] },
-                { name: 'u_scale', data: [1] }
-            ])
-        }
-
-        {
+            // gl.disable(gl.BLEND);
+            // gl.bindFramebuffer(gl.FRAMEBUFFER, fBufferInfo.frameBuffer);
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+            gl.clearColor(252 / 255, 247 / 255, 233 / 255, 1);
+            gl.clear(gl.COLOR_BUFFER_BIT);
+            map.drawMap(x, y);
+            // LightMesh.drawWithAVO([
+            //     { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
+            //     { name: 'u_translation', data: [x, y] },
+            //     { name: 'u_scale', data: [1] }
+            // ])
+        }
 
-            TestRectMesh.drawWithAVO([
-                { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
-                { name: 'u_image', data: [0] }
-            ], texture);
-        }
-        {
-            gl.enable(gl.BLEND);
-            gl.blendFunc(gl.DST_COLOR, 0);
-            TestRectMesh.drawWithAVO([
-                { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
-                { name: 'u_image', data: [0] }
-            ], targetTexture);
-        }
+        // {
+        //     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+
+        //     TestRectMesh.drawWithAVO([
+        //         { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
+        //         { name: 'u_image', data: [0] }
+        //     ], texture);
+        // }
+        // {
+        //     gl.enable(gl.BLEND);
+        //     gl.blendFunc(gl.DST_COLOR, 0);
+        //     TestRectMesh.drawWithAVO([
+        //         { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
+        //         { name: 'u_image', data: [0] }
+        //     ], fBufferInfo.targetTexture);
+        // }
     }
 
 
 
-    const moveLight = (event: KeyboardEvent) => {
-        const keyCode = event.key;
-        if (keyCode === 'w') {
-            dirY += speed;
+    const move = () => {
+        const distance = speed * deltaTime;
+        if (KeyPress.get('w')) {
+            dirY -= distance;
         }
-        if (keyCode === 's') {
-            dirY -= speed;
+        if (KeyPress.get('s')) {
+            dirY += distance;
         }
-        if (keyCode === 'a') {
-            dirX -= speed;
+        if (KeyPress.get('a')) {
+            dirX -= distance;
+            // console.log(dirX, dirY);
         }
-        if (keyCode === 'd') {
-            dirX += speed;
+        if (KeyPress.get('d')) {
+            dirX += distance;
         }
 
     }
-
-    document.onkeydown = moveLight;
 
     const image = new Image();
     image.src = imgSource;
     image.onload = () => {
-        const skyTexture = getTextureFromImg(gl, image);
-        const update = () => {
+        const skyTexture = WebGL.getTexture(gl, image);
+        let lastTime = 0;
+        const update = (now: number) => {
+            // console.log(delay);
+            deltaTime = (now - lastTime) / 1000;
+            // console.log(deltaTime);
+            lastTime = now;
             draw(dirX, dirY, skyTexture);
             requestAnimationFrame(update);
         }
-        update();
+        update(0);
         // draw(0, 0, skyTexture);
     }
 
 }
 
-const renderLightToTexture = (gl: WebGL2RenderingContext) => {
-    const textureWidth = gl.canvas.width;
-    const textureHeight = gl.canvas.height;
-    const targetTexture = gl.createTexture();
-    gl.bindTexture(gl.TEXTURE_2D, targetTexture);
-    {
-        const level = 0;
-        const internalFormat = gl.RGBA;
-        const border = 0;
-        const format = gl.RGBA;
-        const type = gl.UNSIGNED_BYTE;
-        const data: ArrayBufferView = null;
-        gl.texImage2D(gl.TEXTURE_2D, level, internalFormat, textureWidth, textureHeight, border, format, type, data);
-
-        // set the filtering so we don't need mips
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    }
-
-    const fb = gl.createFramebuffer();
-    gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
-
-    const attachmentPoint = gl.COLOR_ATTACHMENT0;
-    const level = 0;
-    gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
-    return [fb, targetTexture];
-}
-
-const getTextureFromImg = (gl: WebGL2RenderingContext, img: HTMLImageElement) => {
-    const texture = gl.createTexture();
-
-    gl.bindTexture(gl.TEXTURE_2D, texture);
-    // Set the parameters so we can render any size image.
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
-    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
-
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, gl.RGBA, gl.UNSIGNED_BYTE, img);
-    return texture;
+const randomInt = (min: number, max: number) => {
+    return Math.floor(Math.random() * (max - min) + min);
 }
 

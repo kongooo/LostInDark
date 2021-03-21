@@ -16,5 +16,8 @@ void main() {
     // else 
     //     outPutColor = vec4(1);
     // outPutColor = v_color;
-    outPutColor = texture(u_image, v_texCoord);// v_color;//vec4(0.5,0.5,0.5,1);
+    // outPutColor = texture(u_image, v_texCoord);// v_color;//vec4(0.5,0.5,0.5,1);
+    vec3 rgb = vec3(132.0, 103.0, 42.0);
+    
+    outPutColor = vec4(rgb/vec3(255.0),1);
 }

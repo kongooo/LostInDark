@@ -32,6 +32,7 @@
     },
     "dependencies": {
         "css-loader": "^4.3.0",
+        "perlin-noise-3d": "^0.5.4",
         "style-loader": "^1.2.1"
     }
 }
