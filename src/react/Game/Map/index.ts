@@ -1,54 +1,82 @@
 import perlinNoise3d from 'perlin-noise-3d';
-import StaticMesh from '../../Tools/Mesh/StaticMesh';
-import { WebGL } from '../../Tools/WebGLUtils';
+import VaryMesh from '../../Tools/Mesh/VaryMesh';
 
 import rectVsSource from '../../shaders/RectShader/vsSource.glsl';
 import rectFsSource from '../../shaders/RectShader/fsSource.glsl';
 
-import KeyPress from '../../Tools/Event/KeyEvent';
+const ZOOM = 5;
+const RECT_VERTEX_COUNT = 4;
+const THRESHOLD = 0.6;
+const SIZE = 40;
 
 class PerlinMap {
     private noise: any;
-    private center: { x: number, y: number };
     private gl: WebGL2RenderingContext;
+    private MapMesh: VaryMesh;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, center: { x: number, y: number }) {
+    constructor(gl: WebGL2RenderingContext, seed: number) {
         const noise = new perlinNoise3d();
         noise.noiseSeed(seed);
         this.noise = noise;
-        this.center = center;
         this.gl = gl;
+        const MapMesh = new VaryMesh(gl, rectVsSource, rectFsSource);
+        MapMesh.getAttributeLocations([
+            { name: 'a_position', size: 2 },
+            { name: 'a_texCoord', size: 2 }
+        ])
+        MapMesh.getUniformLocations(['u_resolution', 'u_translation']);
+        MapMesh.getBuffer();
+        this.MapMesh = MapMesh;
     }
 
-    private size: number = 40;
-    private threshold: number = 0.55;
     private preDis: { x: number, y: number } = { x: 0, y: 0 };
+    private vertics: Array<number> = [];
+    private indices: Array<number> = [];
+    private noiseValue: number = 0;
 
     drawMap(startX: number, startY: number) {
         const gl = this.gl;
-        const xCount = gl.canvas.width / this.size;
-        const yCount = gl.canvas.height / this.size;
-        const RECT_VERTEX_COUNT = 4;
-        const zoom = 5;
-        let vertics = [];
-        let indices = [];
-        let count = 0;
+
         const FloorX = Math.floor(startX);
         const FloorY = Math.floor(startY);
 
+        const disX = (FloorX - startX) * SIZE;
+        const disY = (FloorY - startY) * SIZE;
+
+        const noiseValue = this.noise.get(Math.floor(startX) / ZOOM, Math.floor(startY) / ZOOM);
+        if (this.noiseValue !== noiseValue) {
+            this.generateVertics(startX, startY);
+            this.noiseValue = noiseValue;
+        }
+
+        this.preDis = { x: disX !== 0 ? disX : this.preDis.x, y: disY !== 0 ? disY : this.preDis.y };
+
+        this.MapMesh.drawWithBuffer(this.vertics, [
+            { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
+            { name: 'u_translation', data: [this.preDis.x, this.preDis.y] },
+        ], this.indices);
+
+    }
+
+    generateVertics(startX: number, startY: number) {
+        const xCount = this.gl.canvas.width / SIZE;
+        const yCount = this.gl.canvas.height / SIZE;
+        let count = 0;
+        this.vertics = [];
+        this.indices = [];
         for (let x = -1; x < xCount + 1; x++)
             for (let y = -1; y < yCount + 1; y++) {
-                const num = this.noise.get(Math.floor(x + startX) / zoom, Math.floor(y + startY) / zoom);
-                if (num > this.threshold) {
-                    const X = x * this.size;
-                    const Y = y * this.size;
-                    vertics.push(...[
+                const num = this.noise.get(Math.floor(x + startX) / ZOOM, Math.floor(y + startY) / ZOOM);
+                if (num > THRESHOLD) {
+                    const X = x * SIZE;
+                    const Y = y * SIZE;
+                    this.vertics.push(...[
                         X, Y, 0, 0,
-                        X + this.size, Y, 1, 0,
-                        X + this.size, Y + this.size, 1, 1,
-                        X, Y + this.size, 0, 1
+                        X + SIZE, Y, 1, 0,
+                        X + SIZE, Y + SIZE, 1, 1,
+                        X, Y + SIZE, 0, 1
                     ]);
-                    indices.push(...[
+                    this.indices.push(...[
                         count * RECT_VERTEX_COUNT,
                         count * RECT_VERTEX_COUNT + 1,
                         count * RECT_VERTEX_COUNT + 2,
@@ -59,26 +87,6 @@ class PerlinMap {
                     count++;
                 }
             }
-
-        const MapMesh = new StaticMesh(gl, rectVsSource, rectFsSource);
-        MapMesh.getAttributeLocations([
-            { name: 'a_position', size: 2 },
-            { name: 'a_texCoord', size: 2 }
-        ])
-        MapMesh.getUniformLocations(['u_resolution', 'u_translation']);
-        MapMesh.getVAO(vertics, indices);
-
-        const disX = (FloorX - startX) * this.size;
-        const disY = (FloorY - startY) * this.size;
-
-        this.preDis = { x: disX !== 0 ? disX : this.preDis.x, y: disY !== 0 ? disY : this.preDis.y };
-
-        MapMesh.drawWithAVO([
-            { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
-            { name: 'u_translation', data: [this.preDis.x, this.preDis.y] },
-        ])
-
-
     }
 }
 

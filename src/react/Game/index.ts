@@ -19,7 +19,7 @@ const gameStart = (gl: WebGL2RenderingContext) => {
 
     let deltaTime = 0;
 
-    const map = new PerlinMap(gl, randomInt(0, 1000), { x: gl.canvas.width / 2, y: gl.canvas.height / 2 });
+    const map = new PerlinMap(gl, randomInt(0, 1000));
 
     const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
 
