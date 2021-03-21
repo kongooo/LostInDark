@@ -1,13 +1,14 @@
 import perlinNoise3d from 'perlin-noise-3d';
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
 
-import rectVsSource from '../../shaders/RectShader/vsSource.glsl';
-import rectFsSource from '../../shaders/RectShader/fsSource.glsl';
+import colorRectVsSource from '../../shaders/ColorRectShader/vsSource.glsl';
+import colorRectFsSource from '../../shaders/ColorRectShader/fsSource.glsl';
 
 const ZOOM = 5;
 const RECT_VERTEX_COUNT = 4;
 const THRESHOLD = 0.6;
 const SIZE = 40;
+const WALL_COLOR = [170, 170, 170];
 
 class PerlinMap {
     private noise: any;
@@ -19,12 +20,12 @@ class PerlinMap {
         noise.noiseSeed(seed);
         this.noise = noise;
         this.gl = gl;
-        const MapMesh = new VaryMesh(gl, rectVsSource, rectFsSource);
+        const MapMesh = new VaryMesh(gl, colorRectVsSource, colorRectFsSource);
         MapMesh.getAttributeLocations([
             { name: 'a_position', size: 2 },
-            { name: 'a_texCoord', size: 2 }
+            // { name: 'a_texCoord', size: 2 }
         ])
-        MapMesh.getUniformLocations(['u_resolution', 'u_translation']);
+        MapMesh.getUniformLocations(['u_resolution', 'u_translation', 'u_color']);
         MapMesh.getBuffer();
         this.MapMesh = MapMesh;
     }
@@ -34,7 +35,7 @@ class PerlinMap {
     private indices: Array<number> = [];
     private noiseValue: number = 0;
 
-    drawMap(startX: number, startY: number) {
+    draw = (startX: number, startY: number) => {
         const gl = this.gl;
 
         const FloorX = Math.floor(startX);
@@ -54,11 +55,24 @@ class PerlinMap {
         this.MapMesh.drawWithBuffer(this.vertics, [
             { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
             { name: 'u_translation', data: [this.preDis.x, this.preDis.y] },
+            { name: 'u_color', data: WALL_COLOR },
         ], this.indices);
-
     }
 
-    generateVertics(startX: number, startY: number) {
+    getEmptyPos = (startX: number, startY: number) => {
+        const xCount = this.gl.canvas.width / SIZE;
+        const yCount = this.gl.canvas.height / SIZE;
+        const xMin = xCount / 3, xMax = (xCount / 3) * 2;
+        const yMin = yCount / 3, yMax = (yCount / 3) * 2;
+        let xIndex = randomInt(xMin, xMax), yIndex = randomInt(yMin, yMax);
+        while (this.noise.get(Math.floor(xIndex + startX) / ZOOM, Math.floor(yIndex + startY) / ZOOM) > THRESHOLD) {
+            xIndex = randomInt(xMin, xMax);
+            yIndex = randomInt(yMin, yMax);
+        }
+        return { x: xIndex * SIZE, y: yIndex * SIZE };
+    }
+
+    private generateVertics = (startX: number, startY: number) => {
         const xCount = this.gl.canvas.width / SIZE;
         const yCount = this.gl.canvas.height / SIZE;
         let count = 0;
@@ -71,10 +85,10 @@ class PerlinMap {
                     const X = x * SIZE;
                     const Y = y * SIZE;
                     this.vertics.push(...[
-                        X, Y, 0, 0,
-                        X + SIZE, Y, 1, 0,
-                        X + SIZE, Y + SIZE, 1, 1,
-                        X, Y + SIZE, 0, 1
+                        X, Y,// 0, 0,
+                        X + SIZE, Y, //1, 0,
+                        X + SIZE, Y + SIZE, //1, 1,
+                        X, Y + SIZE, //0, 1
                     ]);
                     this.indices.push(...[
                         count * RECT_VERTEX_COUNT,
@@ -89,5 +103,9 @@ class PerlinMap {
             }
     }
 }
+
+const randomInt = (min: number, max: number) => {
+    return Math.floor(Math.random() * (max - min) + min);
+};
 
 export default PerlinMap;

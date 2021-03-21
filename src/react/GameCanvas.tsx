@@ -2,7 +2,7 @@ import * as React from "react";
 import { useState, useEffect } from "react";
 import * as ReactDOM from "react-dom";
 
-import { gameStart } from "./Game";
+import Game from "./Game/index";
 
 export { GameCanvas };
 
@@ -20,8 +20,13 @@ function GameCanvas(props: GLProps) {
       console.error("can't init webgl");
       return;
     }
-    gameStart(gl);
+    const game = new Game(gl, randomInt(0, 10000), { x: 1000, y: 1000 });
+    game.start();
   });
+
+  const randomInt = (min: number, max: number) => {
+    return Math.floor(Math.random() * (max - min) + min);
+  };
 
   return (
     <canvas

@@ -30,6 +30,7 @@ class StaticMesh extends Mesh {
         this.vao = vao;
         this.vertics = vertics;
         this.indices = indices;
+        gl.bindVertexArray(null);
         return this.vao;
     }
 
@@ -47,6 +48,7 @@ class StaticMesh extends Mesh {
         } else {
             gl.drawArrays(gl.TRIANGLES, 0, this.vertexCount);
         }
+        gl.bindVertexArray(null);
     }
 }
 

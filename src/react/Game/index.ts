@@ -1,134 +1,92 @@
-import lightVsSource from '../shaders/LightShader/vsSource.glsl';
-import lightFsSource from '../shaders/LightShader/fsSource.glsl';
-import rectVsSource from '../shaders/RectShader/vsSource.glsl';
-import rectFsSource from '../shaders/RectShader/fsSource.glsl';
-
-import imgSource from '../../../image/girl.png';
-
-import { WebGL } from '../Tools/WebGLUtils';
+import PerlinMap from './Map/index';
+import Player from './Player/index';
 import KeyPress from '../Tools/Event/KeyEvent';
 
-import StaticMesh from '../Tools/Mesh/StaticMesh';
-import VaryMesh from '../Tools/Mesh/VaryMesh';
+const PLAYER_SPEED = 150;
+const CAMERA_SPEED = 3;
+const BACK_COLOR = { r: 246, g: 246, b: 246 };
 
-import PerlinMap from './Map/index';
+interface Coord {
+    x: number;
+    y: number;
+}
 
-export { gameStart };
+class Game {
+    private gl: WebGL2RenderingContext;
+    private player: Player;
+    private map: PerlinMap;
+    private CameraInitPos: Coord;
 
-const gameStart = (gl: WebGL2RenderingContext) => {
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord) {
+        this.gl = gl;
+        const map = new PerlinMap(gl, seed);
+        const player = new Player(gl);
+        this.map = map;
+        this.player = player;
+        this.CameraInitPos = center;
+        this.playerScreenPos = map.getEmptyPos(center.x, center.y);
+        this.xThreshold = this.gl.canvas.width / 3;
+        this.yThreshold = this.gl.canvas.height / 3;
+    }
 
-    let deltaTime = 0;
+    private deltaTime: number = 0;
+    private lastTime: number = 0;
+    private playerScreenPos: Coord = { x: 0, y: 0 };
+    private mapDir: Coord = { x: 0, y: 0 };
+    private xThreshold: number;
+    private yThreshold: number;
 
-    const map = new PerlinMap(gl, randomInt(0, 1000));
+    start = () => {
+        this.update(0);
+    }
 
-    const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
+    private update = (now: number) => {
+        this.deltaTime = (now - this.lastTime) / 1000;
+        this.lastTime = now;
+        this.draw();
+        requestAnimationFrame(this.update);
+    }
 
-    const TestRectMesh = new StaticMesh(gl, rectVsSource, rectFsSource);
-    TestRectMesh.getAttributeLocations([
-        { name: 'a_position', size: 2 },
-        { name: 'a_texCoord', size: 2 }
-    ])
-    TestRectMesh.getUniformLocations(['u_resolution', 'u_image']);
-    TestRectMesh.getVAO([
-        0, 0, 0, 0,
-        gl.canvas.width, 0, 1, 0,
-        gl.canvas.width, gl.canvas.height, 1, 1,
-        0, gl.canvas.height, 0, 1
-    ], [0, 1, 2, 0, 2, 3]);
-
-    let dirX = 1000, dirY = 1000;
-    const speed = 5;
-
-
-    const LightMesh = new StaticMesh(gl, lightVsSource, lightFsSource);
-    LightMesh.getAttributeLocations([
-        { name: 'a_position', size: 2 },
-        { name: 'a_texCoord', size: 2 }
-    ])
-    LightMesh.getUniformLocations(['u_resolution', 'u_translation', 'u_scale']);
-    LightMesh.getVAO([
-        0, 0, 0, 0,
-        200, 0, 1, 0,
-        200, 200, 1, 1,
-        0, 200, 0, 1
-    ], [0, 1, 2, 0, 2, 3]);
-
-    const draw = (x: number, y: number, texture: WebGLTexture) => {
-        move();
+    private draw = () => {
+        const gl = this.gl;
+        // this.move();
+        this.cameraController();
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-        {
-            // gl.disable(gl.BLEND);
-            // gl.bindFramebuffer(gl.FRAMEBUFFER, fBufferInfo.frameBuffer);
-            gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-            gl.clearColor(252 / 255, 247 / 255, 233 / 255, 1);
-            gl.clear(gl.COLOR_BUFFER_BIT);
-            map.drawMap(x, y);
-            // LightMesh.drawWithAVO([
-            //     { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
-            //     { name: 'u_translation', data: [x, y] },
-            //     { name: 'u_scale', data: [1] }
-            // ])
-        }
-
-        // {
-        //     gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-
-        //     TestRectMesh.drawWithAVO([
-        //         { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
-        //         { name: 'u_image', data: [0] }
-        //     ], texture);
-        // }
-        // {
-        //     gl.enable(gl.BLEND);
-        //     gl.blendFunc(gl.DST_COLOR, 0);
-        //     TestRectMesh.drawWithAVO([
-        //         { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
-        //         { name: 'u_image', data: [0] }
-        //     ], fBufferInfo.targetTexture);
-        // }
+        gl.clearColor(BACK_COLOR.r / 255, BACK_COLOR.g / 255, BACK_COLOR.b / 255, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        this.map.draw(this.CameraInitPos.x + this.mapDir.x, this.CameraInitPos.y + this.mapDir.y);
+        this.player.draw(this.playerScreenPos.x, this.playerScreenPos.y);
     }
 
+    private cameraController = () => {
+        const distance = PLAYER_SPEED * this.deltaTime;
+        // const cameraWordPos = CoordAdd(this.CameraInitPos, this.mapDir);
+        // const playerWordPos = CoordAdd(cameraWordPos, this.playerScreenPos);
 
+        if (this.playerScreenPos.y < this.yThreshold && KeyPress.get('s')) {
+            this.mapDir.y -= CAMERA_SPEED * this.deltaTime;
+        } else if (KeyPress.get('s')) this.playerScreenPos.y -= distance;
 
-    const move = () => {
-        const distance = speed * deltaTime;
-        if (KeyPress.get('w')) {
-            dirY -= distance;
-        }
-        if (KeyPress.get('s')) {
-            dirY += distance;
-        }
-        if (KeyPress.get('a')) {
-            dirX -= distance;
-            // console.log(dirX, dirY);
-        }
-        if (KeyPress.get('d')) {
-            dirX += distance;
-        }
+        if (this.playerScreenPos.y > this.yThreshold * 2 && KeyPress.get('w')) {
+            this.mapDir.y += CAMERA_SPEED * this.deltaTime;
+        } else if (KeyPress.get('w')) this.playerScreenPos.y += distance;
 
+        if (this.playerScreenPos.x < this.xThreshold && KeyPress.get('a')) {
+            this.mapDir.x -= CAMERA_SPEED * this.deltaTime;
+        } else if (KeyPress.get('a')) this.playerScreenPos.x -= distance;
+
+        if (this.playerScreenPos.x > this.xThreshold * 2 && KeyPress.get('d')) {
+            this.mapDir.x += CAMERA_SPEED * this.deltaTime;
+        } else if (KeyPress.get('d')) this.playerScreenPos.x += distance;
     }
+}
 
-    const image = new Image();
-    image.src = imgSource;
-    image.onload = () => {
-        const skyTexture = WebGL.getTexture(gl, image);
-        let lastTime = 0;
-        const update = (now: number) => {
-            // console.log(delay);
-            deltaTime = (now - lastTime) / 1000;
-            // console.log(deltaTime);
-            lastTime = now;
-            draw(dirX, dirY, skyTexture);
-            requestAnimationFrame(update);
-        }
-        update(0);
-        // draw(0, 0, skyTexture);
-    }
-
+const CoordAdd = (aPos: Coord, bPos: Coord) => {
+    return { x: aPos.x + bPos.x, y: aPos.y + bPos.y };
 }
 
 const randomInt = (min: number, max: number) => {
     return Math.floor(Math.random() * (max - min) + min);
-}
+};
 
+export default Game;
