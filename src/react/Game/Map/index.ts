@@ -1,5 +1,6 @@
 import perlinNoise3d from 'perlin-noise-3d';
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
+import { Item } from '../Item/index';
 
 import colorRectVsSource from '../../shaders/ColorRectShader/vsSource.glsl';
 import colorRectFsSource from '../../shaders/ColorRectShader/fsSource.glsl';
@@ -9,6 +10,11 @@ const RECT_VERTEX_COUNT = 4;
 const THRESHOLD = 0.6;
 const SIZE = 40;
 const WALL_COLOR = [170, 170, 170];
+
+interface Coord {
+    x: number;
+    y: number;
+}
 
 class PerlinMap {
     private noise: any;
@@ -30,26 +36,32 @@ class PerlinMap {
         this.MapMesh = MapMesh;
     }
 
-    private preDis: { x: number, y: number } = { x: 0, y: 0 };
+    private preDis: Coord = { x: 0, y: 0 };
     private vertics: Array<number> = [];
     private indices: Array<number> = [];
     private noiseValue: number = 0;
 
-    draw = (startX: number, startY: number) => {
+    size: number = SIZE;
+
+    //startPos：摄像机左下角世界坐标
+    draw = (startPos: Coord) => {
         const gl = this.gl;
 
-        const FloorX = Math.floor(startX);
-        const FloorY = Math.floor(startY);
+        const FloorX = Math.floor(startPos.x);
+        const FloorY = Math.floor(startPos.y);
 
-        const disX = (FloorX - startX) * SIZE;
-        const disY = (FloorY - startY) * SIZE;
+        const disX = (FloorX - startPos.x) * SIZE;
+        const disY = (FloorY - startPos.y) * SIZE;
 
-        const noiseValue = this.noise.get(Math.floor(startX) / ZOOM, Math.floor(startY) / ZOOM);
+        const noiseValue = this.noise.get(Math.floor(startPos.x) / ZOOM, Math.floor(startPos.y) / ZOOM);
+
+        //边界重新得到地图顶点数据
         if (this.noiseValue !== noiseValue) {
-            this.generateVertics(startX, startY);
+            this.generateVertics(startPos.x, startPos.y);
             this.noiseValue = noiseValue;
         }
 
+        //最终偏移值
         this.preDis = { x: disX !== 0 ? disX : this.preDis.x, y: disY !== 0 ? disY : this.preDis.y };
 
         this.MapMesh.drawWithBuffer(this.vertics, [
@@ -59,6 +71,7 @@ class PerlinMap {
         ], this.indices);
     }
 
+    //得到没有障碍物的坐标
     getEmptyPos = (startX: number, startY: number) => {
         const xCount = this.gl.canvas.width / SIZE;
         const yCount = this.gl.canvas.height / SIZE;
@@ -69,9 +82,15 @@ class PerlinMap {
             xIndex = randomInt(xMin, xMax);
             yIndex = randomInt(yMin, yMax);
         }
-        return { x: xIndex * SIZE, y: yIndex * SIZE };
+        return { x: xIndex + startX, y: yIndex + startY };
     }
 
+    //判断该点坐标是否为障碍物
+    obstacled = (x: number, y: number) => {
+        return this.noise.get(Math.floor(x) / ZOOM, Math.floor(y) / ZOOM) > THRESHOLD;
+    }
+
+    //生成地图顶点坐标
     private generateVertics = (startX: number, startY: number) => {
         const xCount = this.gl.canvas.width / SIZE;
         const yCount = this.gl.canvas.height / SIZE;

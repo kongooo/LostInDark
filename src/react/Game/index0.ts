@@ -67,8 +67,8 @@ const gameStart = (gl: WebGL2RenderingContext) => {
             gl.bindFramebuffer(gl.FRAMEBUFFER, null);
             gl.clearColor(BACK_COLOR.r / 255, BACK_COLOR.g / 255, BACK_COLOR.b / 255, 1);
             gl.clear(gl.COLOR_BUFFER_BIT);
-            map.draw(1000, 1000);
-            player.draw(x, y);
+            map.draw({ x: 1000, y: 1000 });
+            player.draw({ x, y });
             // LightMesh.drawWithAVO([
             //     { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
             //     { name: 'u_translation', data: [x, y] },
