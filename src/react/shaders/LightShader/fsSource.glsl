@@ -13,10 +13,4 @@ void main() {
     float t = 0.3;
     float l = exp(-distance * t) - distance * exp(-t);
     outPutColor = vec4(l, l, l, 1);
-    // outPutColor = vec4(1, 1, 1, max(1.0 - distance, 0.0));
-    // if(distance < 1.0) 
-    //     outPutColor = vec4(1.0);
-    // else
-    //     outPutColor = vec4(1, 1, 1, 0);
-    // outPutColor = vec4(1,1,1,1);
 }

@@ -1,6 +1,5 @@
 import * as React from "react";
-import { useState, useEffect } from "react";
-import * as ReactDOM from "react-dom";
+import { useEffect } from "react";
 
 import Game from "./Game/index";
 

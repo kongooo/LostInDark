@@ -1,5 +1,7 @@
 import PerlinMap from './Map/index';
 import Player from './Player/index';
+import Light from './Light/index';
+import Canvas from './Light/Canvas';
 import KeyPress from '../Tools/Event/KeyEvent';
 
 const PLAYER_SPEED = 3;
@@ -15,15 +17,17 @@ class Game {
     private gl: WebGL2RenderingContext;
     private player: Player;
     private map: PerlinMap;
+    private playerLight: Light;
+    private lightCanvas: Canvas;
 
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord) {
         this.gl = gl;
-        const map = new PerlinMap(gl, seed);
-        const player = new Player(gl);
-        this.map = map;
-        this.player = player;
+        this.map = new PerlinMap(gl, seed);
+        this.player = new Player(gl);
         this.cameraWorldPos = center;
-        this.playerWorldPos = map.getEmptyPos(center.x, center.y);
+        this.playerLight = new Light(gl);
+        this.lightCanvas = new Canvas(gl);
+        this.playerWorldPos = this.map.getEmptyPos(center.x, center.y);
     }
 
     private deltaTime: number = 0;
@@ -50,11 +54,35 @@ class Game {
         this.cameraController();
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
+
+        this.drawLight();
+        this.drawScene();
+        this.drawLightToScene();
+    }
+
+    private drawLight = () => {
+        const gl = this.gl;
+        gl.disable(gl.BLEND);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.playerLight.fBufferInfo.frameBuffer);
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        this.playerLight.draw(this.worldToScreenPos(this.playerWorldPos), 3);
+    }
+
+    private drawScene = () => {
+        const gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.clearColor(BACK_COLOR.r / 255, BACK_COLOR.g / 255, BACK_COLOR.b / 255, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
-
         this.map.draw(this.cameraWorldPos);
         this.player.draw(this.worldToScreenPos(this.playerWorldPos));
+    }
+
+    private drawLightToScene = () => {
+        const gl = this.gl;
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.DST_COLOR, 0);
+        this.lightCanvas.draw(this.playerLight.fBufferInfo.targetTexture);
     }
 
     private playerController = () => {
