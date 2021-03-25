@@ -7,6 +7,7 @@ import KeyPress from '../Tools/Event/KeyEvent';
 const PLAYER_SPEED = 3;
 const CAMERA_SPEED = 1;
 const BACK_COLOR = { r: 246, g: 246, b: 246 };
+const PLAYER_LIGHT_SCALE = 1;
 
 interface Coord {
     x: number;
@@ -34,6 +35,7 @@ class Game {
     private lastTime: number = 0;
     private playerWorldPos: Coord;
     private cameraWorldPos: Coord;
+    private cameraOffset: Coord = { x: 0, y: 0 };
 
     start = () => {
         this.update(0);
@@ -52,6 +54,7 @@ class Game {
         this.playerController();
         this.CollisionDetection();
         this.cameraController();
+        this.calCameraOffset();
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -74,7 +77,7 @@ class Game {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.clearColor(BACK_COLOR.r / 255, BACK_COLOR.g / 255, BACK_COLOR.b / 255, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        this.map.draw(this.cameraWorldPos);
+        this.map.draw(this.cameraWorldPos, this.cameraOffset);
         this.player.draw(this.worldToScreenPos(this.playerWorldPos));
     }
 
@@ -99,6 +102,18 @@ class Game {
         const cameraToPlayer = CoordSub(this.playerWorldPos, cameraCenterPos);
         this.cameraWorldPos.x += cameraToPlayer.x * this.deltaTime * CAMERA_SPEED;
         this.cameraWorldPos.y += cameraToPlayer.y * this.deltaTime * CAMERA_SPEED;
+    }
+
+    private calCameraOffset = () => {
+        const startPos = this.cameraWorldPos;
+        const FloorX = Math.floor(startPos.x);
+        const FloorY = Math.floor(startPos.y);
+
+        const disX = (FloorX - startPos.x) * this.map.size;
+        const disY = (FloorY - startPos.y) * this.map.size;
+
+        //最终偏移值
+        this.cameraOffset = { x: disX !== 0 ? disX : this.cameraOffset.x, y: disY !== 0 ? disY : this.cameraOffset.y };
     }
 
     //碰撞检测

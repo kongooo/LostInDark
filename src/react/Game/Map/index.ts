@@ -36,7 +36,6 @@ class PerlinMap {
         this.MapMesh = MapMesh;
     }
 
-    private preDis: Coord = { x: 0, y: 0 };
     private vertics: Array<number> = [];
     private indices: Array<number> = [];
     private noiseValue: number = 0;
@@ -44,14 +43,8 @@ class PerlinMap {
     size: number = SIZE;
 
     //startPos：摄像机左下角世界坐标
-    draw = (startPos: Coord) => {
+    draw = (startPos: Coord, cameraOffset: Coord) => {
         const gl = this.gl;
-
-        const FloorX = Math.floor(startPos.x);
-        const FloorY = Math.floor(startPos.y);
-
-        const disX = (FloorX - startPos.x) * SIZE;
-        const disY = (FloorY - startPos.y) * SIZE;
 
         const noiseValue = this.noise.get(Math.floor(startPos.x) / ZOOM, Math.floor(startPos.y) / ZOOM);
 
@@ -61,12 +54,9 @@ class PerlinMap {
             this.noiseValue = noiseValue;
         }
 
-        //最终偏移值
-        this.preDis = { x: disX !== 0 ? disX : this.preDis.x, y: disY !== 0 ? disY : this.preDis.y };
-
         this.MapMesh.drawWithBuffer(this.vertics, [
             { name: 'u_resolution', data: [gl.canvas.width, gl.canvas.height] },
-            { name: 'u_translation', data: [this.preDis.x, this.preDis.y] },
+            { name: 'u_translation', data: [cameraOffset.x, cameraOffset.y] },
             { name: 'u_color', data: WALL_COLOR },
         ], this.indices);
     }
