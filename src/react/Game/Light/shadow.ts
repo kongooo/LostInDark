@@ -35,7 +35,6 @@ class Shadow {
      */
     draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, offset: Coord, worldToScreenPixelPos: (worldPos: Coord) => Coord) => {
         let vertices = [];
-        lightPos = lightPos.add(new Coord(0.45, 0.55));
 
         for (let i = 0; i < obstacleVertics.length - 3; i += 2) {
             let aPos = new Coord(obstacleVertics[i], obstacleVertics[i + 1]);

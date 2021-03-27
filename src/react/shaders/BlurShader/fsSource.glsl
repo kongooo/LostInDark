@@ -11,36 +11,28 @@ in vec2 v_resolution;
  
 void main() {
     // vec2 v_resolution = vec2(375.0, 667.0);
+    vec2 step = vec2(5.5) / v_resolution; 
 
-    float offset[4];
-    offset[1] = 0.; offset[2] = 1.3846153846; offset[3] = 3.2307692308;
+    float weight[9];
+    weight[0] = 0.0625;
+    weight[1] = 0.125;
+    weight[2] = 0.0625;
+    weight[3] = 0.125;
+    weight[4] = 0.25;
+    weight[5] = 0.125;
+    weight[6] = 0.0625;
+    weight[7] = 0.125;
+    weight[8] = 0.0625;
 
-    float weight[4];
-    weight[1] = 0.2270270270; weight[2] = 0.3162162162; weight[3] = 0.0702702703;
+    vec4 color = vec4(0);
 
-    vec4 color = texture(u_image, vec2(v_texCoord)) * weight[0];
+    int count = 0;
 
-    // 垂直
-    for (int i=1; i<=3; i++) {
-        color +=
-            texture(u_image, (vec2(v_texCoord)+vec2(0.0, offset[i])))
-                * weight[i];
-        color +=
-            texture(u_image, (vec2(v_texCoord)-vec2(0.0, offset[i])))
-                * weight[i];
+    for(int x = -1; x < 2; x++) {
+        for(int y = -1; y < 2; y++) {
+            color += texture(u_image, v_texCoord + step * vec2(x, y)) * weight[count];
+            count++;
+        }
     }
-
-    vec4 color2 = texture(u_image, vec2(v_texCoord)) * weight[0];
-
-    // 水平
-    for (int i=1; i<=3; i++) {
-        color2 +=
-            texture(u_image, (vec2(v_texCoord)+vec2(offset[i], 0.0)))
-                * weight[i];
-        color2 +=
-            texture(u_image, (vec2(v_texCoord)-vec2(offset[i], 0.0)))
-                * weight[i];
-    }
-
-    outPutColor = texture(u_image, v_texCoord);//mix(color, color2, 0.5);
+    outPutColor = texture(u_image, v_texCoord);
 }
