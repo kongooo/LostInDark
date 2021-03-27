@@ -1,6 +1,7 @@
 import PerlinMap from './Map/index';
 import Player from './Player/index';
 import Light from './Light/light';
+import Shadow from './Light/shadow';
 import Canvas from './Light/Canvas';
 import KeyPress from '../Tools/Event/KeyEvent';
 import { Coord } from '../Tools/Tool';
@@ -16,6 +17,8 @@ class Game {
     private map: PerlinMap;
     private playerLight: Light;
     private lightCanvas: Canvas;
+    private shadowCanvas: Canvas;
+    private shadow: Shadow;
 
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord) {
         this.gl = gl;
@@ -23,7 +26,9 @@ class Game {
         this.player = new Player(gl);
         this.cameraWorldPos = center;
         this.playerLight = new Light(gl);
+        this.shadow = new Shadow(gl);
         this.lightCanvas = new Canvas(gl);
+        this.shadowCanvas = new Canvas(gl);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
         this.playerWorldPos = new Coord(emptyPos.x, emptyPos.y);
     }
@@ -55,9 +60,20 @@ class Game {
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        this.drawLight();
         this.drawScene();
-        this.drawLightToScene();
+        // this.drawLight();
+        // this.drawShadow();
+        // this.drawShadowToScene();
+        // this.drawLightToScene();
+    }
+
+    private drawShadow = () => {
+        const gl = this.gl;
+        gl.disable(gl.BLEND);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadow.fBufferInfo.frameBuffer);
+        gl.clearColor(1, 1, 1, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+        this.shadow.draw(this.map.vertics, this.worldToScreenPos(this.playerWorldPos), this.playerLight.lightRadius * PLAYER_LIGHT_SCALE, this.cameraOffset);
     }
 
     private drawLight = () => {
@@ -80,9 +96,18 @@ class Game {
 
     private drawLightToScene = () => {
         const gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.DST_COLOR, 0);
         this.lightCanvas.draw(this.playerLight.fBufferInfo.targetTexture);
+    }
+
+    private drawShadowToScene = () => {
+        const gl = this.gl;
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.enable(gl.BLEND);
+        gl.blendFunc(gl.DST_COLOR, 0);
+        this.shadowCanvas.draw(this.shadow.fBufferInfo.targetTexture);
     }
 
     private playerController = () => {
@@ -182,11 +207,11 @@ class Game {
     }
 
     private screenToWorldPos = (screenPos: Coord) => {
-        return CoordAdd(screenPos, this.cameraWorldPos);
+        return screenPos.add(this.cameraWorldPos);
     }
 
     private worldToScreenPos = (worldPos: Coord) => {
-        return CoordSub(worldPos, this.cameraWorldPos);
+        return worldPos.sub(this.cameraWorldPos);
     }
 
     private cameraCornerToCenter = (cornerPos: Coord) => {

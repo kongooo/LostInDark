@@ -6,12 +6,14 @@ import StaticMesh from '../../Tools/Mesh/StaticMesh';
 import { WebGL } from '../../Tools/WebGLUtils';
 
 const SIZE = 40;
+const PLAYER_SZIE = 36;
 
 
 class Light {
 
     private lightMesh: StaticMesh;
     private gl: WebGL2RenderingContext;
+    lightRadius: number;
     fBufferInfo: { frameBuffer: WebGLFramebuffer, targetTexture: WebGLTexture };
 
     constructor(gl: WebGL2RenderingContext) {
@@ -32,12 +34,13 @@ class Light {
         this.lightMesh = LightMesh;
         this.fBufferInfo = fBufferInfo;
         this.gl = gl;
+        this.lightRadius = lightRadius;
     }
 
     draw = (pos: { x: number, y: number }, size: number) => {
         this.lightMesh.drawWithAVO([
             { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
-            { name: 'u_translation', data: [pos.x * SIZE + 0.5 * SIZE, pos.y * SIZE + 0.5 * SIZE] },
+            { name: 'u_translation', data: [pos.x * SIZE + 0.5 * PLAYER_SZIE, pos.y * SIZE + 0.5 * PLAYER_SZIE] },
             { name: 'u_scale', data: [size] }
         ])
     }

@@ -33,6 +33,7 @@ class Player {
     }
 
     getSize = () => RECT_SIZE / SIZE;
+    getPixelSize = () => RECT_SIZE;
 }
 
 export default Player;
