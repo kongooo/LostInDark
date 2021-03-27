@@ -7,8 +7,6 @@ import { WebGL } from '../../Tools/WebGLUtils';
 
 import { Coord } from '../../Tools/Tool';
 
-import KeyPress from '../../Tools/Event/KeyEvent';
-
 class Shadow {
 
     private shadowMesh: VaryMesh;
@@ -19,7 +17,7 @@ class Shadow {
         const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         const shadowMesh = new VaryMesh(gl, shadowVsSource, shadowFsSource);
         shadowMesh.getAttributeLocations([{ name: 'a_position', size: 2 }]);
-        shadowMesh.getUniformLocations(['u_resolution', 'u_translation']);
+        shadowMesh.getUniformLocations(['u_resolution']);
         shadowMesh.getBuffer();
 
         this.fBufferInfo = fBufferInfo;
@@ -27,24 +25,38 @@ class Shadow {
         this.gl = gl;
     }
 
-    draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, offset: Coord) => {
+
+    /**
+     * 
+     * @param obstacleVertics 障碍物世界坐标
+     * @param lightPos 光源世界坐标
+     * @param radius 光源半径
+     * @param offset 摄像机偏移
+     */
+    draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, offset: Coord, worldToScreenPixelPos: (worldPos: Coord) => Coord) => {
         let vertices = [];
-        lightPos = lightPos.mult(40).add(18);
-        if (KeyPress.get('p')) console.log(obstacleVertics, lightPos, radius);
+        lightPos = lightPos.add(new Coord(0.45, 0.55));
+
         for (let i = 0; i < obstacleVertics.length - 3; i += 2) {
-            const aPos = new Coord(obstacleVertics[i], obstacleVertics[i + 1]);
-            const bPos = (i + 2) % 8 === 0 ? new Coord(obstacleVertics[i - 6], obstacleVertics[i - 5]) : new Coord(obstacleVertics[i + 2], obstacleVertics[i + 3]);
-            if (KeyPress.get('i') && (i + 2) % 8 !== 0) console.log(i, aPos, bPos);
+            let aPos = new Coord(obstacleVertics[i], obstacleVertics[i + 1]);
+            let bPos = (i + 2) % 8 === 0 ? new Coord(obstacleVertics[i - 6], obstacleVertics[i - 5]) : new Coord(obstacleVertics[i + 2], obstacleVertics[i + 3]);
+
             if (aPos.sub(lightPos).length() > radius || bPos.sub(lightPos).length() > radius) { continue; }
             const aVector = aPos.sub(lightPos).normalize();
             const bVector = bPos.sub(lightPos).normalize();
-            const aCirclePos = lightPos.add(aVector.mult(radius));
-            const bcirclePos = lightPos.add(bVector.mult(radius));
+            let aCirclePos = lightPos.add(aVector.mult(radius));
+            let bcirclePos = lightPos.add(bVector.mult(radius));
             const aVectorVertical = aVector.rotate(-Math.PI / 2);
             const bVectorVertical = bVector.rotate(Math.PI / 2);
             const intersectLength = Math.abs(aCirclePos.sub(bcirclePos).x / (bVectorVertical.x - aVectorVertical.x));
-            const intersectPos = aCirclePos.add(aVectorVertical.mult(intersectLength));
-            if (KeyPress.get('l')) console.log(aVector, aCirclePos, lightPos, radius);
+            let intersectPos = aCirclePos.add(aVectorVertical.mult(intersectLength));
+
+            aPos = worldToScreenPixelPos(aPos);
+            bPos = worldToScreenPixelPos(bPos);
+            aCirclePos = worldToScreenPixelPos(aCirclePos);
+            bcirclePos = worldToScreenPixelPos(bcirclePos);
+            intersectPos = worldToScreenPixelPos(intersectPos);
+
             vertices.push(...[
 
                 aCirclePos.x, aCirclePos.y,
@@ -59,21 +71,11 @@ class Shadow {
                 intersectPos.x, intersectPos.y,
                 bcirclePos.x, bcirclePos.y,
 
-                // aCirclePos.x, aCirclePos.y,
-                // bcirclePos.x, bcirclePos.y,
-                // aPos.x, aPos.y,
-
-                // aPos.x, aPos.y,
-                // bcirclePos.x, bcirclePos.y,
-                // bPos.x, bPos.y,
-
             ])
         }
 
-        if (KeyPress.get('o')) console.log(vertices);
         this.shadowMesh.drawWithBuffer(vertices, [
-            { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
-            { name: 'u_translation', data: [offset.x, offset.y] }
+            { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] }
         ])
     }
 

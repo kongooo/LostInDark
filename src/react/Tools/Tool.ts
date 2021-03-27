@@ -1,14 +1,17 @@
+import KeyPress from '../Tools/Event/KeyEvent';
+
 class Coord {
     x: number;
     y: number;
 
     constructor(x: number, y?: number) {
         this.x = x;
-        this.y = y ? y : x;
+        this.y = y !== undefined ? y : x;
     }
 
     add = (pos: Coord | number) => {
-        return new Coord(this.x + (typeof pos === 'number' ? pos : pos.x), this.y + (typeof pos === 'number' ? pos : pos.y));
+        const res = new Coord(this.x + (typeof pos === 'number' ? pos : pos.x), this.y + (typeof pos === 'number' ? pos : pos.y));
+        return res;
     }
 
     sub = (pos: Coord) => {

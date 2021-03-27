@@ -36,9 +36,10 @@ class PerlinMap {
         this.MapMesh = MapMesh;
     }
 
-    vertics: Array<number> = [];
+    private vertics: Array<number> = [];
     private indices: Array<number> = [];
     private noiseValue: number = 0;
+    vertexWorldPos: Array<number> = [];
 
     size: number = SIZE;
 
@@ -87,9 +88,12 @@ class PerlinMap {
         let count = 0;
         this.vertics = [];
         this.indices = [];
+        this.vertexWorldPos = [];
         for (let x = -1; x < xCount + 1; x++)
             for (let y = -1; y < yCount + 1; y++) {
-                const num = this.noise.get(Math.floor(x + startX) / ZOOM, Math.floor(y + startY) / ZOOM);
+                const xWorldPos = Math.floor(x + startX);
+                const yWorldPos = Math.floor(y + startY);
+                const num = this.noise.get(xWorldPos / ZOOM, yWorldPos / ZOOM);
                 if (num > THRESHOLD) {
                     const X = x * SIZE;
                     const Y = y * SIZE;
@@ -106,6 +110,12 @@ class PerlinMap {
                         count * RECT_VERTEX_COUNT,
                         count * RECT_VERTEX_COUNT + 2,
                         count * RECT_VERTEX_COUNT + 3,
+                    ])
+                    this.vertexWorldPos.push(...[
+                        xWorldPos, yWorldPos,
+                        xWorldPos + 1, yWorldPos,
+                        xWorldPos + 1, yWorldPos + 1,
+                        xWorldPos, yWorldPos + 1
                     ])
                     count++;
                 }
