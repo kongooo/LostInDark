@@ -6,6 +6,11 @@ import Canvas from './Light/Canvas';
 import KeyPress from '../Tools/Event/KeyEvent';
 import { Coord } from '../Tools/Tool';
 
+import rectVsSource from '../shaders/RectShader/vsSource.glsl';
+import rectFsSource from '../shaders/RectShader/fsSource.glsl';
+import blurVsSource from '../shaders/BlurShader/vsSource.glsl';
+import blurFsSource from '../shaders/BlurShader/fsSource.glsl';
+
 const PLAYER_SPEED = 3;
 const CAMERA_SPEED = 1;
 const BACK_COLOR = { r: 246, g: 246, b: 246 };
@@ -27,8 +32,8 @@ class Game {
         this.cameraWorldPos = center;
         this.playerLight = new Light(gl);
         this.shadow = new Shadow(gl);
-        this.lightCanvas = new Canvas(gl);
-        this.shadowCanvas = new Canvas(gl);
+        this.lightCanvas = new Canvas(gl, rectVsSource, rectFsSource);
+        this.shadowCanvas = new Canvas(gl, blurVsSource, blurFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
         this.playerWorldPos = new Coord(emptyPos.x, emptyPos.y);
     }
@@ -71,7 +76,7 @@ class Game {
         const gl = this.gl;
         gl.disable(gl.BLEND);
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadow.fBufferInfo.frameBuffer);
-        gl.clearColor(1, 1, 1, 0.1);
+        gl.clearColor(1, 1, 1, 0.05);
         gl.clear(gl.COLOR_BUFFER_BIT);
         this.shadow.draw(this.map.vertexWorldPos, this.playerWorldPos, this.playerLight.lightRadius * PLAYER_LIGHT_SCALE, this.cameraOffset, this.worldToScreenPixelPos);
     }
@@ -107,6 +112,7 @@ class Game {
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.enable(gl.BLEND);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+        // gl.blendFunc(gl.DST_COLOR, 0);
         this.shadowCanvas.draw(this.shadow.fBufferInfo.targetTexture);
     }
 

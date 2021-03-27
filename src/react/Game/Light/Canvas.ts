@@ -1,6 +1,3 @@
-import rectVsSource from '../../shaders/RectShader/vsSource.glsl';
-import rectFsSource from '../../shaders/RectShader/fsSource.glsl';
-
 import StaticMesh from '../../Tools/Mesh/StaticMesh';
 
 class Canvas {
@@ -8,9 +5,9 @@ class Canvas {
     private gl: WebGL2RenderingContext;
     private canvasMesh: StaticMesh;
 
-    constructor(gl: WebGL2RenderingContext) {
+    constructor(gl: WebGL2RenderingContext, vsSource: string, fsSource: string) {
 
-        const mesh = new StaticMesh(gl, rectVsSource, rectFsSource);
+        const mesh = new StaticMesh(gl, vsSource, fsSource);
         mesh.getAttributeLocations([
             { name: 'a_position', size: 2 },
             { name: 'a_texCoord', size: 2 }
