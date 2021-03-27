@@ -13,6 +13,7 @@ class Light {
     private lightMesh: StaticMesh;
     private gl: WebGL2RenderingContext;
     fBufferInfo: { frameBuffer: WebGLFramebuffer, targetTexture: WebGLTexture };
+
     constructor(gl: WebGL2RenderingContext) {
         const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         const LightMesh = new StaticMesh(gl, lightVsSource, lightFsSource);

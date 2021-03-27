@@ -36,7 +36,7 @@ class PerlinMap {
         this.MapMesh = MapMesh;
     }
 
-    private vertics: Array<number> = [];
+    vertics: Array<number> = [];
     private indices: Array<number> = [];
     private noiseValue: number = 0;
 
