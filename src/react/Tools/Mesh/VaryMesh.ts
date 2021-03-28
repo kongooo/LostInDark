@@ -25,6 +25,7 @@ class VaryMesh extends Mesh {
         const gl = this.gl;
         gl.useProgram(this.shaderProgram);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
+
         this.setUniformLocation(uniforms);
         if (texture) {
             gl.bindTexture(gl.TEXTURE_2D, texture);

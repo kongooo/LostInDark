@@ -78,7 +78,7 @@ class Game {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadow.fBufferInfo.frameBuffer);
         gl.clearColor(1, 1, 1, 0.05);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        this.shadow.draw(this.map.vertexWorldPos, { x: this.playerWorldPos.x + 0.45, y: this.playerWorldPos.y + 0.55 }, this.playerLight.lightRadius * PLAYER_LIGHT_SCALE, this.cameraOffset, this.worldToScreenPixelPos);
+        this.shadow.draw(this.map.vertexWorldPos, { x: this.playerWorldPos.x + 0.45, y: this.playerWorldPos.y + 0.45 }, (this.playerLight.lightRadius * PLAYER_LIGHT_SCALE) / (this.map.size / 4), this.worldToScreenPixelPos);
     }
 
     private drawLight = () => {

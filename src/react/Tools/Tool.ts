@@ -42,6 +42,41 @@ class CoordUtils {
         return { x: Math.cos(curTheta - theta), y: Math.sin(curTheta - theta) };
     }
 
+    static calTheta = (vector: Coord) => Math.acos(vector.x);
+
+    static calDistance = (aPos: Coord, bPos: Coord) => {
+        const x = bPos.x - aPos.x;
+        const y = bPos.y - aPos.y;
+        return Math.sqrt(x * x + y * y);
+    }
+
+    static calPointToLineDis = (point: Coord, aPos: Coord, bPos: Coord) => {
+        const a = CoordUtils.calDistance(aPos, bPos);
+        const b = CoordUtils.calDistance(aPos, point);
+        const c = CoordUtils.calDistance(bPos, point);
+        const s = (a + b + c) / 2;
+        const A = Math.sqrt(s * (s - a) * (s - b) * (s - c));
+        return A / (2 * a);
+    }
+
+    static calLineIntersection = (aPos: Coord, aVector: Coord, bPos: Coord, bVector: Coord) => {
+        const k1 = aVector.y / aVector.x;
+        const k2 = bVector.y / bVector.x;
+        const b1 = aPos.y - aPos.x * k1;
+        const b2 = bPos.y - bPos.x * k2;
+
+        const x = (b2 - b1) / (k1 - k2);
+        const y = k1 * x + b1;
+        return { x, y };
+    }
+
+    static calCircleLinePos = (circlePos: Coord, radius: number, aPos: Coord, bPos: Coord) => {
+        const centerPos = CoordUtils.division(CoordUtils.add(aPos, bPos), 2);
+        const centerToCircle = CoordUtils.calDistance(centerPos, circlePos);
+        const len = (radius * radius) / centerToCircle;
+        const centerVector = CoordUtils.normalize(CoordUtils.sub(centerPos, circlePos));
+        return CoordUtils.add(circlePos, CoordUtils.mult(centerVector, len));
+    }
 }
 
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);

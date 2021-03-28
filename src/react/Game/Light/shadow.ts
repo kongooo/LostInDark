@@ -31,12 +31,12 @@ class Shadow {
      * @param obstacleVertics 障碍物世界坐标
      * @param lightPos 光源世界坐标
      * @param radius 光源半径
-     * @param offset 摄像机偏移
      */
-    draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, offset: Coord, worldToScreenPixelPos: (worldPos: Coord) => Coord) => {
+    draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, worldToScreenPixelPos: (worldPos: Coord) => Coord) => {
         let vertices = [];
 
         for (let i = 0; i < obstacleVertics.length - 3; i += 2) {
+
             let aPos = { x: obstacleVertics[i], y: obstacleVertics[i + 1] };
             let bPos = (i + 2) % 8 === 0 ? { x: obstacleVertics[i - 6], y: obstacleVertics[i - 5] } : { x: obstacleVertics[i + 2], y: obstacleVertics[i + 3] };
 
@@ -46,10 +46,8 @@ class Shadow {
             const bVector = CoordUtils.normalize(CoordUtils.sub(bPos, lightPos));
             let aCirclePos = CoordUtils.add(lightPos, CoordUtils.mult(aVector, radius));
             let bcirclePos = CoordUtils.add(lightPos, CoordUtils.mult(bVector, radius));
-            const aVectorVertical = CoordUtils.rotate(aVector, -Math.PI / 2);
-            const bVectorVertical = CoordUtils.rotate(bVector, Math.PI / 2);
-            const intersectLength = Math.abs(CoordUtils.sub(aCirclePos, bcirclePos).x / (bVectorVertical.x - aVectorVertical.x));
-            let intersectPos = CoordUtils.add(aCirclePos, CoordUtils.mult(aVectorVertical, intersectLength));
+
+            let intersectPos = CoordUtils.calCircleLinePos(lightPos, radius, aCirclePos, bcirclePos);
 
             aPos = worldToScreenPixelPos(aPos);
             bPos = worldToScreenPixelPos(bPos);
@@ -62,11 +60,11 @@ class Shadow {
                 aCirclePos.x, aCirclePos.y,
                 intersectPos.x, intersectPos.y,
                 aPos.x, aPos.y,
-                //
+
                 aPos.x, aPos.y,
                 intersectPos.x, intersectPos.y,
                 bPos.x, bPos.y,
-                //
+
                 bPos.x, bPos.y,
                 intersectPos.x, intersectPos.y,
                 bcirclePos.x, bcirclePos.y,
