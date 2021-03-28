@@ -4,7 +4,7 @@ import Light from './Light/light';
 import Shadow from './Light/shadow';
 import Canvas from './Light/Canvas';
 import KeyPress from '../Tools/Event/KeyEvent';
-import { Coord } from '../Tools/Tool';
+import { Coord, CoordUtils } from '../Tools/Tool';
 
 import rectVsSource from '../shaders/RectShader/vsSource.glsl';
 import rectFsSource from '../shaders/RectShader/fsSource.glsl';
@@ -35,14 +35,14 @@ class Game {
         this.lightCanvas = new Canvas(gl, rectVsSource, rectFsSource);
         this.shadowCanvas = new Canvas(gl, blurVsSource, blurFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
-        this.playerWorldPos = new Coord(emptyPos.x, emptyPos.y);
+        this.playerWorldPos = { x: emptyPos.x, y: emptyPos.y };
     }
 
     private deltaTime: number = 0;
     private lastTime: number = 0;
     private playerWorldPos: Coord;
     private cameraWorldPos: Coord;
-    private cameraOffset: Coord = new Coord(0, 0);
+    private cameraOffset: Coord = { x: 0, y: 0 };
 
     start = () => {
         this.update(0);
@@ -78,7 +78,7 @@ class Game {
         gl.bindFramebuffer(gl.FRAMEBUFFER, this.shadow.fBufferInfo.frameBuffer);
         gl.clearColor(1, 1, 1, 0.05);
         gl.clear(gl.COLOR_BUFFER_BIT);
-        this.shadow.draw(this.map.vertexWorldPos, new Coord(this.playerWorldPos.x + 0.45, this.playerWorldPos.y + 0.55), this.playerLight.lightRadius * PLAYER_LIGHT_SCALE, this.cameraOffset, this.worldToScreenPixelPos);
+        this.shadow.draw(this.map.vertexWorldPos, { x: this.playerWorldPos.x + 0.45, y: this.playerWorldPos.y + 0.55 }, this.playerLight.lightRadius * PLAYER_LIGHT_SCALE, this.cameraOffset, this.worldToScreenPixelPos);
     }
 
     private drawLight = () => {
@@ -127,7 +127,7 @@ class Game {
 
     private cameraController = () => {
         const cameraCenterPos = this.cameraCornerToCenter(this.cameraWorldPos);
-        const cameraToPlayer = this.playerWorldPos.sub(new Coord(cameraCenterPos.x, cameraCenterPos.y));
+        const cameraToPlayer = CoordUtils.sub(this.playerWorldPos, cameraCenterPos);
         this.cameraWorldPos.x += cameraToPlayer.x * this.deltaTime * CAMERA_SPEED;
         this.cameraWorldPos.y += cameraToPlayer.y * this.deltaTime * CAMERA_SPEED;
     }
@@ -141,8 +141,8 @@ class Game {
         const disY = (FloorY - startPos.y) * this.map.size;
 
         //最终偏移值
-        const offSet = { x: disX !== 0 ? disX : this.cameraOffset.x, y: disY !== 0 ? disY : this.cameraOffset.y };
-        this.cameraOffset = new Coord(offSet.x, offSet.y);
+        this.cameraOffset = { x: disX !== 0 ? disX : this.cameraOffset.x, y: disY !== 0 ? disY : this.cameraOffset.y };
+
     }
 
     //碰撞检测
@@ -152,7 +152,7 @@ class Game {
         for (let x = this.playerWorldPos.x - 1; x <= this.playerWorldPos.x + 1; x++) {
             for (let y = this.playerWorldPos.y - dir; dir === 1 ? y <= this.playerWorldPos.y + dir : y >= this.playerWorldPos.y + dir; y += dir) {
                 if (this.map.obstacled(x, y)) {
-                    const obstacleRealPos = new Coord(Math.floor(x), Math.floor(y));
+                    const obstacleRealPos = { x: Math.floor(x), y: Math.floor(y) };
                     const intersected = this.intersected(obstacleRealPos, this.playerWorldPos, 1, this.player.getSize());
                     if (intersected) {
                         const intersectRect = this.getInterSectedRect(obstacleRealPos, this.playerWorldPos, 1, this.player.getSize());
@@ -185,7 +185,7 @@ class Game {
                             if (KeyPress.get('s')) offset.y = intersectRect.c1.y - intersectRect.c0.y;
 
                         }
-                        this.playerWorldPos = this.playerWorldPos.add(new Coord(offset.x, offset.y));
+                        this.playerWorldPos = CoordUtils.add(this.playerWorldPos, offset);
                     }
                 }
             }
@@ -195,16 +195,16 @@ class Game {
     //判断两个矩形是否相交，a0、a1分别为左下角、右上角坐标
     private intersected = (a0: Coord, b0: Coord, aSize: number, bSize: number) => {
 
-        const a1 = a0.add(aSize);
-        const b1 = b0.add(bSize);
+        const a1 = CoordUtils.add(a0, aSize);
+        const b1 = CoordUtils.add(b0, bSize);
 
         return Math.max(a0.x, b0.x) < Math.min(a1.x, b1.x) && Math.max(a0.y, b0.y) < Math.min(a1.y, b1.y);
     }
 
     //得到两个矩形的相交矩形
     private getInterSectedRect = (a0: Coord, b0: Coord, aSize: number, bSize: number) => {
-        const a1 = a0.add(aSize);
-        const b1 = b0.add(bSize);
+        const a1 = CoordUtils.add(a0, aSize);
+        const b1 = CoordUtils.add(b0, bSize);
         const c0 = { x: Math.max(a0.x, b0.x), y: Math.max(a0.y, b0.y) };
         const c1 = { x: Math.min(a1.x, b1.x), y: Math.min(a1.y, b1.y) };
 
@@ -212,29 +212,29 @@ class Game {
     }
 
     private screenToWorldPos = (screenPos: Coord) => {
-        return screenPos.add(this.cameraWorldPos);
+        return CoordUtils.add(screenPos, this.cameraWorldPos);
     }
 
     private worldToScreenPos = (worldPos: Coord) => {
-        return worldPos.sub(this.cameraWorldPos);
+        return CoordUtils.sub(worldPos, this.cameraWorldPos);
     }
 
     private worldToScreenPixelPos = (worldPos: Coord) => {
         const screenPos = this.worldToScreenPos(worldPos);
-        return screenPos.mult(this.map.size);
+        return CoordUtils.mult(screenPos, this.map.size);
     }
 
     private cameraCornerToCenter = (cornerPos: Coord) => {
         const xCount = this.gl.canvas.width / (this.map.size * 2);
         const yCount = this.gl.canvas.height / (this.map.size * 2);
-        const cameraCenterPos = cornerPos.add(new Coord(xCount, yCount));
+        const cameraCenterPos = CoordUtils.add(cornerPos, { x: xCount, y: yCount });
         return cameraCenterPos;
     }
 
     private cameraCenterToConrner = (centerPos: Coord) => {
         const xCount = this.gl.canvas.width / (this.map.size * 2);
         const yCount = this.gl.canvas.height / (this.map.size * 2);
-        const cameraCornerPos = centerPos.sub(new Coord(xCount, yCount));
+        const cameraCornerPos = CoordUtils.sub(centerPos, { x: xCount, y: yCount });
         return cameraCornerPos;
     }
 }

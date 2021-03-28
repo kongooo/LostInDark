@@ -5,7 +5,7 @@ import VaryMesh from '../../Tools/Mesh/VaryMesh';
 
 import { WebGL } from '../../Tools/WebGLUtils';
 
-import { Coord } from '../../Tools/Tool';
+import { Coord, CoordUtils } from '../../Tools/Tool';
 
 class Shadow {
 
@@ -37,18 +37,19 @@ class Shadow {
         let vertices = [];
 
         for (let i = 0; i < obstacleVertics.length - 3; i += 2) {
-            let aPos = new Coord(obstacleVertics[i], obstacleVertics[i + 1]);
-            let bPos = (i + 2) % 8 === 0 ? new Coord(obstacleVertics[i - 6], obstacleVertics[i - 5]) : new Coord(obstacleVertics[i + 2], obstacleVertics[i + 3]);
+            let aPos = { x: obstacleVertics[i], y: obstacleVertics[i + 1] };
+            let bPos = (i + 2) % 8 === 0 ? { x: obstacleVertics[i - 6], y: obstacleVertics[i - 5] } : { x: obstacleVertics[i + 2], y: obstacleVertics[i + 3] };
 
-            if (aPos.sub(lightPos).length() > radius || bPos.sub(lightPos).length() > radius) { continue; }
-            const aVector = aPos.sub(lightPos).normalize();
-            const bVector = bPos.sub(lightPos).normalize();
-            let aCirclePos = lightPos.add(aVector.mult(radius));
-            let bcirclePos = lightPos.add(bVector.mult(radius));
-            const aVectorVertical = aVector.rotate(-Math.PI / 2);
-            const bVectorVertical = bVector.rotate(Math.PI / 2);
-            const intersectLength = Math.abs(aCirclePos.sub(bcirclePos).x / (bVectorVertical.x - aVectorVertical.x));
-            let intersectPos = aCirclePos.add(aVectorVertical.mult(intersectLength));
+            if (CoordUtils.len(CoordUtils.sub(aPos, lightPos)) > radius || CoordUtils.len(CoordUtils.sub(bPos, lightPos)) > radius) continue;
+
+            const aVector = CoordUtils.normalize(CoordUtils.sub(aPos, lightPos));
+            const bVector = CoordUtils.normalize(CoordUtils.sub(bPos, lightPos));
+            let aCirclePos = CoordUtils.add(lightPos, CoordUtils.mult(aVector, radius));
+            let bcirclePos = CoordUtils.add(lightPos, CoordUtils.mult(bVector, radius));
+            const aVectorVertical = CoordUtils.rotate(aVector, -Math.PI / 2);
+            const bVectorVertical = CoordUtils.rotate(bVector, Math.PI / 2);
+            const intersectLength = Math.abs(CoordUtils.sub(aCirclePos, bcirclePos).x / (bVectorVertical.x - aVectorVertical.x));
+            let intersectPos = CoordUtils.add(aCirclePos, CoordUtils.mult(aVectorVertical, intersectLength));
 
             aPos = worldToScreenPixelPos(aPos);
             bPos = worldToScreenPixelPos(bPos);

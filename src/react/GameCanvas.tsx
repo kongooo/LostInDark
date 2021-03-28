@@ -3,8 +3,6 @@ import { useEffect } from "react";
 
 import Game from "./Game/index";
 
-import { Coord } from "./Tools/Tool";
-
 export { GameCanvas };
 
 interface GLProps {
@@ -21,7 +19,7 @@ function GameCanvas(props: GLProps) {
       console.error("can't init webgl");
       return;
     }
-    const game = new Game(gl, randomInt(0, 10000), new Coord(1000));
+    const game = new Game(gl, randomInt(0, 10000), { x: 1000, y: 1000 });
     game.start();
   });
 
