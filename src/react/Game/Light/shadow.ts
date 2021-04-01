@@ -5,24 +5,28 @@ import VaryMesh from '../../Tools/Mesh/VaryMesh';
 
 import { WebGL } from '../../Tools/WebGLUtils';
 
-import { Coord, CoordUtils } from '../../Tools/Tool';
+import { Coord, CoordUtils, FrameBufferInfo } from '../../Tools/Tool';
 
 class Shadow {
 
     private shadowMesh: VaryMesh;
     private gl: WebGL2RenderingContext;
-    fBufferInfo: { frameBuffer: WebGLFramebuffer, targetTexture: WebGLTexture };
+    fBufferInfo: FrameBufferInfo;
+    private mapSize: number;
 
-    constructor(gl: WebGL2RenderingContext) {
+    constructor(gl: WebGL2RenderingContext, mapSize: number) {
         const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         const shadowMesh = new VaryMesh(gl, shadowVsSource, shadowFsSource);
-        shadowMesh.getAttributeLocations([{ name: 'a_position', size: 2 }]);
-        shadowMesh.getUniformLocations(['u_resolution']);
+        shadowMesh.getAttributeLocations([
+            { name: 'a_position', size: 2 }
+        ]);
+        shadowMesh.getUniformLocations(['u_resolution', 'u_cameraWorldPos', 'u_mapSize', 'u_image']);
         shadowMesh.getBuffer();
 
         this.fBufferInfo = fBufferInfo;
         this.shadowMesh = shadowMesh;
         this.gl = gl;
+        this.mapSize = mapSize;
     }
 
 
@@ -31,8 +35,9 @@ class Shadow {
      * @param obstacleVertics 障碍物世界坐标
      * @param lightPos 光源世界坐标
      * @param radius 光源半径
+     * @param cameraWorldPos 摄像机世界坐标
      */
-    draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, worldToScreenPixelPos: (worldPos: Coord) => Coord) => {
+    draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, cameraWorldPos: Coord, texture: WebGLTexture) => {
         let vertices = [];
 
         for (let i = 0; i < obstacleVertics.length - 3; i += 2) {
@@ -48,12 +53,6 @@ class Shadow {
             let bcirclePos = CoordUtils.add(lightPos, CoordUtils.mult(bVector, radius));
 
             let intersectPos = CoordUtils.calCircleLinePos(lightPos, radius, aCirclePos, bcirclePos);
-
-            aPos = worldToScreenPixelPos(aPos);
-            bPos = worldToScreenPixelPos(bPos);
-            aCirclePos = worldToScreenPixelPos(aCirclePos);
-            bcirclePos = worldToScreenPixelPos(bcirclePos);
-            intersectPos = worldToScreenPixelPos(intersectPos);
 
             vertices.push(...[
 
@@ -73,10 +72,11 @@ class Shadow {
         }
 
         this.shadowMesh.drawWithBuffer(vertices, [
-            { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] }
-        ])
+            { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
+            { name: 'u_cameraWorldPos', data: [cameraWorldPos.x, cameraWorldPos.y] },
+            { name: 'u_mapSize', data: [this.mapSize] }
+        ], undefined, texture)
     }
-
 }
 
 export default Shadow;

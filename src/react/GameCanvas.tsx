@@ -15,6 +15,7 @@ function GameCanvas(props: GLProps) {
   const canvasRef = React.useRef(null);
   useEffect(() => {
     const gl = canvasRef.current.getContext("webgl2") as WebGL2RenderingContext;
+    (window as any).gl = gl;
     if (!gl) {
       console.error("can't init webgl");
       return;
@@ -30,8 +31,8 @@ function GameCanvas(props: GLProps) {
   return (
     <canvas
       className="gl-root"
-      width={props.width}
-      height={props.height}
+      width={props.width * window.devicePixelRatio}
+      height={props.height * window.devicePixelRatio}
       style={{ width: props.width, height: props.height }}
       ref={canvasRef}
     ></canvas>

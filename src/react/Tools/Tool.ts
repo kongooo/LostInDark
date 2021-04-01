@@ -3,6 +3,12 @@ interface Coord {
     y: number;
 }
 
+interface FrameBufferInfo {
+    renderFrameBuffer: WebGLFramebuffer;
+    textureFrameBuffer: WebGLFramebuffer;
+    targetTexture: WebGLTexture;
+}
+
 class CoordUtils {
 
     static add = (aPos: Coord, bPos: Coord | number) =>
@@ -85,4 +91,4 @@ const lerp = (a: number, b: number, t: number) => a + t * (b - a);
 
 const getDir = (a: number) => a === 0 ? 0 : (a < 0 ? -1 : 1);
 
-export { Coord, CoordUtils, clamp, lerp, getDir };
+export { Coord, CoordUtils, FrameBufferInfo, clamp, lerp, getDir };

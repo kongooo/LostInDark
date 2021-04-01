@@ -69,6 +69,7 @@ class WebGL {
     }
 
     static getFBufferAndTexture = (gl: WebGL2RenderingContext, width: number, height: number) => {
+
         const targetTexture = gl.createTexture();
         gl.bindTexture(gl.TEXTURE_2D, targetTexture);
         {
@@ -86,14 +87,32 @@ class WebGL {
             gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
         }
 
-        const fb = gl.createFramebuffer();
-        gl.bindFramebuffer(gl.FRAMEBUFFER, fb);
+        //创建带有SMAA效果的render buffer
+        //SMAA效果只能在render buffer中使用
+        const renderBuffer = gl.createRenderbuffer();
+        gl.bindRenderbuffer(gl.RENDERBUFFER, renderBuffer);
+        gl.renderbufferStorageMultisample(gl.RENDERBUFFER, 0, gl.RGBA8, gl.canvas.width, gl.canvas.height);
 
-        const attachmentPoint = gl.COLOR_ATTACHMENT0;
-        const level = 0;
-        gl.framebufferTexture2D(gl.FRAMEBUFFER, attachmentPoint, gl.TEXTURE_2D, targetTexture, level);
+        //create render frame buffer
+        const renderFrameBuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, renderFrameBuffer);
+
+        //bind render buffer to current frame buffer
+        gl.framebufferRenderbuffer(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.RENDERBUFFER, renderBuffer);
+
+        //create texture frame buffer
+        const textureFrameBuffer = gl.createFramebuffer();
+        gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
+
+        //bind texture to current frame buffer
+        gl.framebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, targetTexture, 0);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+        gl.bindRenderbuffer(gl.RENDERBUFFER, null);
+
         return {
-            frameBuffer: fb,
+            renderFrameBuffer,
+            textureFrameBuffer,
             targetTexture
         }
     }

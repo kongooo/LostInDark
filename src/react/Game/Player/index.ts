@@ -1,39 +1,38 @@
-import colorRectVsSource from '../../shaders/ColorRectShader/vsSource.glsl';
-import colorRectFsSource from '../../shaders/ColorRectShader/fsSource.glsl';
+import playerVsSource from '../../shaders/PlayerShader/vsSource.glsl';
+import playerFsSource from '../../shaders/PlayerShader/fsSource.glsl';
 
-import StaticMesh from '../../Tools/Mesh/StaticMesh';
+import VaryMesh from '../../Tools/Mesh/VaryMesh';
+import { Coord } from '../../Tools/Tool';
 
-const SIZE = 40;
-const RECT_SIZE = 36;
-const PLAYER_COLOR = [255, 199, 199];
 
 class Player {
-    private playerMesh: StaticMesh;
+    private playerMesh: VaryMesh;
     private gl: WebGL2RenderingContext;
-    constructor(gl: WebGL2RenderingContext) {
-        const playerMesh = new StaticMesh(gl, colorRectVsSource, colorRectFsSource);
+    private size: number;
+
+    constructor(gl: WebGL2RenderingContext, size: number) {
+        const playerMesh = new VaryMesh(gl, playerVsSource, playerFsSource);
         playerMesh.getAttributeLocations([{ name: 'a_position', size: 2 }]);
-        playerMesh.getUniformLocations(['u_resolution', 'u_translation', 'u_color']);
-        playerMesh.getVAO([
-            0, 0,
-            RECT_SIZE, 0,
-            RECT_SIZE, RECT_SIZE,
-            0, RECT_SIZE
-        ], [0, 1, 2, 0, 2, 3]);
+        playerMesh.getUniformLocations(['u_resolution', 'u_cameraWorldPos', 'u_mapSize']);
+        playerMesh.getBuffer();
         this.playerMesh = playerMesh;
         this.gl = gl;
+        this.size = size;
     }
 
-    draw(pos: { x: number, y: number }) {
-        this.playerMesh.drawWithAVO([
-            { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
-            { name: 'u_translation', data: [pos.x * SIZE, pos.y * SIZE] },
-            { name: 'u_color', data: PLAYER_COLOR },
-        ])
+    draw(pos: Coord, cameraWorldPos: Coord, mapSize: number) {
+        this.playerMesh.drawWithBuffer([
+            pos.x, pos.y,
+            pos.x + this.size, pos.y,
+            pos.x + this.size, pos.y + this.size,
+            pos.x, pos.y + this.size
+        ],
+            [
+                { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
+                { name: 'u_cameraWorldPos', data: [cameraWorldPos.x, cameraWorldPos.y] },
+                { name: 'u_mapSize', data: [mapSize] },
+            ], [0, 1, 2, 0, 2, 3]);
     }
-
-    getSize = () => RECT_SIZE / SIZE;
-    getPixelSize = () => RECT_SIZE;
 }
 
 export default Player;
