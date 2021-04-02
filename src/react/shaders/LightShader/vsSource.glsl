@@ -9,12 +9,14 @@ uniform vec2 u_cameraWorldPos;
 
 uniform float u_mapSize;
 
+uniform vec2 u_worldPos;
+
 out vec4 v_color;
 out vec2 v_texCoord;
 out vec2 v_samplePos;
 
 void main() {
-    vec2 screenPos = (a_position - u_cameraWorldPos) * vec2(u_mapSize);
+    vec2 screenPos = (a_position + u_worldPos - u_cameraWorldPos) * vec2(u_mapSize);
     vec2 zeroToOne = screenPos / u_resolution;
     vec2 zeroToTwo = zeroToOne * 2.0;
     vec2 clipSpace = zeroToTwo - 1.0;

@@ -21,6 +21,8 @@ const PLAYER_COLOR = [22, 135, 167];
 const MAP_SIZE = 50;
 const PLAYER_SIZE = 0.9;
 
+const DEFAULT_UNIFORM_NAME = ['u_resolution', 'u_cameraWorldPos', 'u_mapSize'];
+
 class Game {
     private gl: WebGL2RenderingContext;
     private player: Player;
@@ -32,11 +34,11 @@ class Game {
 
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord) {
         this.gl = gl;
-        this.map = new PerlinMap(gl, seed, MAP_SIZE);
-        this.player = new Player(gl, PLAYER_SIZE);
+        this.map = new PerlinMap(gl, seed, MAP_SIZE, DEFAULT_UNIFORM_NAME);
+        this.player = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME);
         this.cameraWorldPos = center;
-        this.playerLight = new Light(gl);
-        this.shadow = new Shadow(gl, this.map.size);
+        this.playerLight = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
+        this.shadow = new Shadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
         this.lightCanvas = new Canvas(gl, rectVsSource, rectFsSource);
         this.mapCanvas = new Canvas(gl, mapCanvasVsSource, mapCanvasFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
@@ -86,12 +88,12 @@ class Game {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
-        //阴影部分r为0，其余部分r为1
-        gl.clearColor(1, 0, 0, 1);
+        //阴影部分alpha为0，其余部分alpha为1
+        gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
-        this.shadow.draw(this.map.vertics, centerPos, PLAYER_LIGHT_RADIUS, this.cameraWorldPos, this.map.fBufferInfo.targetTexture);
+        this.shadow.draw(this.map.vertics, centerPos, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
@@ -107,7 +109,8 @@ class Game {
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        this.playerLight.draw(CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2), PLAYER_LIGHT_RADIUS, this.cameraWorldPos, this.map.size, this.shadow.fBufferInfo.targetTexture);
+        const lightCenter = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
+        this.playerLight.draw(lightCenter, this.shadow.fBufferInfo.targetTexture, this.getDefaultUniform());
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
@@ -123,23 +126,24 @@ class Game {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
-        gl.clearColor(1, 0, 0, 1);
+        gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        this.map.draw(this.cameraWorldPos);
+        this.map.draw(this.cameraWorldPos, this.getDefaultUniform(), [0, 0, 0, 0]);
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
 
     private drawScene = () => {
         const gl = this.gl;
+
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.disable(gl.BLEND);
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         this.mapCanvas.draw(this.map.fBufferInfo.targetTexture, BACK_COLOR, WALL_COLOR);
-        this.player.draw(this.playerWorldPos, this.cameraWorldPos, MAP_SIZE);
+        this.player.draw(this.playerWorldPos, this.getDefaultUniform(), PLAYER_COLOR);
     }
 
     private drawLightToScene = () => {
@@ -266,6 +270,14 @@ class Game {
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
     }
+
+    private getDefaultUniform = () => ([
+        { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
+        { name: 'u_cameraWorldPos', data: [this.cameraWorldPos.x, this.cameraWorldPos.y] },
+        { name: 'u_mapSize', data: [MAP_SIZE] },
+    ])
+
+    private arrayToColor = (array: Array<number>) => (array.map(a => a / 255));
 }
 
 export default Game;

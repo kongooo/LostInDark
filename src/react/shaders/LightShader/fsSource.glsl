@@ -25,7 +25,7 @@ void main() {
     }
     
     vec4 color = vec4(l, l, l, 1);
-    float shadow = texture(u_shadow, v_samplePos).r;
+    float shadow = texture(u_shadow, v_samplePos).a;
     if(shadow == 0.0) {
         color = color * vec4(vec3(0.0), 1);
     }

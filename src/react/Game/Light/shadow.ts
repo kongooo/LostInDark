@@ -6,6 +6,7 @@ import VaryMesh from '../../Tools/Mesh/VaryMesh';
 import { WebGL } from '../../Tools/WebGLUtils';
 
 import { Coord, CoordUtils, FrameBufferInfo } from '../../Tools/Tool';
+import { UniformLocationObj } from '../../Tools/interface';
 
 class Shadow {
 
@@ -14,13 +15,13 @@ class Shadow {
     fBufferInfo: FrameBufferInfo;
     private mapSize: number;
 
-    constructor(gl: WebGL2RenderingContext, mapSize: number) {
+    constructor(gl: WebGL2RenderingContext, mapSize: number, defaultUniformName: Array<string>) {
         const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         const shadowMesh = new VaryMesh(gl, shadowVsSource, shadowFsSource);
         shadowMesh.getAttributeLocations([
             { name: 'a_position', size: 2 }
         ]);
-        shadowMesh.getUniformLocations(['u_resolution', 'u_cameraWorldPos', 'u_mapSize', 'u_image']);
+        shadowMesh.getUniformLocations(['u_image', ...defaultUniformName]);
         shadowMesh.getBuffer();
 
         this.fBufferInfo = fBufferInfo;
@@ -35,9 +36,9 @@ class Shadow {
      * @param obstacleVertics 障碍物世界坐标
      * @param lightPos 光源世界坐标
      * @param radius 光源半径
-     * @param cameraWorldPos 摄像机世界坐标
+     * @param defaultUniform 坐标转换uniform
      */
-    draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, cameraWorldPos: Coord, texture: WebGLTexture) => {
+    draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, defaultUniform: Array<UniformLocationObj>, texture: WebGLTexture) => {
         let vertices = [];
 
         for (let i = 0; i < obstacleVertics.length - 3; i += 2) {
@@ -71,11 +72,7 @@ class Shadow {
             ])
         }
 
-        this.shadowMesh.drawWithBuffer(vertices, [
-            { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
-            { name: 'u_cameraWorldPos', data: [cameraWorldPos.x, cameraWorldPos.y] },
-            { name: 'u_mapSize', data: [this.mapSize] }
-        ], undefined, texture)
+        this.shadowMesh.drawWithBuffer(vertices, defaultUniform, undefined, texture)
     }
 }
 

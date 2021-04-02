@@ -24,6 +24,11 @@ class Mesh {
     protected uniformLocations: Map<string, WebGLUniformLocation> = new Map();
     protected vertexSize: number;
 
+    /**
+     * 
+     * @param attribs attribute object array
+     * @returns attribute object array
+     */
     getAttributeLocations = (attribs: Array<Attrib>) => {
         attribs.forEach((attrib) => {
             const attribLocation = this.gl.getAttribLocation(this.shaderProgram, attrib.name);
@@ -36,6 +41,11 @@ class Mesh {
         return this.attributeLocationObjs;
     }
 
+    /**
+     * 
+     * @param uniforms uniform object array
+     * @returns uniform object array
+     */
     getUniformLocations = (uniforms: Array<string>) => {
         uniforms.forEach((uniform) => {
             const uniformLocation = this.gl.getUniformLocation(this.shaderProgram, uniform);
@@ -59,4 +69,5 @@ class Mesh {
             WebGL.setUniform(this.gl, this.uniformLocations.get(uniformObj.name), uniformObj.data);
         })
     }
+
 }
