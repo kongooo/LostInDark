@@ -100,6 +100,14 @@ class PerlinMap {
         this.vertics = [];
         this.indices = [];
 
+        // this.vertics.push(...[
+        //     startX + this.mapCount.x / 2, startY + this.mapCount.y / 2,
+        //     startX + this.mapCount.x / 2 + 1, startY + this.mapCount.y / 2,
+        //     startX + this.mapCount.x / 2 + 1, startY + this.mapCount.y / 2 + 1,
+        //     startX + this.mapCount.x / 2, startY + this.mapCount.y / 2 + 1,
+        // ]);
+        // this.indices.push(...[0, 1, 2, 0, 2, 3]);
+
         for (let x = -1; x < this.mapCount.x + 1; x++)
             for (let y = -1; y < this.mapCount.y + 1; y++) {
                 const xWorldPos = Math.floor(x + startX);

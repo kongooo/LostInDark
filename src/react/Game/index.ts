@@ -1,7 +1,8 @@
 import PerlinMap from './Map/index';
 import Player from './Player/index';
 import Light from './Light/light';
-import Shadow from './Light/shadow';
+import HardShadow from './Light/HardShadow';
+import SoftShadow from './Light/SoftShadow';
 import Canvas from './Light/Canvas';
 import KeyPress from '../Tools/Event/KeyEvent';
 import { Coord, CoordUtils } from '../Tools/Tool';
@@ -14,12 +15,13 @@ import mapCanvasFsSource from '../shaders/MapCanvasShader/fsSource.glsl';
 
 const PLAYER_SPEED = 3;
 const CAMERA_SPEED = 1;
-const BACK_COLOR = [211, 224, 234];
-const WALL_COLOR = [39, 102, 120];
+const BACK_COLOR = [244, 249, 249];
+const WALL_COLOR = [170, 170, 170];
 const PLAYER_LIGHT_RADIUS = 15;
-const PLAYER_COLOR = [22, 135, 167];
+const PLAYER_COLOR = [164, 235, 243];
 const MAP_SIZE = 50;
 const PLAYER_SIZE = 0.9;
+const LIGHT_SIZE = 0.3;
 
 const DEFAULT_UNIFORM_NAME = ['u_resolution', 'u_cameraWorldPos', 'u_mapSize'];
 
@@ -30,7 +32,8 @@ class Game {
     private playerLight: Light;
     private lightCanvas: Canvas;
     private mapCanvas: Canvas;
-    private shadow: Shadow;
+    private hardShadow: HardShadow;
+    private softShadow: SoftShadow;
 
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord) {
         this.gl = gl;
@@ -38,7 +41,8 @@ class Game {
         this.player = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME);
         this.cameraWorldPos = center;
         this.playerLight = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
-        this.shadow = new Shadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
+        this.hardShadow = new HardShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
+        this.softShadow = new SoftShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
         this.lightCanvas = new Canvas(gl, rectVsSource, rectFsSource);
         this.mapCanvas = new Canvas(gl, mapCanvasVsSource, mapCanvasFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
@@ -72,7 +76,8 @@ class Game {
 
         this.drawMapTexture();
         //shadow必须在light前绘制
-        this.drawShadowTexture();
+        // this.drawHardShadowTexture();
+        this.drawSoftShadowTexture();
         this.drawLightTexture();
 
         this.drawScene();
@@ -80,11 +85,11 @@ class Game {
         this.drawLightToScene();
     }
 
-    private drawShadowTexture = () => {
+    private drawHardShadowTexture = () => {
         const gl = this.gl;
         gl.disable(gl.BLEND);
 
-        const { renderFrameBuffer, textureFrameBuffer } = this.shadow.fBufferInfo;
+        const { renderFrameBuffer, textureFrameBuffer } = this.hardShadow.fBufferInfo;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
@@ -93,10 +98,30 @@ class Game {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
-        this.shadow.draw(this.map.vertics, centerPos, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+        this.hardShadow.drawHardShadow(this.map.vertics, centerPos, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
+
+
+    private drawSoftShadowTexture = () => {
+        const gl = this.gl;
+        gl.disable(gl.BLEND);
+
+        const { renderFrameBuffer, textureFrameBuffer } = this.softShadow.fBufferInfo;
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
+
+        //阴影部分alpha为0，其余部分alpha为1
+        gl.clearColor(0, 0, 0, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
+        this.softShadow.drawSoftShadow(this.map.vertics, centerPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+
+        // this.blit(renderFrameBuffer, textureFrameBuffer);
+    }
+
 
     private drawLightTexture = () => {
         const gl = this.gl;
@@ -109,8 +134,12 @@ class Game {
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        const lightCenter = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
-        this.playerLight.draw(lightCenter, this.shadow.fBufferInfo.targetTexture, this.getDefaultUniform());
+        const lightCenter = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2);
+
+        //hard shadow
+        // this.playerLight.draw(lightCenter, this.hardShadow.fBufferInfo.targetTexture, this.getDefaultUniform());
+        //soft shadow
+        this.playerLight.draw(lightCenter, this.softShadow.fBufferInfo.targetTexture, this.getDefaultUniform());
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }

@@ -1,5 +1,5 @@
-import shadowVsSource from '../../shaders/ShadowShader/vsSource.glsl';
-import shadowFsSource from '../../shaders/ShadowShader/fsSource.glsl';
+import shadowVsSource from '../../shaders/HardShadowShader/vsSource.glsl';
+import shadowFsSource from '../../shaders/HardShadowShader/fsSource.glsl';
 
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
 
@@ -8,7 +8,7 @@ import { WebGL } from '../../Tools/WebGLUtils';
 import { Coord, CoordUtils, FrameBufferInfo } from '../../Tools/Tool';
 import { UniformLocationObj } from '../../Tools/interface';
 
-class Shadow {
+class HardShadow {
 
     private shadowMesh: VaryMesh;
     private gl: WebGL2RenderingContext;
@@ -38,7 +38,7 @@ class Shadow {
      * @param radius 光源半径
      * @param defaultUniform 坐标转换uniform
      */
-    draw = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, defaultUniform: Array<UniformLocationObj>, texture: WebGLTexture) => {
+    drawHardShadow = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, defaultUniform: Array<UniformLocationObj>, texture: WebGLTexture) => {
         let vertices = [];
 
         for (let i = 0; i < obstacleVertics.length - 3; i += 2) {
@@ -72,8 +72,11 @@ class Shadow {
             ])
         }
 
-        this.shadowMesh.drawWithBuffer(vertices, defaultUniform, undefined, texture)
+        this.shadowMesh.drawWithBuffer(vertices, [
+            { name: 'u_image', data: [0] },
+            ...defaultUniform
+        ], undefined, texture)
     }
 }
 
-export default Shadow;
+export default HardShadow;
