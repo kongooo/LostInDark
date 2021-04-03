@@ -17,7 +17,7 @@ const PLAYER_SPEED = 3;
 const CAMERA_SPEED = 1;
 const BACK_COLOR = [244, 249, 249];
 const WALL_COLOR = [170, 170, 170];
-const PLAYER_LIGHT_RADIUS = 15;
+const PLAYER_LIGHT_RADIUS = 20;
 const PLAYER_COLOR = [164, 235, 243];
 const MAP_SIZE = 50;
 const PLAYER_SIZE = 0.9;
@@ -107,13 +107,15 @@ class Game {
     private drawSoftShadowTexture = () => {
         const gl = this.gl;
         gl.disable(gl.BLEND);
-
+        gl.enable(gl.BLEND);
+        //1 - 遮挡率 = 亮度
+        gl.blendEquation(gl.FUNC_REVERSE_SUBTRACT);
+        gl.blendFunc(gl.ONE, gl.ONE);
         const { renderFrameBuffer, textureFrameBuffer } = this.softShadow.fBufferInfo;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
-        //阴影部分alpha为0，其余部分alpha为1
-        gl.clearColor(0, 0, 0, 1);
+        gl.clearColor(1, 1, 1, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
@@ -179,6 +181,7 @@ class Game {
         const gl = this.gl;
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
         gl.enable(gl.BLEND);
+        gl.blendEquation(gl.FUNC_ADD);
         gl.blendFunc(gl.DST_COLOR, 0);
         this.lightCanvas.draw(this.playerLight.fBufferInfo.targetTexture);
     }

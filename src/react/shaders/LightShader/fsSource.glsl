@@ -25,8 +25,8 @@ void main() {
     }
     
     vec4 color = vec4(l, l, l, 1);
-    float shadow = texture(u_shadow, v_samplePos).a;
-    color = color * vec4(vec3(shadow), 1);
+    vec4 brightness = texture(u_shadow, v_samplePos);
+    color = color * vec4(vec3(brightness), 1);
 
     outPutColor = color;
 }
