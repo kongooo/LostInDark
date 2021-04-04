@@ -21,7 +21,8 @@ class SoftShadow {
         const shadowMesh = new VaryMesh(gl, shadowVsSource, shadowFsSource);
         shadowMesh.getAttributeLocations([
             { name: 'a_position', size: 2 },
-            { name: 'a_ABposition', size: 4 }
+            { name: 'a_ABposition', size: 4 },
+            { name: 'a_situation', size: 1 }
         ]);
         shadowMesh.getUniformLocations(['u_map', 'u_lightPos', 'u_lightSize', ...defaultUniformName]);
         shadowMesh.getBuffer();
@@ -71,9 +72,9 @@ class SoftShadow {
                 // console.log(SR, TR);
 
                 vertices.push(...[
-                    S.x, S.y, A.x, A.y, B.x, B.y,
-                    T.x, T.y, A.x, A.y, B.x, B.y,
-                    A.x, A.y, A.x, A.y, B.x, B.y,
+                    S.x, S.y, A.x, A.y, B.x, B.y, 1,
+                    T.x, T.y, A.x, A.y, B.x, B.y, 1,
+                    A.x, A.y, A.x, A.y, B.x, B.y, 1
                 ])
             }
             //如果B在A上方
@@ -90,9 +91,9 @@ class SoftShadow {
                 // console.log(SR, TR);
 
                 vertices.push(...[
-                    S.x, S.y, A.x, A.y, B.x, B.y,
-                    T.x, T.y, A.x, A.y, B.x, B.y,
-                    B.x, B.y, A.x, A.y, B.x, B.y,
+                    S.x, S.y, A.x, A.y, B.x, B.y, -1,
+                    T.x, T.y, A.x, A.y, B.x, B.y, -1,
+                    B.x, B.y, A.x, A.y, B.x, B.y, -1
                 ])
             } else {
 
@@ -155,12 +156,12 @@ class SoftShadow {
                 if (KeyPress.get('p')) console.log(A, B, C, D);
 
                 vertices.push(...[
-                    C.x, C.y, A.x, A.y, B.x, B.y,
-                    D.x, D.y, A.x, A.y, B.x, B.y,
-                    A.x, A.y, A.x, A.y, B.x, B.y,
-                    A.x, A.y, A.x, A.y, B.x, B.y,
-                    D.x, D.y, A.x, A.y, B.x, B.y,
-                    B.x, B.y, A.x, A.y, B.x, B.y,
+                    C.x, C.y, A.x, A.y, B.x, B.y, 0,
+                    D.x, D.y, A.x, A.y, B.x, B.y, 0,
+                    A.x, A.y, A.x, A.y, B.x, B.y, 0,
+                    A.x, A.y, A.x, A.y, B.x, B.y, 0,
+                    D.x, D.y, A.x, A.y, B.x, B.y, 0,
+                    B.x, B.y, A.x, A.y, B.x, B.y, 0
                 ])
             }
 

@@ -10,6 +10,10 @@ in vec2 v_samplePos;
 
 out vec4 outPutColor;
 
+// float clamp(float num, float minNum, float maxNum) {
+//     return max(min(num, maxNum), minNum);
+// }
+
 void main() {
     vec2 circle_pos = (v_texCoord - vec2(0.5)) * vec2(2.0);
     float distance = circle_pos.x * circle_pos.x + circle_pos.y * circle_pos.y;
@@ -25,7 +29,7 @@ void main() {
     }
     
     vec4 color = vec4(l, l, l, 1);
-    vec4 brightness = texture(u_shadow, v_samplePos);
+    float brightness = clamp(texture(u_shadow, v_samplePos).a, 0.0, 1.0);
     color = color * vec4(vec3(brightness), 1);
 
     outPutColor = color;
