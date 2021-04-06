@@ -138,13 +138,6 @@ void main() {
         }
     }
 
-    
-    // } else if(cross(PAvector, PtangentRight) < 0.0 && cross(PAvector, PtangentLeft) > 0.0 && cross(PBvector, PtangentRight) < 0.0 && cross(PBvector, PtangentLeft) > 0.0) {
-    //     float ABP = angle(PAvector, PBvector);
-    //     color = vec4(ABP / theta);
-    // }
-
-
     //除去障碍物部分
     if(alpha == 0.0) {
         color = vec4(0.0);

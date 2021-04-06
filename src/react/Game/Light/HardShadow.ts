@@ -38,13 +38,13 @@ class HardShadow {
      * @param radius 光源半径
      * @param defaultUniform 坐标转换uniform
      */
-    drawHardShadow = (obstacleVertics: Array<number>, lightPos: Coord, radius: number, defaultUniform: Array<UniformLocationObj>, texture: WebGLTexture) => {
+    drawHardShadow = (lineVertics: Array<Coord>, lightPos: Coord, radius: number, defaultUniform: Array<UniformLocationObj>, texture: WebGLTexture) => {
         let vertices = [];
 
-        for (let i = 0; i < obstacleVertics.length - 3; i += 2) {
+        for (let i = 0; i < lineVertics.length - 1; i += 2) {
 
-            let aPos = { x: obstacleVertics[i], y: obstacleVertics[i + 1] };
-            let bPos = (i + 2) % 8 === 0 ? { x: obstacleVertics[i - 6], y: obstacleVertics[i - 5] } : { x: obstacleVertics[i + 2], y: obstacleVertics[i + 3] };
+            let aPos = lineVertics[i];
+            let bPos = lineVertics[i + 1];
 
             if (CoordUtils.len(CoordUtils.sub(aPos, lightPos)) > radius || CoordUtils.len(CoordUtils.sub(bPos, lightPos)) > radius) continue;
 

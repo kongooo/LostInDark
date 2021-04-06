@@ -12,28 +12,28 @@ interface FrameBufferInfo {
 class CoordUtils {
 
     static add = (aPos: Coord, bPos: Coord | number) =>
-    ({
-        x: aPos.x + (typeof bPos === 'number' ? bPos : bPos.x),
-        y: aPos.y + (typeof bPos === 'number' ? bPos : bPos.y)
-    })
+        ({
+            x: aPos.x + (typeof bPos === 'number' ? bPos : bPos.x),
+            y: aPos.y + (typeof bPos === 'number' ? bPos : bPos.y)
+        })
 
     static sub = (aPos: Coord, bPos: Coord | number) =>
-    ({
-        x: aPos.x - (typeof bPos === 'number' ? bPos : bPos.x),
-        y: aPos.y - (typeof bPos === 'number' ? bPos : bPos.y)
-    })
+        ({
+            x: aPos.x - (typeof bPos === 'number' ? bPos : bPos.x),
+            y: aPos.y - (typeof bPos === 'number' ? bPos : bPos.y)
+        })
 
     static division = (aPos: Coord, bPos: Coord | number) =>
-    ({
-        x: aPos.x / (typeof bPos === 'number' ? bPos : bPos.x),
-        y: aPos.y / (typeof bPos === 'number' ? bPos : bPos.y)
-    })
+        ({
+            x: aPos.x / (typeof bPos === 'number' ? bPos : bPos.x),
+            y: aPos.y / (typeof bPos === 'number' ? bPos : bPos.y)
+        })
 
     static mult = (aPos: Coord, bPos: Coord | number) =>
-    ({
-        x: aPos.x * (typeof bPos === 'number' ? bPos : bPos.x),
-        y: aPos.y * (typeof bPos === 'number' ? bPos : bPos.y)
-    })
+        ({
+            x: aPos.x * (typeof bPos === 'number' ? bPos : bPos.x),
+            y: aPos.y * (typeof bPos === 'number' ? bPos : bPos.y)
+        })
 
     static len = (pos: Coord) => Math.sqrt(pos.x * pos.x + pos.y * pos.y);
 
@@ -124,6 +124,8 @@ class CoordUtils {
         return { leftVector, rightVector };
     }
 
+    static equal = (a: Coord, b: Coord) => a.x === b.x && a.y === b.y;
+
     /**
      * 
      * @param aVector 
@@ -131,6 +133,10 @@ class CoordUtils {
      * @returns 向量叉积
      */
     static cross = (aVector: Coord, bVector: Coord) => (aVector.x * bVector.y - aVector.y * bVector.x);
+
+    static flipXY = (vector: Coord) => ({ x: vector.y, y: vector.x });
+
+    static absolute = (vector: Coord) => ({ x: Math.abs(vector.x), y: Math.abs(vector.y) });
 }
 
 const clamp = (num: number, min: number, max: number) => Math.min(Math.max(num, min), max);

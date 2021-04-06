@@ -17,11 +17,11 @@ const PLAYER_SPEED = 3;
 const CAMERA_SPEED = 1;
 const BACK_COLOR = [244, 249, 249];
 const WALL_COLOR = [170, 170, 170];
-const PLAYER_LIGHT_RADIUS = 20;
+const PLAYER_LIGHT_RADIUS = 15;
 const PLAYER_COLOR = [164, 235, 243];
 const MAP_SIZE = 50;
 const PLAYER_SIZE = 0.9;
-const LIGHT_SIZE = 0.3;
+const LIGHT_SIZE = 0.44;
 
 const DEFAULT_UNIFORM_NAME = ['u_resolution', 'u_cameraWorldPos', 'u_mapSize'];
 
@@ -98,7 +98,7 @@ class Game {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
-        this.hardShadow.drawHardShadow(this.map.vertics, centerPos, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+        this.hardShadow.drawHardShadow(this.map.lineVertices, centerPos, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
@@ -119,7 +119,10 @@ class Game {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
-        this.softShadow.drawSoftShadow(this.map.vertics, centerPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+        //draw with min line
+        this.softShadow.drawSoftShadow(this.map.lineVertices, centerPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+        //draw width vertices
+        // this.softShadow.drawSoftShadow(this.map.simpleVertices, centerPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }

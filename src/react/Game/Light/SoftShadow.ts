@@ -33,16 +33,16 @@ class SoftShadow {
         this.mapSize = mapSize;
     }
 
-    drawSoftShadow = (obstacleVertics: Array<number>, lightPos: Coord, sLightRadius: number, bLightRadius: number, defaultUniform: Array<UniformLocationObj>, texture: WebGLTexture) => {
+    drawSoftShadow = (lineVertics: Array<Coord>, lightPos: Coord, sLightRadius: number, bLightRadius: number, defaultUniform: Array<UniformLocationObj>, texture: WebGLTexture) => {
         let vertices = [];
 
-        for (let i = 0; i < obstacleVertics.length - 3; i += 2) {
+        for (let i = 0; i < lineVertics.length - 1; i += 2) {
 
             // if ((i) % 8 !== 0) continue;
-            let A = { x: obstacleVertics[i], y: obstacleVertics[i + 1] };
-            let B = (i + 2) % 8 === 0 ? { x: obstacleVertics[i - 6], y: obstacleVertics[i - 5] } : { x: obstacleVertics[i + 2], y: obstacleVertics[i + 3] };
+            let A = lineVertics[i];
+            let B = lineVertics[i + 1];
 
-            if (CoordUtils.len(CoordUtils.sub(A, lightPos)) > bLightRadius || CoordUtils.len(CoordUtils.sub(B, lightPos)) > bLightRadius) continue;
+            if (CoordUtils.len(CoordUtils.sub(A, lightPos)) > bLightRadius && CoordUtils.len(CoordUtils.sub(B, lightPos)) > bLightRadius) continue;
 
             //如果B在A左边(相对于光源坐标)，则交换AB位置，保证A一直在B左边
             if (CoordUtils.cross(CoordUtils.sub(B, A), CoordUtils.sub(lightPos, A)) <= 0) {

@@ -7,8 +7,10 @@ import mapFsSource from '../../shaders/MapShader/fsSource.glsl';
 
 import { WebGL } from '../../Tools/WebGLUtils';
 
-import { FrameBufferInfo } from '../../Tools/Tool';
+import { CoordUtils, FrameBufferInfo } from '../../Tools/Tool';
 import { UniformLocationObj } from '../../Tools/interface';
+
+import Union from './Union';
 
 const ZOOM = 5;
 const RECT_VERTEX_COUNT = 4;
@@ -24,6 +26,7 @@ class PerlinMap {
     private gl: WebGL2RenderingContext;
     private MapMesh: VaryMesh;
     private mapCount: Coord;
+    private union: Union;
     fBufferInfo: FrameBufferInfo;
 
     constructor(gl: WebGL2RenderingContext, seed: number, size: number, defaultUniformName: Array<string>) {
@@ -43,11 +46,14 @@ class PerlinMap {
         this.noise = noise;
         this.fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         this.size = size;
-        this.mapCount = { x: gl.canvas.width / size, y: gl.canvas.height / size };
+        this.mapCount = CoordUtils.add({ x: Math.floor(gl.canvas.width / size), y: Math.floor(gl.canvas.height / size) }, 2);
+        this.union = new Union(noise, this.mapCount, THRESHOLD, ZOOM);
     }
 
-    vertics: Array<number> = [];
-    indices: Array<number> = [];
+    private vertics: Array<number> = [];
+    private indices: Array<number> = [];
+    simpleVertices: Array<Coord> = [];
+    lineVertices: Array<Coord> = [];
     private noiseValue: number = 0;
     // vertexWorldPos: Array<number> = [];
 
@@ -96,9 +102,12 @@ class PerlinMap {
     //生成地图顶点坐标
     private generateVertics = (startX: number, startY: number) => {
 
+        this.union.init({ x: Math.floor(startX), y: Math.floor(startY) });
+
         let count = 0;
         this.vertics = [];
         this.indices = [];
+        this.simpleVertices = [];
 
         // this.vertics.push(...[
         //     startX + this.mapCount.x / 2, startY + this.mapCount.y / 2,
@@ -129,11 +138,25 @@ class PerlinMap {
                         count * RECT_VERTEX_COUNT + 2,
                         count * RECT_VERTEX_COUNT + 3,
                     ]);
+                    this.simpleVertices.push(...[
+                        { x: xWorldPos, y: yWorldPos },
+                        { x: xWorldPos + 1, y: yWorldPos },
+                        { x: xWorldPos + 1, y: yWorldPos },
+                        { x: xWorldPos + 1, y: yWorldPos + 1 },
+                        { x: xWorldPos + 1, y: yWorldPos + 1 },
+                        { x: xWorldPos, y: yWorldPos + 1 },
+                        { x: xWorldPos, y: yWorldPos + 1 },
+                        { x: xWorldPos, y: yWorldPos },
+                    ])
                     count++;
+                    //将-1，size+1映射到0，size+2
+                    this.union.setBlock(x + 1, y + 1);
                 }
             }
 
+        this.lineVertices = this.union.getBlocksLine();
     }
+
 }
 
 const randomInt = (min: number, max: number) => {
