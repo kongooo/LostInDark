@@ -7,7 +7,6 @@ import { WebGL } from '../../Tools/WebGLUtils';
 
 import { Coord, CoordUtils, FrameBufferInfo, swap } from '../../Tools/Tool';
 import { UniformLocationObj } from '../../Tools/interface';
-import KeyPress from '../../Tools/Event/KeyEvent';
 
 class SoftShadow {
 
@@ -38,7 +37,6 @@ class SoftShadow {
 
         for (let i = 0; i < lineVertics.length - 1; i += 2) {
 
-            // if ((i) % 8 !== 0) continue;
             let A = lineVertics[i];
             let B = lineVertics[i + 1];
 
@@ -59,7 +57,6 @@ class SoftShadow {
 
             //如果A在B上方
             if (CoordUtils.cross(BAvector, CoordUtils.reverseVector(Btangent.leftVector)) >= 0 && CoordUtils.cross(BAvector, CoordUtils.reverseVector(Btangent.rightVector)) <= 0) {
-                // console.log('A above B');
 
                 const R = CoordUtils.add(A, CoordUtils.mult(ABvector, bLightRadius));
                 const ASR = CoordUtils.calTheta(CoordUtils.reverseVector(OKvector)) - CoordUtils.calTheta(CoordUtils.reverseVector(Atangent.rightVector));
@@ -79,7 +76,7 @@ class SoftShadow {
             }
             //如果B在A上方
             else if (CoordUtils.cross(ABvector, CoordUtils.reverseVector(Atangent.rightVector)) <= 0 && CoordUtils.cross(ABvector, CoordUtils.reverseVector(Atangent.leftVector)) >= 0) {
-                // console.log('B above A');
+
                 const R = CoordUtils.add(B, CoordUtils.mult(BAvector, bLightRadius));
                 const BSR = Math.abs(CoordUtils.calTheta(OKvector) - CoordUtils.calTheta(CoordUtils.reverseVector(Btangent.rightVector)));
                 const BTR = Math.abs(CoordUtils.calTheta(CoordUtils.reverseVector(OKvector)) - CoordUtils.calTheta(CoordUtils.reverseVector(Btangent.leftVector)));
@@ -88,15 +85,13 @@ class SoftShadow {
                 const S = CoordUtils.add(R, CoordUtils.mult(CoordUtils.reverseVector(OKvector), SR));
                 const T = CoordUtils.add(R, CoordUtils.mult(OKvector, TR));
 
-                // console.log(SR, TR);
-
                 vertices.push(...[
                     S.x, S.y, A.x, A.y, B.x, B.y, -1,
                     T.x, T.y, A.x, A.y, B.x, B.y, -1,
                     B.x, B.y, A.x, A.y, B.x, B.y, -1
                 ])
-            } else {
 
+            } else {
 
                 const K = CoordUtils.add(lightPos, CoordUtils.mult(OKvector, bLightRadius));
 
@@ -121,39 +116,24 @@ class SoftShadow {
                 }
 
                 //计算C点坐标
-
-                // ACD = Math.abs(CoordUtils.calTheta(CoordUtils.reverseVector(Atangent.rightVector)) - CoordUtils.calTheta(ABvector));
                 const KOF = ACD;
                 const OQ = Math.cos(KOF) * sLightRadius;
                 const QK = Math.abs(bLightRadius - OQ);
                 const CK = Math.abs(QK / Math.tan(ACD));
                 let C = CoordUtils.add(K, CoordUtils.mult(BAvector, CK));
-                // console.log('ACD', ACD);
                 if (ACD > Math.PI / 2) {
-                    // console.log('acd');
                     C = CoordUtils.add(K, CoordUtils.mult(ABvector, CK));
                 }
 
                 //计算D点坐标
-                // if (BAvector.x === -1)
-                //     BDC = Math.abs(CoordUtils.calTheta(ABvector) - CoordUtils.calTheta(CoordUtils.reverseVector(Btangent.leftVector)));
-                // else
-                //     BDC = Math.abs(CoordUtils.calTheta(BAvector) - CoordUtils.calTheta(CoordUtils.reverseVector(Btangent.leftVector)));
                 const KOE = BDC;
                 const OP = Math.cos(KOE) * sLightRadius;
                 const PK = Math.abs(bLightRadius - OP);
                 const DK = Math.abs(PK / Math.tan(BDC));
                 let D = CoordUtils.add(K, CoordUtils.mult(ABvector, DK));
-                // console.log('BDC', BDC);
                 if (BDC > Math.PI / 2) {
                     D = CoordUtils.add(K, CoordUtils.mult(BAvector, DK));
                 }
-
-                if (CoordUtils.cross(CoordUtils.sub(lightPos, D), CoordUtils.sub(lightPos, C)) > 0) {
-                    // swap(C, D);
-                }
-
-                if (KeyPress.get('p')) console.log(A, B, C, D);
 
                 vertices.push(...[
                     C.x, C.y, A.x, A.y, B.x, B.y, 0,

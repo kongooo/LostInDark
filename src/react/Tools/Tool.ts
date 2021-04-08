@@ -12,28 +12,28 @@ interface FrameBufferInfo {
 class CoordUtils {
 
     static add = (aPos: Coord, bPos: Coord | number) =>
-        ({
-            x: aPos.x + (typeof bPos === 'number' ? bPos : bPos.x),
-            y: aPos.y + (typeof bPos === 'number' ? bPos : bPos.y)
-        })
+    ({
+        x: aPos.x + (typeof bPos === 'number' ? bPos : bPos.x),
+        y: aPos.y + (typeof bPos === 'number' ? bPos : bPos.y)
+    })
 
     static sub = (aPos: Coord, bPos: Coord | number) =>
-        ({
-            x: aPos.x - (typeof bPos === 'number' ? bPos : bPos.x),
-            y: aPos.y - (typeof bPos === 'number' ? bPos : bPos.y)
-        })
+    ({
+        x: aPos.x - (typeof bPos === 'number' ? bPos : bPos.x),
+        y: aPos.y - (typeof bPos === 'number' ? bPos : bPos.y)
+    })
 
     static division = (aPos: Coord, bPos: Coord | number) =>
-        ({
-            x: aPos.x / (typeof bPos === 'number' ? bPos : bPos.x),
-            y: aPos.y / (typeof bPos === 'number' ? bPos : bPos.y)
-        })
+    ({
+        x: aPos.x / (typeof bPos === 'number' ? bPos : bPos.x),
+        y: aPos.y / (typeof bPos === 'number' ? bPos : bPos.y)
+    })
 
     static mult = (aPos: Coord, bPos: Coord | number) =>
-        ({
-            x: aPos.x * (typeof bPos === 'number' ? bPos : bPos.x),
-            y: aPos.y * (typeof bPos === 'number' ? bPos : bPos.y)
-        })
+    ({
+        x: aPos.x * (typeof bPos === 'number' ? bPos : bPos.x),
+        y: aPos.y * (typeof bPos === 'number' ? bPos : bPos.y)
+    })
 
     static len = (pos: Coord) => Math.sqrt(pos.x * pos.x + pos.y * pos.y);
 
@@ -58,6 +58,23 @@ class CoordUtils {
         let curTheta = Math.acos(normVector.x);
         if (normVector.y < 0) curTheta = -curTheta;
         return { x: Math.cos(curTheta - theta), y: Math.sin(curTheta - theta) };
+    }
+
+    /**
+     * 
+     * @param aVector 
+     * @param bVector 
+     * @returns 计算a、b向量之间的夹角
+     */
+    static angle = (aVector: Coord, bVector: Coord) => {
+        const a = CoordUtils.normalize(aVector);
+        const b = CoordUtils.normalize(bVector);
+        const theta = Math.acos(CoordUtils.dot(a, b));
+        return theta;
+    }
+
+    static dot = (aVector: Coord, bVector: Coord) => {
+        return aVector.x * bVector.x + aVector.y + bVector.y;
     }
 
     static calTheta = (vector: Coord) => {

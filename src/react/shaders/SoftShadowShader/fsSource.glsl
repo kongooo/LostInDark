@@ -41,21 +41,13 @@ vec4 calCircleTangent(vec2 circlePos, vec2 point, float radius) {
     return vec4(leftVector, rightVector);
 }
 
-float calTheta(vec2 vector) {
-    float theta = acos(vector.x);
-    if (vector.y < 0.0) theta = -theta;
-    else if (vector.y == 0.0 && vector.x < 0.0) theta = -3.1415926;
-    return theta;
-}
-
 float cross(vec2 aVector, vec2 bVector) {
     return aVector.x * bVector.y - aVector.y * bVector.x;
 }
 
 float angle(vec2 aVector, vec2 bVector) {
-    float angle = abs(abs(calTheta(aVector)) - abs(calTheta(bVector)));
-    // if(angle < 0.005) angle = 0.0;
-    return angle;
+    float theta = acos(dot(aVector, bVector));
+    return theta;
 }
 
 void main() {
@@ -65,6 +57,8 @@ void main() {
 
     vec2 A = vec2(v_ABposition.x, v_ABposition.y);
     vec2 B = vec2(v_ABposition.z, v_ABposition.w);
+    vec2 BAvector = normalize(A - B);
+    vec2 ABvector = normalize(B - A);
     vec2 PAvector = normalize(A - P);
     vec2 PBvector = normalize(B - P);
     vec2 APvector = reverse(PAvector);
@@ -89,50 +83,55 @@ void main() {
     if(v_situation == 0.0) {
 
         //完全被遮挡，遮挡率为1
-        if(cross(APvector, AtangentLeft) <= 0.0 && cross(BPvector, BtangentRight) >= 0.0) {
+        if(cross(PAvector, PCvector) <= 0.0 && cross(PCvector, PDvector) < 0.0 && cross(PBvector, PDvector) >= 0.0) {
             color = vec4(1.0);
-        } else if(cross(APvector, AtangentLeft) > 0.0) {
+        }
+        else if(cross(PAvector, PCvector) > 0.0) {
             float APD = angle(PAvector, PDvector);
             color = vec4(APD / theta);
-        } else if(cross(BPvector, BtangentRight) < 0.0) {
+        } else if(cross(PBvector, PDvector) < 0.0) {
             float BPC = angle(PBvector, PCvector);
             color = vec4(BPC / theta);
         }
 
-    } else if(v_situation == 1.0){
+    }
+    //如果A在B上方 
+    else if(v_situation == 1.0){
 
         //如果P在B的阴影中
         if(cross(BPvector, BtangentLeft) >= 0.0 && cross(BPvector, BtangentRight) <= 0.0) {
-            float ABP = max(angle(PAvector, PBvector), 0.15);
+            float ABP = angle(PAvector, PBvector);
             color = vec4(ABP / theta);
             // color = vec4(1.0);
         }
-        //如果P在B阴影的左边 
-        if(cross(BPvector, BtangentRight) > 0.0) {
+        //如果P在AB的左边 
+        else if(cross(BAvector, BPvector) >= 0.0) {
             float APD = angle(PAvector, PDvector);
             color = vec4(APD / theta);
-        } 
+        }   
         //如果P在B阴影的右边
-        else if(cross(BPvector, BtangentLeft) < 0.0) {
+        else if(cross(BAvector, BPvector) < 0.0) {
             float APC = angle(PAvector, PCvector);
             color = vec4(APC / theta);
         }
 
-    } else if(v_situation == -1.0) {
+    } 
+    //如果B在A上方
+    else if(v_situation == -1.0) {
 
-        //如果P在B的阴影中
+        //如果P在A的阴影中
         if(cross(APvector, AtangentLeft) >= 0.0 && cross(BPvector, BtangentRight) <= 0.0) {
-            float ABP = max(angle(PAvector, PBvector), 0.15);
+            float ABP = angle(PAvector, PBvector);
             color = vec4(ABP / theta);
             // color = vec4(1.0);
         }
-        //如果P在B阴影的左边 
-        if(cross(APvector, AtangentRight) > 0.0) {
+        //如果P在AB的左边 
+        if(cross(ABvector, APvector) >= 0.0) {
             float BPD = angle(PBvector, PDvector);
             color = vec4(BPD / theta);
         } 
-        //如果P在B阴影的右边
-        else if(cross(APvector, AtangentLeft) < 0.0) {
+        // //如果P在A阴影的右边
+        else if(cross(ABvector, APvector) < 0.0) {
             float BPC = angle(PBvector, PCvector);
             color = vec4(BPC / theta);
         }

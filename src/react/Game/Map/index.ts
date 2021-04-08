@@ -109,13 +109,25 @@ class PerlinMap {
         this.indices = [];
         this.simpleVertices = [];
 
-        // this.vertics.push(...[
-        //     startX + this.mapCount.x / 2, startY + this.mapCount.y / 2,
-        //     startX + this.mapCount.x / 2 + 1, startY + this.mapCount.y / 2,
-        //     startX + this.mapCount.x / 2 + 1, startY + this.mapCount.y / 2 + 1,
-        //     startX + this.mapCount.x / 2, startY + this.mapCount.y / 2 + 1,
-        // ]);
-        // this.indices.push(...[0, 1, 2, 0, 2, 3]);
+        // const xWorldPos = Math.floor(this.mapCount.x / 2 + startX);
+        // const yWorldPos = Math.floor(this.mapCount.y / 2 + startY);
+        // const vertices = [
+        //     //down
+        //     { x: xWorldPos, y: yWorldPos },
+        //     { x: xWorldPos + 1, y: yWorldPos },
+        //     //right
+        //     { x: xWorldPos + 1, y: yWorldPos },
+        //     { x: xWorldPos + 1, y: yWorldPos + 1 },
+        //     //up
+        //     { x: xWorldPos + 1, y: yWorldPos + 1 },
+        //     { x: xWorldPos, y: yWorldPos + 1 },
+        //     // //left
+        //     { x: xWorldPos, y: yWorldPos + 1 },
+        //     { x: xWorldPos, y: yWorldPos },
+        // ];
+        // this.lineVertices.push(...vertices);
+
+
 
         for (let x = -1; x < this.mapCount.x + 1; x++)
             for (let y = -1; y < this.mapCount.y + 1; y++) {

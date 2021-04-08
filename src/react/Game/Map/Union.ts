@@ -135,10 +135,10 @@ class Union {
                 if (grid.upUseful) {
                     this.getLineVertices(
                         grid,
-                        { x: -1, y: 0 },
-                        { x: 0, y: 1 },
                         { x: 1, y: 0 },
                         { x: 1, y: 1 },
+                        { x: -1, y: 0 },
+                        { x: 0, y: 1 },
                         1
                     );
                 }
@@ -159,10 +159,10 @@ class Union {
                 if (grid.leftUseful) {
                     this.getLineVertices(
                         grid,
+                        { x: 0, y: 1 },
+                        { x: 0, y: 1 },
                         { x: 0, y: -1 },
                         { x: 0, y: 0 },
-                        { x: 0, y: 1 },
-                        { x: 0, y: 1 },
                         -1
                     );
                 }
