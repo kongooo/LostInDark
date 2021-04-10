@@ -56,9 +56,9 @@ class Union {
      */
     setBlock = (x: number, y: number) => {
         const xHas =
-            x > 0 && this.isObstacle({ x: x - 1, y });
+            x > 0 && this.obstacled({ x: x - 1, y });
         const yHas =
-            y > 0 && this.isObstacle({ x, y: y - 1 })
+            y > 0 && this.obstacled({ x, y: y - 1 })
         if (xHas && yHas) {
             let xBlockIndex = this.getBlockIndex({ x: x - 1, y });
             let yBlockIndex = this.getBlockIndex({ x, y: y - 1 });
@@ -118,7 +118,7 @@ class Union {
 
             while (this.toTraverseQueue.length > 0) {
                 const grid = this.toTraverseQueue.shift();
-
+                this.updateGridStateWithObstacle(grid);
                 //下边
                 if (grid.downUseful) {
                     this.getLineVertices(
@@ -237,17 +237,15 @@ class Union {
         );
         let offset = CoordUtils.mult(dir, count);
         let offsetObstacle = CoordUtils.add(offset, obstacleDir);
-        let nearObstaclePos = CoordUtils.add(grid.pos, offset);
         let curGridPos = CoordUtils.add(grid.pos, offset);
         while (
             curGridPos.x >= 0 &&
             curGridPos.x < this.mapCount.x &&
             curGridPos.y >= 0 &&
             curGridPos.y < this.mapCount.y &&
-            this.isObstacle(nearObstaclePos) &&
+            this.isObstacle(curGridPos) &&
             !this.isObstacle(CoordUtils.add(grid.pos, offsetObstacle))
         ) {
-            curGridPos = CoordUtils.add(grid.pos, offset);
             const curGridIndex = this.gridsMap.get(this.CoordToNumber(curGridPos));
             if (!curGridIndex) {
                 return null;
@@ -258,8 +256,7 @@ class Union {
 
             count++;
             offset = CoordUtils.mult(dir, count);
-            offsetObstacle = CoordUtils.add(offset, obstacleDir);
-            nearObstaclePos = CoordUtils.add(grid.pos, offset);
+            curGridPos = CoordUtils.add(grid.pos, offset);
         }
 
         this.updateGridStateWithTraverse(grid, dir, edge);

@@ -46,8 +46,8 @@ class PerlinMap {
         this.noise = noise;
         this.fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         this.size = size;
-        this.mapCount = CoordUtils.add({ x: Math.floor(gl.canvas.width / size), y: Math.floor(gl.canvas.height / size) }, 2);
-        this.union = new Union(noise, this.mapCount, THRESHOLD, ZOOM);
+        this.mapCount = { x: Math.floor(gl.canvas.width / size), y: Math.floor(gl.canvas.height / size) };
+        this.union = new Union(noise, CoordUtils.add(this.mapCount, 2), THRESHOLD, ZOOM);
     }
 
     private vertics: Array<number> = [];

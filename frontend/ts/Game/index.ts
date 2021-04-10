@@ -21,40 +21,50 @@ const PLAYER_LIGHT_RADIUS = 15;
 const PLAYER_COLOR = [164, 235, 243];
 const MAP_SIZE = 50;
 const PLAYER_SIZE = 0.9;
-const LIGHT_SIZE = 0.3;
+const LIGHT_SIZE = 0.44;
 
 const DEFAULT_UNIFORM_NAME = ['u_resolution', 'u_cameraWorldPos', 'u_mapSize'];
 
 class Game {
     private gl: WebGL2RenderingContext;
     private player: Player;
+    private player2: Player;
     private map: PerlinMap;
     private playerLight: Light;
+    private playerLight2: Light;
     private lightCanvas: Canvas;
     private mapCanvas: Canvas;
     private hardShadow: HardShadow;
     private softShadow: SoftShadow;
+    private softShadow2: SoftShadow;
+    private ws: any;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord) {
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, ws: any) {
         this.gl = gl;
         this.map = new PerlinMap(gl, seed, MAP_SIZE, DEFAULT_UNIFORM_NAME);
         this.player = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME);
+        this.player2 = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME);
         this.cameraWorldPos = center;
         this.playerLight = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
+        this.playerLight2 = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
         this.hardShadow = new HardShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
         this.softShadow = new SoftShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
+        this.softShadow2 = new SoftShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
         this.lightCanvas = new Canvas(gl, rectVsSource, rectFsSource);
         this.mapCanvas = new Canvas(gl, mapCanvasVsSource, mapCanvasFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
         this.playerWorldPos = { x: emptyPos.x, y: emptyPos.y };
+        this.ws = ws;
     }
 
     private deltaTime: number = 0;
     private lastTime: number = 0;
     private playerWorldPos: Coord;
+    private player2WorldPos: Coord;
     private cameraWorldPos: Coord;
 
     start = () => {
+        this.initWs();
         this.update(0);
     }
 
@@ -106,25 +116,40 @@ class Game {
 
     private drawSoftShadowTexture = () => {
         const gl = this.gl;
-        gl.disable(gl.BLEND);
         gl.enable(gl.BLEND);
         //1 - 遮挡率 = 亮度
         gl.blendEquation(gl.FUNC_REVERSE_SUBTRACT);
         gl.blendFunc(gl.ONE, gl.ONE);
-        const { renderFrameBuffer, textureFrameBuffer } = this.softShadow.fBufferInfo;
+
+        //draw player shadow
+        {
+            this.drawSoftShadow(this.softShadow, this.playerWorldPos);
+        }
+
+        //draw player2shadow
+        {
+            if (this.player2WorldPos)
+                this.drawSoftShadow(this.softShadow2, this.player2WorldPos);
+        }
+
+        //draw width vertices
+        // this.softShadow.drawSoftShadow(this.map.simpleVertices, centerPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+
+        // this.blit(renderFrameBuffer, textureFrameBuffer);
+    }
+
+    private drawSoftShadow = (shadow: SoftShadow, playerPos: Coord) => {
+        const gl = this.gl;
+        const { renderFrameBuffer, textureFrameBuffer } = shadow.fBufferInfo;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
         gl.clearColor(1, 1, 1, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
+        const playerCenterPos = CoordUtils.add(playerPos, PLAYER_SIZE / 2)
         //draw with min line
-        this.softShadow.drawSoftShadow(this.map.lineVertices, centerPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
-        //draw width vertices
-        // this.softShadow.drawSoftShadow(this.map.simpleVertices, centerPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
-
-        // this.blit(renderFrameBuffer, textureFrameBuffer);
+        shadow.drawSoftShadow(this.map.lineVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
     }
 
 
@@ -139,12 +164,22 @@ class Game {
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
+        //draw player shadow
         const lightCenter = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2);
-
         //hard shadow
         // this.playerLight.draw(lightCenter, this.hardShadow.fBufferInfo.targetTexture, this.getDefaultUniform());
         //soft shadow
         this.playerLight.draw(lightCenter, this.softShadow.fBufferInfo.targetTexture, this.getDefaultUniform());
+
+        gl.enable(gl.BLEND);
+        gl.blendEquation(gl.FUNC_ADD);
+        gl.blendFunc(gl.ONE, gl.ONE);
+
+        //draw player2 shadow
+        if (this.player2WorldPos) {
+            const light2Center = CoordUtils.add(this.player2WorldPos, PLAYER_SIZE / 2);
+            this.playerLight2.draw(light2Center, this.softShadow2.fBufferInfo.targetTexture, this.getDefaultUniform());
+        }
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
@@ -178,6 +213,7 @@ class Game {
 
         this.mapCanvas.draw(this.map.fBufferInfo.targetTexture, BACK_COLOR, WALL_COLOR);
         this.player.draw(this.playerWorldPos, this.getDefaultUniform(), PLAYER_COLOR);
+        if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.getDefaultUniform(), PLAYER_COLOR);
     }
 
     private drawLightToScene = () => {
@@ -250,6 +286,8 @@ class Game {
                 }
             }
         }
+
+        this.ws.send(JSON.stringify({ type: 'pos', pos: this.playerWorldPos }));
     }
 
     //判断两个矩形是否相交，a0、a1分别为左下角、右上角坐标
@@ -304,6 +342,19 @@ class Game {
 
         gl.bindFramebuffer(gl.READ_FRAMEBUFFER, null);
         gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER, null);
+    }
+
+    private initWs = () => {
+        this.ws.onmessage = (mes: any) => {
+            const data = JSON.parse(mes.data);
+
+            switch (data.type) {
+                case 'pos':
+                    this.player2WorldPos = data.pos;
+                    // console.log(this.player2WorldPos);
+                    break;
+            }
+        }
     }
 
     private getDefaultUniform = () => ([
