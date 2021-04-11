@@ -5,16 +5,17 @@ class KeyPress {
 
     private static init() {
         window.onkeydown = (event: KeyboardEvent) => {
-            this.keycode.set(event.key, true);
+            this.keycode.set(event.code, true);
         }
         window.onkeyup = (event: KeyboardEvent) => {
-            this.keycode.set(event.key, false);
+            this.keycode.set(event.code, false);
         }
         this.inited = true;
     }
     static get(code: string) {
         if (!this.inited) this.init();
-        return this.keycode.has(code) && this.keycode.get(code);
+        const keyCode = 'Key' + code;
+        return this.keycode.has(keyCode) && this.keycode.get(keyCode);
     }
 }
 

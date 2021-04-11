@@ -138,7 +138,7 @@ void main() {
     }
 
     //除去障碍物部分
-    if(alpha == 0.0) {
+    if(alpha == 1.0) {
         color = vec4(0.0);
     }
 

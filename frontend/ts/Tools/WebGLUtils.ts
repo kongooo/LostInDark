@@ -54,13 +54,23 @@ class WebGL {
         }
     }
 
-    static getTexture = (gl: WebGL2RenderingContext, src: any) => {
+    /**
+     * 
+     * @param gl 
+     * @param src 
+     * @returns 通过图片加载纹理
+     */
+    static getTexture = (gl: WebGL2RenderingContext, src: HTMLImageElement, repeat = false) => {
+
+        if (!src) return undefined;
+
         const texture = gl.createTexture();
 
         gl.bindTexture(gl.TEXTURE_2D, texture);
         // Set the parameters so we can render any size image.
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE);
-        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE);
+        const textureWrap = repeat ? gl.REPEAT : gl.CLAMP_TO_EDGE;
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, textureWrap);
+        gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, textureWrap);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST);
         gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST);
 
@@ -68,6 +78,13 @@ class WebGL {
         return texture;
     }
 
+    /**
+     * 
+     * @param gl 
+     * @param width 
+     * @param height 
+     * @returns 使用自行绘制的纹理加载
+     */
     static getFBufferAndTexture = (gl: WebGL2RenderingContext, width: number, height: number) => {
 
         const targetTexture = gl.createTexture();

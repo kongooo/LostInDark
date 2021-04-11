@@ -1,3 +1,4 @@
+import { WebGL } from '../../Tools/WebGLUtils';
 import StaticMesh from '../../Tools/Mesh/StaticMesh';
 
 class Canvas {
@@ -23,7 +24,7 @@ class Canvas {
         this.gl = gl;
     }
 
-    draw = (texture: WebGLTexture, backColor: Array<number> = [], obstacleColor: Array<number> = []) => {
+    draw = (texture?: WebGLTexture, backColor: Array<number> = [], obstacleColor: Array<number> = []) => {
         this.canvasMesh.drawWithAVO([
             { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
             { name: 'u_image', data: [0] },

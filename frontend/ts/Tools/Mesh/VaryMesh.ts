@@ -31,11 +31,11 @@ class VaryMesh extends Mesh {
             gl.bindTexture(gl.TEXTURE_2D, texture);
             gl.activeTexture(gl.TEXTURE0 + 0);
         }
-        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertics), gl.STATIC_DRAW);
+        gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertics), gl.DYNAMIC_DRAW);
         this.setAttribPointer();
         if (indices) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
-            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.STATIC_DRAW);
+            gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(indices), gl.DYNAMIC_DRAW);
             gl.drawElements(gl.TRIANGLES, indices.length, gl.UNSIGNED_SHORT, 0);
         } else {
             gl.drawArrays(gl.TRIANGLES, 0, vertics.length / this.vertexSize);

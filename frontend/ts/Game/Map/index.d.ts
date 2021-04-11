@@ -8,10 +8,11 @@ declare class PerlinMap {
     private noise;
     private gl;
     private MapMesh;
-    private mapCount;
+    mapCount: Coord;
     private union;
     fBufferInfo: FrameBufferInfo;
-    constructor(gl: WebGL2RenderingContext, seed: number, size: number, defaultUniformName: Array<string>);
+    texture: WebGLTexture;
+    constructor(gl: WebGL2RenderingContext, seed: number, size: number, img: HTMLImageElement, defaultUniformName: Array<string>);
     private vertics;
     private indices;
     simpleVertices: Array<Coord>;

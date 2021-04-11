@@ -15,6 +15,7 @@ import Union from './Union';
 const ZOOM = 5;
 const RECT_VERTEX_COUNT = 4;
 const THRESHOLD = 0.6;
+const SPREAD_SIZE = 5;
 
 interface Coord {
     x: number;
@@ -25,20 +26,21 @@ class PerlinMap {
     private noise: any;
     private gl: WebGL2RenderingContext;
     private MapMesh: VaryMesh;
-    private mapCount: Coord;
+    mapCount: Coord;
     private union: Union;
     fBufferInfo: FrameBufferInfo;
+    texture: WebGLTexture;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, size: number, defaultUniformName: Array<string>) {
+    constructor(gl: WebGL2RenderingContext, seed: number, size: number, img: HTMLImageElement, defaultUniformName: Array<string>) {
         const noise = new perlinNoise3d();
         noise.noiseSeed(seed);
 
         const MapMesh = new VaryMesh(gl, mapVsSource, mapFsSource);
         MapMesh.getAttributeLocations([
             { name: 'a_position', size: 2 },
-            // { name: 'a_texCoord', size: 2 }
+            { name: 'a_texCoord', size: 2 }
         ])
-        MapMesh.getUniformLocations(['u_color', ...defaultUniformName]);
+        MapMesh.getUniformLocations(['u_image', ...defaultUniformName]);
         MapMesh.getBuffer();
 
         this.MapMesh = MapMesh;
@@ -47,7 +49,8 @@ class PerlinMap {
         this.fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         this.size = size;
         this.mapCount = { x: Math.floor(gl.canvas.width / size), y: Math.floor(gl.canvas.height / size) };
-        this.union = new Union(noise, CoordUtils.add(this.mapCount, 2), THRESHOLD, ZOOM);
+        this.union = new Union(noise, CoordUtils.add(this.mapCount, SPREAD_SIZE * 2), THRESHOLD, ZOOM, SPREAD_SIZE);
+        this.texture = WebGL.getTexture(gl, img);
     }
 
     private vertics: Array<number> = [];
@@ -75,9 +78,9 @@ class PerlinMap {
         }
 
         this.MapMesh.drawWithBuffer(this.vertics, [
-            { name: 'u_color', data: obstacleColor },
+            { name: 'u_image', data: [0] },
             ...defaultUniform
-        ], this.indices);
+        ], this.indices, this.texture);
     }
 
     //得到没有障碍物的坐标
@@ -129,18 +132,18 @@ class PerlinMap {
 
 
 
-        for (let x = -1; x < this.mapCount.x + 1; x++)
-            for (let y = -1; y < this.mapCount.y + 1; y++) {
+        for (let x = -SPREAD_SIZE; x < this.mapCount.x + SPREAD_SIZE; x++)
+            for (let y = -SPREAD_SIZE; y < this.mapCount.y + SPREAD_SIZE; y++) {
                 const xWorldPos = Math.floor(x + startX);
                 const yWorldPos = Math.floor(y + startY);
                 const num = this.noise.get(xWorldPos / ZOOM, yWorldPos / ZOOM);
                 if (num > THRESHOLD) {
 
                     this.vertics.push(...[
-                        xWorldPos, yWorldPos,
-                        xWorldPos + 1, yWorldPos,
-                        xWorldPos + 1, yWorldPos + 1,
-                        xWorldPos, yWorldPos + 1
+                        xWorldPos, yWorldPos, 0, 0,
+                        xWorldPos + 1, yWorldPos, 1, 0,
+                        xWorldPos + 1, yWorldPos + 1, 1, 1,
+                        xWorldPos, yWorldPos + 1, 0, 1
                     ]);
                     this.indices.push(...[
                         count * RECT_VERTEX_COUNT,
@@ -161,8 +164,8 @@ class PerlinMap {
                         { x: xWorldPos, y: yWorldPos },
                     ])
                     count++;
-                    //将-1，size+1映射到0，size+2
-                    this.union.setBlock(x + 1, y + 1);
+                    //将-SPREAD_SIZE，size+SPREAD_SIZE映射到0，size+SPREAD_SIZE
+                    this.union.setBlock(x + SPREAD_SIZE, y + SPREAD_SIZE);
                 }
             }
 

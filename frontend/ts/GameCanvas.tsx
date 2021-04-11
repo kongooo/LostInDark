@@ -1,9 +1,13 @@
 import * as React from "react";
-import { useEffect, useState } from "react";
 
 import Game from "./Game/index";
 
 import Loading from "./Loading";
+import { LoadImage } from "./Tools/LoadImage";
+
+import playerImg from "../../image/slime.png";
+import backImg from "../../image/back.png";
+import groundImg from "../../image/ground1.png";
 
 export { GameCanvas };
 
@@ -13,53 +17,76 @@ interface GLProps {
   height: number;
 }
 
-function GameCanvas(props: GLProps) {
-  const canvasRef = React.useRef(null);
+interface GLState {
+  loading: boolean;
+}
 
-  const [loading, setLoading] = useState(true);
+class GameCanvas extends React.Component<GLProps, GLState> {
+  private canvasRef = React.createRef<HTMLCanvasElement>();
+  constructor(props: GLProps) {
+    super(props);
+    this.state = { loading: true };
+  }
 
-  useEffect(() => {
-    const gl = canvasRef.current.getContext("webgl2") as WebGL2RenderingContext;
+  componentDidMount() {
+    const gl = this.canvasRef.current.getContext(
+      "webgl2"
+    ) as WebGL2RenderingContext;
     (window as any).gl = gl;
     if (!gl) {
       console.error("can't init webgl");
       return;
     }
-    init(gl);
-  });
+    this.init(gl);
+  }
 
-  const init = (gl: WebGL2RenderingContext) => {
+  private loadImages = async () => {
+    const images: Array<any> = [];
+    images.push(playerImg);
+    images.push(backImg);
+    images.push(groundImg);
+    const imgs = await LoadImage(images);
+    return imgs;
+  };
+
+  private init = (gl: WebGL2RenderingContext) => {
     const path = "ws://" + window.location.host + "/transfer";
     const ws = new WebSocket(path);
-    const pos = JSON.stringify({ type: "connect" });
+    const mes = JSON.stringify({ type: "connect" });
     ws.onopen = (e) => {
-      ws.send(pos);
+      ws.send(mes);
     };
-    ws.onmessage = (mes) => {
+    ws.onmessage = async (mes) => {
       const data = JSON.parse(mes.data);
       if (data.type === "success") {
-        const game = new Game(gl, data.seed, data.pos, ws);
+        console.log("success");
+        const imgs = await this.loadImages();
+        const game = new Game(gl, data.seed, data.pos, ws, imgs);
         game.start();
-        setLoading(false);
+        this.setState({ loading: false });
       }
     };
   };
 
-  return (
-    <React.Fragment>
-      <div
-        className="load-anima"
-        style={{ display: loading ? "flex" : "none" }}
-      >
-        <Loading></Loading>
-      </div>
-      <canvas
-        className="gl-root"
-        width={props.width * window.devicePixelRatio}
-        height={props.height * window.devicePixelRatio}
-        style={{ width: props.width, height: props.height }}
-        ref={canvasRef}
-      ></canvas>
-    </React.Fragment>
-  );
+  render() {
+    const { loading } = this.state;
+    const { width, height } = this.props;
+    return (
+      <React.Fragment>
+        <div
+          className="load-anima"
+          style={{ display: loading ? "flex" : "none" }}
+        >
+          <Loading></Loading>
+        </div>
+        <canvas
+          className="gl-root"
+          width={width * window.devicePixelRatio}
+          height={height * window.devicePixelRatio}
+          style={{ width, height }}
+          ref={this.canvasRef}
+        ></canvas>
+      </React.Fragment>
+    );
+  }
 }

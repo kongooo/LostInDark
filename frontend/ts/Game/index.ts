@@ -4,6 +4,7 @@ import Light from './Light/light';
 import HardShadow from './Light/HardShadow';
 import SoftShadow from './Light/SoftShadow';
 import Canvas from './Light/Canvas';
+import GroundCanvas from './Map/GroundCanvas';
 import KeyPress from '../Tools/Event/KeyEvent';
 import { Coord, CoordUtils } from '../Tools/Tool';
 
@@ -17,11 +18,12 @@ const PLAYER_SPEED = 3;
 const CAMERA_SPEED = 1;
 const BACK_COLOR = [244, 249, 249];
 const WALL_COLOR = [170, 170, 170];
-const PLAYER_LIGHT_RADIUS = 15;
+const PLAYER_LIGHT_RADIUS = 13;
 const PLAYER_COLOR = [164, 235, 243];
 const MAP_SIZE = 50;
 const PLAYER_SIZE = 0.9;
 const LIGHT_SIZE = 0.44;
+const ANIMA_SPEED = 7;
 
 const DEFAULT_UNIFORM_NAME = ['u_resolution', 'u_cameraWorldPos', 'u_mapSize'];
 
@@ -33,17 +35,19 @@ class Game {
     private playerLight: Light;
     private playerLight2: Light;
     private lightCanvas: Canvas;
+    private groundCanvas: GroundCanvas;
     private mapCanvas: Canvas;
     private hardShadow: HardShadow;
     private softShadow: SoftShadow;
     private softShadow2: SoftShadow;
     private ws: any;
+    private imgs: Array<HTMLImageElement>;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, ws: any) {
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, ws: any, imgs: Array<HTMLImageElement>) {
         this.gl = gl;
-        this.map = new PerlinMap(gl, seed, MAP_SIZE, DEFAULT_UNIFORM_NAME);
-        this.player = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME);
-        this.player2 = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME);
+        this.map = new PerlinMap(gl, seed, MAP_SIZE, imgs[2], DEFAULT_UNIFORM_NAME);
+        this.player = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME, imgs[0]);
+        this.player2 = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME, imgs[0]);
         this.cameraWorldPos = center;
         this.playerLight = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
         this.playerLight2 = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
@@ -51,10 +55,12 @@ class Game {
         this.softShadow = new SoftShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
         this.softShadow2 = new SoftShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
         this.lightCanvas = new Canvas(gl, rectVsSource, rectFsSource);
+        this.groundCanvas = new GroundCanvas(gl, imgs[1]);
         this.mapCanvas = new Canvas(gl, mapCanvasVsSource, mapCanvasFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
         this.playerWorldPos = { x: emptyPos.x, y: emptyPos.y };
         this.ws = ws;
+        this.imgs = imgs;
     }
 
     private deltaTime: number = 0;
@@ -62,6 +68,11 @@ class Game {
     private playerWorldPos: Coord;
     private player2WorldPos: Coord;
     private cameraWorldPos: Coord;
+    private playerDirLevel: number = 3;
+    private player2DirLevel: number = 3;
+    private playerAnimaFrame: number = 0;
+    private player2AnimaFrame: number = 0;
+    private count: number = 0;
 
     start = () => {
         this.initWs();
@@ -185,7 +196,7 @@ class Game {
     }
 
     /**
-     * 绘制map贴图，r=0为障碍物，r=1为背景
+     * 绘制map贴图，a=1为障碍物，a=0为背景
      */
     private drawMapTexture = () => {
         const gl = this.gl;
@@ -195,10 +206,10 @@ class Game {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
-        gl.clearColor(0, 0, 0, 1);
+        gl.clearColor(0, 0, 0, 0);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        this.map.draw(this.cameraWorldPos, this.getDefaultUniform(), [0, 0, 0, 0]);
+        this.map.draw(this.cameraWorldPos, this.getDefaultUniform(), [0, 0, 0, 1]);
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
@@ -211,9 +222,17 @@ class Game {
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
+        const lefDownPos = { x: this.cameraWorldPos.x / this.map.mapCount.x, y: this.cameraWorldPos.y / this.map.mapCount.y };
+        this.groundCanvas.draw(lefDownPos, CoordUtils.add(lefDownPos, 1));
+
+        gl.enable(gl.BLEND);
+        gl.blendEquation(gl.FUNC_ADD);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
         this.mapCanvas.draw(this.map.fBufferInfo.targetTexture, BACK_COLOR, WALL_COLOR);
-        this.player.draw(this.playerWorldPos, this.getDefaultUniform(), PLAYER_COLOR);
-        if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.getDefaultUniform(), PLAYER_COLOR);
+
+        this.player.draw(this.playerWorldPos, this.getDefaultUniform(), this.playerDirLevel, this.playerAnimaFrame);
+        if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.getDefaultUniform(), this.player2DirLevel, this.player2AnimaFrame);
     }
 
     private drawLightToScene = () => {
@@ -228,10 +247,28 @@ class Game {
     private playerController = () => {
         const distance = PLAYER_SPEED * this.deltaTime;
 
-        if (KeyPress.get('s')) this.playerWorldPos.y -= distance;
-        if (KeyPress.get('w')) this.playerWorldPos.y += distance;
-        if (KeyPress.get('a')) this.playerWorldPos.x -= distance;
-        if (KeyPress.get('d')) this.playerWorldPos.x += distance;
+        if (KeyPress.get('S')) {
+            this.playerWorldPos.y -= distance;
+            this.playerDirLevel = 3;
+        }
+        if (KeyPress.get('A')) {
+            this.playerWorldPos.x -= distance;
+            this.playerDirLevel = 0;
+        }
+        if (KeyPress.get('D')) {
+            this.playerWorldPos.x += distance;
+            this.playerDirLevel = 2;
+        }
+        if (KeyPress.get('W')) {
+            this.playerWorldPos.y += distance;
+            this.playerDirLevel = 1;
+        }
+
+        this.count += ANIMA_SPEED * this.deltaTime;
+        this.playerAnimaFrame = Math.floor(this.count % 4);
+        if (!KeyPress.get('S') && !KeyPress.get('A') && !KeyPress.get('D') && !KeyPress.get('W')) {
+            this.playerAnimaFrame = 0;
+        }
     }
 
     private cameraController = () => {
@@ -244,7 +281,7 @@ class Game {
     //碰撞检测
     private CollisionDetection = () => {
         let dir = 1;
-        if (KeyPress.get('s')) dir = -1;
+        if (KeyPress.get('S')) dir = -1;
         for (let x = this.playerWorldPos.x - 1; x <= this.playerWorldPos.x + 1; x++) {
             for (let y = this.playerWorldPos.y - dir; dir === 1 ? y <= this.playerWorldPos.y + dir : y >= this.playerWorldPos.y + dir; y += dir) {
                 if (this.map.obstacled(x, y)) {
@@ -255,30 +292,30 @@ class Game {
                         let offset = { x: 0, y: 0 };
                         const threshold = 0.1;
 
-                        if ((KeyPress.get('d') || KeyPress.get('a')) && (KeyPress.get('w') || KeyPress.get('s'))) {
+                        if ((KeyPress.get('D') || KeyPress.get('A')) && (KeyPress.get('W') || KeyPress.get('S'))) {
 
-                            if (KeyPress.get('d') && KeyPress.get('w')) {
+                            if (KeyPress.get('D') && KeyPress.get('W')) {
                                 if (this.playerWorldPos.y + PLAYER_SIZE - threshold < obstacleRealPos.y) offset.y = intersectRect.c0.y - intersectRect.c1.y;
                                 else offset.x = intersectRect.c0.x - intersectRect.c1.x;
                             }
-                            if (KeyPress.get('a') && KeyPress.get('w')) {
+                            if (KeyPress.get('A') && KeyPress.get('W')) {
                                 if (this.playerWorldPos.y + PLAYER_SIZE - threshold < obstacleRealPos.y) offset.y = intersectRect.c0.y - intersectRect.c1.y;
                                 else offset.x = intersectRect.c1.x - intersectRect.c0.x;
                             }
-                            if (KeyPress.get('d') && KeyPress.get('s')) {
+                            if (KeyPress.get('D') && KeyPress.get('S')) {
                                 if (this.playerWorldPos.y - 1 + threshold > obstacleRealPos.y) offset.y = intersectRect.c1.y - intersectRect.c0.y;
                                 else offset.x = intersectRect.c0.x - intersectRect.c1.x;
                             }
-                            if (KeyPress.get('a') && KeyPress.get('s')) {
+                            if (KeyPress.get('A') && KeyPress.get('S')) {
                                 if (this.playerWorldPos.y - 1 + threshold > obstacleRealPos.y) offset.y = intersectRect.c1.y - intersectRect.c0.y;
                                 else offset.x = intersectRect.c1.x - intersectRect.c0.x;
                             }
 
                         } else {
-                            if (KeyPress.get('d')) offset.x = intersectRect.c0.x - intersectRect.c1.x;
-                            if (KeyPress.get('a')) offset.x = intersectRect.c1.x - intersectRect.c0.x;
-                            if (KeyPress.get('w')) offset.y = intersectRect.c0.y - intersectRect.c1.y;
-                            if (KeyPress.get('s')) offset.y = intersectRect.c1.y - intersectRect.c0.y;
+                            if (KeyPress.get('D')) offset.x = intersectRect.c0.x - intersectRect.c1.x;
+                            if (KeyPress.get('A')) offset.x = intersectRect.c1.x - intersectRect.c0.x;
+                            if (KeyPress.get('W')) offset.y = intersectRect.c0.y - intersectRect.c1.y;
+                            if (KeyPress.get('S')) offset.y = intersectRect.c1.y - intersectRect.c0.y;
 
                         }
                         this.playerWorldPos = CoordUtils.add(this.playerWorldPos, offset);
@@ -287,7 +324,8 @@ class Game {
             }
         }
 
-        this.ws.send(JSON.stringify({ type: 'pos', pos: this.playerWorldPos }));
+        if (this.ws.readyState === 1)
+            this.ws.send(JSON.stringify({ type: 'player', pos: this.playerWorldPos, dir: this.playerDirLevel, frame: this.playerAnimaFrame }));
     }
 
     //判断两个矩形是否相交，a0、a1分别为左下角、右上角坐标
@@ -349,8 +387,10 @@ class Game {
             const data = JSON.parse(mes.data);
 
             switch (data.type) {
-                case 'pos':
+                case 'player':
                     this.player2WorldPos = data.pos;
+                    this.player2DirLevel = data.dir;
+                    this.player2AnimaFrame = data.frame;
                     // console.log(this.player2WorldPos);
                     break;
             }

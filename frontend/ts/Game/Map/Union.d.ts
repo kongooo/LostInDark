@@ -21,7 +21,8 @@ declare class Union {
     private startPos;
     private threshold;
     private zoom;
-    constructor(noise: any, mapCount: Coord, threshod: number, zoom: number);
+    private spreadSize;
+    constructor(noise: any, mapCount: Coord, threshod: number, zoom: number, spreadSize: number);
     /**
      * 初始化Union数据
      */

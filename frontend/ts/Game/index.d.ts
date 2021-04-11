@@ -7,17 +7,24 @@ declare class Game {
     private playerLight;
     private playerLight2;
     private lightCanvas;
+    private groundCanvas;
     private mapCanvas;
     private hardShadow;
     private softShadow;
     private softShadow2;
     private ws;
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, ws: any);
+    private imgs;
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, ws: any, imgs: Array<HTMLImageElement>);
     private deltaTime;
     private lastTime;
     private playerWorldPos;
     private player2WorldPos;
     private cameraWorldPos;
+    private playerDirLevel;
+    private player2DirLevel;
+    private playerAnimaFrame;
+    private player2AnimaFrame;
+    private count;
     start: () => void;
     private update;
     private draw;
@@ -26,7 +33,7 @@ declare class Game {
     private drawSoftShadow;
     private drawLightTexture;
     /**
-     * 绘制map贴图，r=0为障碍物，r=1为背景
+     * 绘制map贴图，a=1为障碍物，a=0为背景
      */
     private drawMapTexture;
     private drawScene;

@@ -31,21 +31,19 @@ class ClientSocket {
         this.player1.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos1 }));
         this.player2.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos2 }));
         this.player1.getWs().on('message', async (mes: any) => {
-            const data = JSON.parse(mes);
-            switch (data.type) {
-                case 'pos':
-                    const mes = JSON.stringify({ type: 'pos', pos: data.pos });
-                    this.player2.getWs().send(mes);
-                    break;
+            if (this.player2.getWs().readyState === 1) {
+                this.player2.getWs().send(mes);
+            } else {
+                this.player2.getWs().close();
+                this.player1.getWs().close();
             }
         });
         this.player2.getWs().on('message', async (mes: any) => {
-            const data = JSON.parse(mes);
-            switch (data.type) {
-                case 'pos':
-                    const mes = JSON.stringify({ type: 'pos', pos: data.pos });
-                    this.player1.getWs().send(mes);
-                    break;
+            if (this.player1.getWs().readyState === 1) {
+                this.player1.getWs().send(mes);
+            } else {
+                this.player1.getWs().close();
+                this.player2.getWs().close();
             }
         });
     }

@@ -31,12 +31,14 @@ class Union {
     private startPos: Coord;
     private threshold: number;
     private zoom: number;
+    private spreadSize: number;
 
-    constructor(noise: any, mapCount: Coord, threshod: number, zoom: number) {
+    constructor(noise: any, mapCount: Coord, threshod: number, zoom: number, spreadSize: number) {
         this.noise = noise;
         this.mapCount = mapCount;
         this.threshold = threshod;
         this.zoom = zoom;
+        this.spreadSize = spreadSize;
     }
 
     /**
@@ -424,7 +426,7 @@ class Union {
         return this.noise.get(worldPos.x / this.zoom, worldPos.y / this.zoom) > this.threshold;
     }
 
-    localToWorldPos = (pos: Coord) => CoordUtils.add(CoordUtils.sub(pos, 1), this.startPos);
+    localToWorldPos = (pos: Coord) => CoordUtils.add(CoordUtils.sub(pos, this.spreadSize), this.startPos);
 }
 
 export default Union;

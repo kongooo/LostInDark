@@ -1,8 +1,18 @@
-/// <reference types="react" />
+import * as React from "react";
 export { GameCanvas };
 interface GLProps {
     children?: JSX.Element[];
     width: number;
     height: number;
 }
-declare function GameCanvas(props: GLProps): JSX.Element;
+interface GLState {
+    loading: boolean;
+}
+declare class GameCanvas extends React.Component<GLProps, GLState> {
+    private canvasRef;
+    constructor(props: GLProps);
+    componentDidMount(): void;
+    private loadImages;
+    private init;
+    render(): JSX.Element;
+}

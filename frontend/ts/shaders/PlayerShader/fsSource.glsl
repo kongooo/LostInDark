@@ -2,10 +2,12 @@
 
 precision mediump float;
 
-uniform vec3 u_color;
+uniform sampler2D u_image;
 
 out vec4 outPutColor;
 
+in vec2 v_texCoord;
+
 void main() {
-    outPutColor = vec4(u_color/vec3(255.0), 1.0);
+    outPutColor = texture(u_image, v_texCoord);
 }
