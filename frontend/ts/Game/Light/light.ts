@@ -1,5 +1,5 @@
-import lightVsSource from '../../shaders/LightShader/vsSource.glsl';
-import lightFsSource from '../../shaders/LightShader/fsSource.glsl';
+import lightVsSource from '../../../shaders/LightShader/vsSource.glsl';
+import lightFsSource from '../../../shaders/LightShader/fsSource.glsl';
 
 import StaticMesh from '../../Tools/Mesh/StaticMesh';
 

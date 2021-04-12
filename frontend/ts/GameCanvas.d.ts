@@ -7,12 +7,14 @@ interface GLProps {
 }
 interface GLState {
     loading: boolean;
+    animaDisplay: string;
 }
 declare class GameCanvas extends React.Component<GLProps, GLState> {
     private canvasRef;
     constructor(props: GLProps);
     componentDidMount(): void;
     private loadImages;
+    private initWithWs;
     private init;
     render(): JSX.Element;
 }

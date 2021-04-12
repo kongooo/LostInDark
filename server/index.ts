@@ -26,11 +26,8 @@ mainRoute.get('/transfer', async (ctx: any) => {
             const data = JSON.parse(mes);
             switch (data.type) {
                 case 'connect':
-                    if (!curFreeClient) {
+                    if (!curFreeClient || curFreeClient.getWs().readyState === 3) {
                         curFreeClient = new Client(ws);
-                        curFreeClient.getWs().on('close', () => {
-                            curFreeClient = undefined;
-                        })
                     } else {
                         const id = GetRandomCode();
                         const seed = GetRandomNum(0, 10000);

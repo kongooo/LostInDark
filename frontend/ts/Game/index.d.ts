@@ -14,7 +14,7 @@ declare class Game {
     private softShadow2;
     private ws;
     private imgs;
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, ws: any, imgs: Array<HTMLImageElement>);
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Array<HTMLImageElement>, ws?: any);
     private deltaTime;
     private lastTime;
     private playerWorldPos;

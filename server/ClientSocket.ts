@@ -33,7 +33,7 @@ class ClientSocket {
         this.player1.getWs().on('message', async (mes: any) => {
             if (this.player2.getWs().readyState === 1) {
                 this.player2.getWs().send(mes);
-            } else {
+            } else if (this.player2.getWs().readyState === 2 || this.player2.getWs().readyState === 3) {
                 this.player2.getWs().close();
                 this.player1.getWs().close();
             }
@@ -41,7 +41,7 @@ class ClientSocket {
         this.player2.getWs().on('message', async (mes: any) => {
             if (this.player1.getWs().readyState === 1) {
                 this.player1.getWs().send(mes);
-            } else {
+            } else if (this.player1.getWs().readyState === 2 || this.player1.getWs().readyState === 3) {
                 this.player1.getWs().close();
                 this.player2.getWs().close();
             }

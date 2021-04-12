@@ -2,8 +2,8 @@ import perlinNoise3d from 'perlin-noise-3d';
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
 import { Item } from '../Item/index';
 
-import mapVsSource from '../../shaders/MapShader/vsSource.glsl';
-import mapFsSource from '../../shaders/MapShader/fsSource.glsl';
+import mapVsSource from '../../../shaders/MapShader/vsSource.glsl';
+import mapFsSource from '../../../shaders/MapShader/fsSource.glsl';
 
 import { WebGL } from '../../Tools/WebGLUtils';
 

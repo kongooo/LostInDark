@@ -7,6 +7,12 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    opacity: 1;
+    transition: opacity 0.5s linear;
+}
+
+.load-anima-disappear {
+    opacity: 0;
 }
 
 .cl-mama {

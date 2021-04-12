@@ -8,11 +8,11 @@ import GroundCanvas from './Map/GroundCanvas';
 import KeyPress from '../Tools/Event/KeyEvent';
 import { Coord, CoordUtils } from '../Tools/Tool';
 
-import rectVsSource from '../shaders/RectShader/vsSource.glsl';
-import rectFsSource from '../shaders/RectShader/fsSource.glsl';
+import rectVsSource from '../../shaders/RectShader/vsSource.glsl';
+import rectFsSource from '../../shaders/RectShader/fsSource.glsl';
 
-import mapCanvasVsSource from '../shaders/MapCanvasShader/vsSource.glsl';
-import mapCanvasFsSource from '../shaders/MapCanvasShader/fsSource.glsl';
+import mapCanvasVsSource from '../../shaders/MapCanvasShader/vsSource.glsl';
+import mapCanvasFsSource from '../../shaders/MapCanvasShader/fsSource.glsl';
 
 const PLAYER_SPEED = 3;
 const CAMERA_SPEED = 1;
@@ -23,7 +23,7 @@ const PLAYER_COLOR = [164, 235, 243];
 const MAP_SIZE = 50;
 const PLAYER_SIZE = 0.9;
 const LIGHT_SIZE = 0.44;
-const ANIMA_SPEED = 7;
+const ANIMA_SPEED = 8;
 
 const DEFAULT_UNIFORM_NAME = ['u_resolution', 'u_cameraWorldPos', 'u_mapSize'];
 
@@ -43,7 +43,7 @@ class Game {
     private ws: any;
     private imgs: Array<HTMLImageElement>;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, ws: any, imgs: Array<HTMLImageElement>) {
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Array<HTMLImageElement>, ws?: any) {
         this.gl = gl;
         this.map = new PerlinMap(gl, seed, MAP_SIZE, imgs[2], DEFAULT_UNIFORM_NAME);
         this.player = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME, imgs[0]);
@@ -75,7 +75,8 @@ class Game {
     private count: number = 0;
 
     start = () => {
-        this.initWs();
+        if (this.ws)
+            this.initWs();
         this.update(0);
     }
 
@@ -143,9 +144,6 @@ class Game {
                 this.drawSoftShadow(this.softShadow2, this.player2WorldPos);
         }
 
-        //draw width vertices
-        // this.softShadow.drawSoftShadow(this.map.simpleVertices, centerPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
-
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
 
@@ -161,6 +159,9 @@ class Game {
         const playerCenterPos = CoordUtils.add(playerPos, PLAYER_SIZE / 2)
         //draw with min line
         shadow.drawSoftShadow(this.map.lineVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+
+        //draw with vertices
+        // shadow.drawSoftShadow(this.map.simpleVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
     }
 
 
@@ -223,7 +224,7 @@ class Game {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const lefDownPos = { x: this.cameraWorldPos.x / this.map.mapCount.x, y: this.cameraWorldPos.y / this.map.mapCount.y };
-        this.groundCanvas.draw(lefDownPos, CoordUtils.add(lefDownPos, 1));
+        this.groundCanvas.draw(lefDownPos);
 
         gl.enable(gl.BLEND);
         gl.blendEquation(gl.FUNC_ADD);
@@ -324,7 +325,7 @@ class Game {
             }
         }
 
-        if (this.ws.readyState === 1)
+        if (this.ws && this.ws.readyState === 1)
             this.ws.send(JSON.stringify({ type: 'player', pos: this.playerWorldPos, dir: this.playerDirLevel, frame: this.playerAnimaFrame }));
     }
 

@@ -1,5 +1,5 @@
-import playerVsSource from '../../shaders/PlayerShader/vsSource.glsl';
-import playerFsSource from '../../shaders/PlayerShader/fsSource.glsl';
+import playerVsSource from '../../../shaders/PlayerShader/vsSource.glsl';
+import playerFsSource from '../../../shaders/PlayerShader/fsSource.glsl';
 
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
 import { Coord } from '../../Tools/Tool';

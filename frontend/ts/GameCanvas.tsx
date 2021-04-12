@@ -2,6 +2,8 @@ import * as React from "react";
 
 import Game from "./Game/index";
 
+import { randomInt } from "./Tools/Tool";
+
 import Loading from "./Loading";
 import { LoadImage } from "./Tools/LoadImage";
 
@@ -19,13 +21,14 @@ interface GLProps {
 
 interface GLState {
   loading: boolean;
+  animaDisplay: string;
 }
 
 class GameCanvas extends React.Component<GLProps, GLState> {
   private canvasRef = React.createRef<HTMLCanvasElement>();
   constructor(props: GLProps) {
     super(props);
-    this.state = { loading: true };
+    this.state = { loading: true, animaDisplay: "flex" };
   }
 
   componentDidMount() {
@@ -37,6 +40,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       console.error("can't init webgl");
       return;
     }
+    // this.initWithWs(gl);
     this.init(gl);
   }
 
@@ -49,7 +53,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     return imgs;
   };
 
-  private init = (gl: WebGL2RenderingContext) => {
+  private initWithWs = (gl: WebGL2RenderingContext) => {
     const path = "ws://" + window.location.host + "/transfer";
     const ws = new WebSocket(path);
     const mes = JSON.stringify({ type: "connect" });
@@ -61,21 +65,36 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       if (data.type === "success") {
         console.log("success");
         const imgs = await this.loadImages();
-        const game = new Game(gl, data.seed, data.pos, ws, imgs);
+        const game = new Game(gl, data.seed, data.pos, imgs, ws);
         game.start();
         this.setState({ loading: false });
+        const timer = setTimeout(() => {
+          this.setState({ animaDisplay: "none" });
+          clearTimeout(timer);
+        }, 500);
       }
     };
   };
 
+  private init = async (gl: WebGL2RenderingContext) => {
+    const imgs = await this.loadImages();
+    const game = new Game(gl, randomInt(0, 10000), { x: 1000, y: 1000 }, imgs);
+    game.start();
+    this.setState({ loading: false });
+    const timer = setTimeout(() => {
+      this.setState({ animaDisplay: "none" });
+      clearTimeout(timer);
+    }, 500);
+  };
+
   render() {
-    const { loading } = this.state;
+    const { loading, animaDisplay } = this.state;
     const { width, height } = this.props;
     return (
       <React.Fragment>
         <div
-          className="load-anima"
-          style={{ display: loading ? "flex" : "none" }}
+          className={`load-anima ${loading ? "" : "load-anima-disappear"}`}
+          style={{ display: animaDisplay }}
         >
           <Loading></Loading>
         </div>

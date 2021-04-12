@@ -1,5 +1,5 @@
-import shadowVsSource from '../../shaders/HardShadowShader/vsSource.glsl';
-import shadowFsSource from '../../shaders/HardShadowShader/fsSource.glsl';
+import shadowVsSource from '../../../shaders/HardShadowShader/vsSource.glsl';
+import shadowFsSource from '../../../shaders/HardShadowShader/fsSource.glsl';
 
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
 

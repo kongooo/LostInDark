@@ -1,7 +1,7 @@
 import { WebGL } from '../../Tools/WebGLUtils';
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
-import rectVsSource from '../../shaders/RectShader/vsSource.glsl';
-import rectFsSource from '../../shaders/RectShader/fsSource.glsl';
+import rectVsSource from '../../../shaders/RectShader/vsSource.glsl';
+import rectFsSource from '../../../shaders/RectShader/fsSource.glsl';
 import { Coord } from '../../Tools/Tool';
 
 class GroundCanvas {
@@ -24,13 +24,13 @@ class GroundCanvas {
         this.texture = WebGL.getTexture(gl, img, true);
     }
 
-    draw = (leftDownPos: Coord, rightupPos: Coord) => {
+    draw = (leftDownPos: Coord) => {
         const gl = this.gl;
         this.canvasMesh.drawWithBuffer([
             0, 0, leftDownPos.x, leftDownPos.y,
-            gl.canvas.width, 0, rightupPos.x, leftDownPos.y,
-            gl.canvas.width, gl.canvas.height, rightupPos.x, rightupPos.y,
-            0, gl.canvas.height, leftDownPos.x, rightupPos.y
+            gl.canvas.width, 0, leftDownPos.x + 1, leftDownPos.y,
+            gl.canvas.width, gl.canvas.height, leftDownPos.x + 1, leftDownPos.y + 1,
+            0, gl.canvas.height, leftDownPos.x, leftDownPos.y + 1
         ], [
             { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
             { name: 'u_image', data: [0] },

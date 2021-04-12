@@ -4,6 +4,6 @@ declare class GroundCanvas {
     private canvasMesh;
     private texture;
     constructor(gl: WebGL2RenderingContext, img: HTMLImageElement);
-    draw: (leftDownPos: Coord, rightupPos: Coord) => void;
+    draw: (leftDownPos: Coord) => void;
 }
 export default GroundCanvas;

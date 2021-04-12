@@ -170,4 +170,6 @@ const swap = (a: Coord, b: Coord) => {
     b.y = t.y;
 }
 
-export { Coord, CoordUtils, FrameBufferInfo, clamp, lerp, getDir, swap };
+const randomInt = (min: number, max: number) => Math.round(Math.random() * (max - min) + min);
+
+export { Coord, CoordUtils, FrameBufferInfo, clamp, lerp, getDir, swap, randomInt };
