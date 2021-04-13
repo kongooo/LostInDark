@@ -8,6 +8,6 @@ declare class StaticMesh extends Mesh {
     private vertics;
     private indices;
     getVAO: (vertics: Array<number>, indices?: Array<number>) => WebGLVertexArrayObject;
-    drawWithAVO: (uniforms: Array<UniformLocationObj>, texture?: WebGLTexture) => void;
+    drawWithAVO: (uniforms: Array<UniformLocationObj>) => void;
 }
 export default StaticMesh;

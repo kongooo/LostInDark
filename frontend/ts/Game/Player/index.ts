@@ -5,6 +5,7 @@ import VaryMesh from '../../Tools/Mesh/VaryMesh';
 import { Coord } from '../../Tools/Tool';
 import { UniformLocationObj } from '../../Tools/interface';
 import { WebGL } from '../../Tools/WebGLUtils';
+import Camera from '../Camera';
 
 
 class Player {
@@ -19,7 +20,7 @@ class Player {
             { name: 'a_position', size: 2 },
             { name: 'a_texCoord', size: 2 }
         ]);
-        playerMesh.getUniformLocations(['u_worldPos', 'u_image', 'u_scale', ...defaultUniformName]);
+        // playerMesh.getUniformLocations(['u_worldPos', 'u_image', 'u_scale', 'u_projectionMatrix', 'u_viewMatrix', ...defaultUniformName]);
         playerMesh.getBuffer();
 
         this.playerMesh = playerMesh;
@@ -41,13 +42,13 @@ class Player {
             this.size, this.size, 0.25 * (animaFrame + 1), 0.25 * (level + 1),
             0, this.size, 0.25 * animaFrame, 0.25 * (level + 1)
         ], [
-            { name: 'u_worldPos', data: [playerWorldPos.x, playerWorldPos.y] },
-            { name: 'u_image', data: [0] },
-            { name: 'u_scale', data: [1] },
+            { name: 'u_worldPos', data: [playerWorldPos.x, playerWorldPos.y], type: 'vec2' },
+            { name: 'u_image', data: [0], type: 'texture', texture: this.playerTexture },
+            { name: 'u_scale', data: [1], type: 'number' },
             ...defaultUniform
         ], [
             0, 1, 2, 0, 2, 3
-        ], this.playerTexture);
+        ]);
     }
 }
 

@@ -22,13 +22,21 @@ class Light {
             { name: 'a_position', size: 2 },
             { name: 'a_texCoord', size: 2 }
         ])
-        LightMesh.getUniformLocations(['u_shadow', 'u_worldPos', ...defaultUniformName]);
+        // lightRadius = 0;
+        // LightMesh.getUniformLocations(['u_shadow', 'u_worldPos', ...defaultUniformName]);
         LightMesh.getVAO([
             - lightRadius, - lightRadius, 0, 0,
-            lightRadius, - lightRadius, 1, 0,
+            - lightRadius, lightRadius, 0, 1,
             lightRadius, lightRadius, 1, 1,
-            - lightRadius, lightRadius, 0, 1
-        ], [0, 1, 2, 0, 2, 3]);
+            lightRadius, - lightRadius, 1, 0,
+        ], [0, 2, 1, 0, 3, 2]);
+
+        // LightMesh.getVAO([
+        //     0, 0, 0, 0,
+        //     0, 0, 0, 1,
+        //     0, 0, 1, 1,
+        //     0, 0, 1, 0,
+        // ], [0, 2, 1, 0, 3, 2]);
 
         this.lightMesh = LightMesh;
         this.fBufferInfo = fBufferInfo;
@@ -43,10 +51,10 @@ class Light {
      */
     draw = (worldPos: Coord, texture: WebGLTexture, defaultUniform: Array<UniformLocationObj>) => {
         this.lightMesh.drawWithAVO([
-            { name: 'u_shadow', data: [0] },
-            { name: 'u_worldPos', data: [worldPos.x, worldPos.y] },
+            { name: 'u_shadow', data: [0], texture, type: 'texture' },
+            { name: 'u_worldPos', data: [worldPos.x, worldPos.y], type: 'vec2' },
             ...defaultUniform
-        ], texture);
+        ]);
     }
 }
 

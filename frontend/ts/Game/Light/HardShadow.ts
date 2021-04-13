@@ -21,7 +21,7 @@ class HardShadow {
         shadowMesh.getAttributeLocations([
             { name: 'a_position', size: 2 }
         ]);
-        shadowMesh.getUniformLocations(['u_image', ...defaultUniformName]);
+        // shadowMesh.getUniformLocations(['u_image', ...defaultUniformName]);
         shadowMesh.getBuffer();
 
         this.fBufferInfo = fBufferInfo;
@@ -73,9 +73,9 @@ class HardShadow {
         }
 
         this.shadowMesh.drawWithBuffer(vertices, [
-            { name: 'u_image', data: [0] },
+            { name: 'u_image', data: [0], texture, type: 'texture' },
             ...defaultUniform
-        ], undefined, texture)
+        ])
     }
 }
 

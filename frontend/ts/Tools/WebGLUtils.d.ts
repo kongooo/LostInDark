@@ -1,9 +1,10 @@
+import { UniformLocationObj } from "./interface";
 export { WebGL };
 declare class WebGL {
     static initShaderProgram: (gl: WebGL2RenderingContext, vsSource: string, fsSource: string) => WebGLProgram;
     static loadShader: (gl: WebGL2RenderingContext, type: number, source: string) => WebGLShader;
     static bindEBO: (gl: WebGL2RenderingContext, index: Array<number>) => void;
-    static setUniform: (gl: WebGL2RenderingContext, uniformLocation: WebGLUniformLocation, data: Array<number>) => void;
+    static setUniform: (gl: WebGL2RenderingContext, uniformLocation: WebGLUniformLocation, uniformObj: UniformLocationObj) => void;
     /**
      *
      * @param gl

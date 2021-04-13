@@ -1,6 +1,5 @@
 import perlinNoise3d from 'perlin-noise-3d';
-import VaryMesh from '../../Tools/Mesh/VaryMesh';
-import { Item } from '../Item/index';
+import InstanceMesh from '../../Tools/Mesh/InstanceMesh';
 
 import mapVsSource from '../../../shaders/MapShader/vsSource.glsl';
 import mapFsSource from '../../../shaders/MapShader/fsSource.glsl';
@@ -15,7 +14,7 @@ import Union from './Union';
 const ZOOM = 5;
 const RECT_VERTEX_COUNT = 4;
 const THRESHOLD = 0.6;
-const SPREAD_SIZE = 5;
+const SPREAD_SIZE = 0;
 
 interface Coord {
     x: number;
@@ -25,36 +24,70 @@ interface Coord {
 class PerlinMap {
     private noise: any;
     private gl: WebGL2RenderingContext;
-    private MapMesh: VaryMesh;
+    private MapMesh: InstanceMesh;
     mapCount: Coord;
     private union: Union;
     fBufferInfo: FrameBufferInfo;
     texture: WebGLTexture;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, size: number, img: HTMLImageElement, defaultUniformName: Array<string>) {
+    constructor(gl: WebGL2RenderingContext, seed: number, size: number, img: HTMLImageElement, mapCount: Coord) {
         const noise = new perlinNoise3d();
         noise.noiseSeed(seed);
 
-        const MapMesh = new VaryMesh(gl, mapVsSource, mapFsSource);
+        const MapMesh = new InstanceMesh(gl, mapVsSource, mapFsSource);
         MapMesh.getAttributeLocations([
-            { name: 'a_position', size: 2 },
+            { name: 'a_position', size: 3 },
             { name: 'a_texCoord', size: 2 }
         ])
-        MapMesh.getUniformLocations(['u_image', ...defaultUniformName]);
-        MapMesh.getBuffer();
+        MapMesh.getInstanceAttribLocations([
+            { name: 'a_offset', size: 2 }
+        ])
+        // MapMesh.getUniformLocations(['u_image', 'u_projectionMatrix', 'u_viewMatrix', ...defaultUniformName]);
+        MapMesh.getBufferAndVAO([
+
+            //right
+            1, 0, 0, 0, 0,
+            1, 1, 0, 1, 0,
+            1, 1, 1, 1, 1,
+            1, 0, 1, 0, 1,
+
+            //left
+            0, 0, 0, 0, 0,
+            0, 0, 1, 1, 0,
+            0, 1, 1, 1, 1,
+            0, 1, 0, 0, 1,
+
+            //front
+            0, 0, 1, 0, 0,
+            1, 0, 1, 1, 0,
+            1, 1, 1, 1, 1,
+            0, 1, 1, 0, 1,
+
+            //top
+            0, 1, 0, 0, 0,
+            0, 1, 1, 1, 0,
+            1, 1, 1, 1, 1,
+            1, 1, 0, 0, 1
+        ], [
+            0, 1, 2, 0, 2, 3,
+            4, 5, 6, 4, 6, 7,
+            8, 9, 10, 8, 10, 11,
+            12, 13, 14, 12, 14, 15
+        ]);
 
         this.MapMesh = MapMesh;
         this.gl = gl;
         this.noise = noise;
         this.fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         this.size = size;
-        this.mapCount = { x: Math.floor(gl.canvas.width / size), y: Math.floor(gl.canvas.height / size) };
+        this.mapCount = mapCount;
         this.union = new Union(noise, CoordUtils.add(this.mapCount, SPREAD_SIZE * 2), THRESHOLD, ZOOM, SPREAD_SIZE);
         this.texture = WebGL.getTexture(gl, img);
     }
 
     private vertics: Array<number> = [];
     private indices: Array<number> = [];
+    private gridPos: Array<number> = [];
     simpleVertices: Array<Coord> = [];
     lineVertices: Array<Coord> = [];
     private noiseValue: number = 0;
@@ -62,25 +95,27 @@ class PerlinMap {
 
     size: number;
 
+    generateVerticesAndLines = (mapPos: Coord) => {
+        const noiseValue = this.noise.get(Math.floor(mapPos.x) / ZOOM, Math.floor(mapPos.y) / ZOOM);
+
+        //边界重新得到地图顶点数据
+        if (this.noiseValue !== noiseValue) {
+            this.generateVertics(mapPos.x, mapPos.y);
+            this.noiseValue = noiseValue;
+        }
+    }
+
     /**
      * 
      * @param cameraWorldPos 摄像机左下角世界坐标
      */
-    draw = (cameraWorldPos: Coord, defaultUniform: Array<UniformLocationObj>, obstacleColor: Array<number>) => {
-        const gl = this.gl;
+    draw = (defaultUniform: Array<UniformLocationObj>) => {
 
-        const noiseValue = this.noise.get(Math.floor(cameraWorldPos.x) / ZOOM, Math.floor(cameraWorldPos.y) / ZOOM);
-
-        //边界重新得到地图顶点数据
-        if (this.noiseValue !== noiseValue) {
-            this.generateVertics(cameraWorldPos.x, cameraWorldPos.y);
-            this.noiseValue = noiseValue;
-        }
-
-        this.MapMesh.drawWithBuffer(this.vertics, [
-            { name: 'u_image', data: [0] },
+        // console.log(this.vertics);
+        this.MapMesh.drawWithBufferAndVAO(this.gridPos, [
+            { name: 'u_image', data: [0], texture: this.texture, type: 'texture' },
             ...defaultUniform
-        ], this.indices, this.texture);
+        ]);
     }
 
     //得到没有障碍物的坐标
@@ -111,26 +146,7 @@ class PerlinMap {
         this.vertics = [];
         this.indices = [];
         this.simpleVertices = [];
-
-        // const xWorldPos = Math.floor(this.mapCount.x / 2 + startX);
-        // const yWorldPos = Math.floor(this.mapCount.y / 2 + startY);
-        // const vertices = [
-        //     //down
-        //     { x: xWorldPos, y: yWorldPos },
-        //     { x: xWorldPos + 1, y: yWorldPos },
-        //     //right
-        //     { x: xWorldPos + 1, y: yWorldPos },
-        //     { x: xWorldPos + 1, y: yWorldPos + 1 },
-        //     //up
-        //     { x: xWorldPos + 1, y: yWorldPos + 1 },
-        //     { x: xWorldPos, y: yWorldPos + 1 },
-        //     // //left
-        //     { x: xWorldPos, y: yWorldPos + 1 },
-        //     { x: xWorldPos, y: yWorldPos },
-        // ];
-        // this.lineVertices.push(...vertices);
-
-
+        this.gridPos = [];
 
         for (let x = -SPREAD_SIZE; x < this.mapCount.x + SPREAD_SIZE; x++)
             for (let y = -SPREAD_SIZE; y < this.mapCount.y + SPREAD_SIZE; y++) {
@@ -139,30 +155,33 @@ class PerlinMap {
                 const num = this.noise.get(xWorldPos / ZOOM, yWorldPos / ZOOM);
                 if (num > THRESHOLD) {
 
-                    this.vertics.push(...[
-                        xWorldPos, yWorldPos, 0, 0,
-                        xWorldPos + 1, yWorldPos, 1, 0,
-                        xWorldPos + 1, yWorldPos + 1, 1, 1,
-                        xWorldPos, yWorldPos + 1, 0, 1
-                    ]);
-                    this.indices.push(...[
-                        count * RECT_VERTEX_COUNT,
-                        count * RECT_VERTEX_COUNT + 1,
-                        count * RECT_VERTEX_COUNT + 2,
-                        count * RECT_VERTEX_COUNT,
-                        count * RECT_VERTEX_COUNT + 2,
-                        count * RECT_VERTEX_COUNT + 3,
-                    ]);
-                    this.simpleVertices.push(...[
-                        { x: xWorldPos, y: yWorldPos },
-                        { x: xWorldPos + 1, y: yWorldPos },
-                        { x: xWorldPos + 1, y: yWorldPos },
-                        { x: xWorldPos + 1, y: yWorldPos + 1 },
-                        { x: xWorldPos + 1, y: yWorldPos + 1 },
-                        { x: xWorldPos, y: yWorldPos + 1 },
-                        { x: xWorldPos, y: yWorldPos + 1 },
-                        { x: xWorldPos, y: yWorldPos },
-                    ])
+                    this.gridPos.push(
+                        xWorldPos, yWorldPos
+                    )
+                    // this.vertics.push(...[
+                    //     xWorldPos, yWorldPos, 0, 0,
+                    //     xWorldPos + 1, yWorldPos, 1, 0,
+                    //     xWorldPos + 1, yWorldPos + 1, 1, 1,
+                    //     xWorldPos, yWorldPos + 1, 0, 1
+                    // ]);
+                    // this.indices.push(...[
+                    //     count * RECT_VERTEX_COUNT,
+                    //     count * RECT_VERTEX_COUNT + 1,
+                    //     count * RECT_VERTEX_COUNT + 2,
+                    //     count * RECT_VERTEX_COUNT,
+                    //     count * RECT_VERTEX_COUNT + 2,
+                    //     count * RECT_VERTEX_COUNT + 3,
+                    // ]);
+                    // this.simpleVertices.push(...[
+                    //     { x: xWorldPos, y: yWorldPos },
+                    //     { x: xWorldPos + 1, y: yWorldPos },
+                    //     { x: xWorldPos + 1, y: yWorldPos },
+                    //     { x: xWorldPos + 1, y: yWorldPos + 1 },
+                    //     { x: xWorldPos + 1, y: yWorldPos + 1 },
+                    //     { x: xWorldPos, y: yWorldPos + 1 },
+                    //     { x: xWorldPos, y: yWorldPos + 1 },
+                    //     { x: xWorldPos, y: yWorldPos },
+                    // ])
                     count++;
                     //将-SPREAD_SIZE，size+SPREAD_SIZE映射到0，size+SPREAD_SIZE
                     this.union.setBlock(x + SPREAD_SIZE, y + SPREAD_SIZE);

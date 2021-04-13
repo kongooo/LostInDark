@@ -12,5 +12,7 @@ interface AttribLocationObj {
 
 interface UniformLocationObj {
     name: string;
-    data: Array<number>;
+    data: Array<number> | Float32Array;
+    type: "texture" | "number" | "vec2" | "vec3" | "vec4" | "matrix",
+    texture?: WebGLTexture;
 }

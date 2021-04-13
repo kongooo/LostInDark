@@ -6,6 +6,6 @@ declare class SoftShadow {
     fBufferInfo: FrameBufferInfo;
     private mapSize;
     constructor(gl: WebGL2RenderingContext, mapSize: number, defaultUniformName: Array<string>);
-    drawSoftShadow: (lineVertics: Array<Coord>, lightPos: Coord, sLightRadius: number, bLightRadius: number, defaultUniform: Array<UniformLocationObj>, texture: WebGLTexture) => void;
+    drawSoftShadow: (lineVertics: Array<Coord>, lightPos: Coord, sLightRadius: number, bLightRadius: number, defaultUniform: Array<UniformLocationObj>) => void;
 }
 export default SoftShadow;

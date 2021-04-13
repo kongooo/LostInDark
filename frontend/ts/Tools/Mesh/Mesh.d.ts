@@ -24,7 +24,6 @@ declare class Mesh {
      * @param uniforms uniform object array
      * @returns uniform object array
      */
-    getUniformLocations: (uniforms: Array<string>) => Map<string, WebGLUniformLocation>;
     protected setAttribPointer: () => void;
     protected setUniformLocation: (uniforms: Array<UniformLocationObj>) => void;
 }

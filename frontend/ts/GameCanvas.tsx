@@ -10,6 +10,7 @@ import { LoadImage } from "./Tools/LoadImage";
 import playerImg from "../../image/slime.png";
 import backImg from "../../image/back.png";
 import groundImg from "../../image/ground1.png";
+import mat4 from "gl-mat4";
 
 export { GameCanvas };
 

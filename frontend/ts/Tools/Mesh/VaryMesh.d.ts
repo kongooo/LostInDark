@@ -5,6 +5,6 @@ declare class VaryMesh extends Mesh {
     private buffer;
     private indexBuffer;
     getBuffer: () => WebGLBuffer;
-    drawWithBuffer: (vertics: Array<number>, uniforms: Array<UniformLocationObj>, indices?: Array<number>, texture?: WebGLTexture) => void;
+    drawWithBuffer: (vertics: Array<number>, uniforms: Array<UniformLocationObj>, indices?: Array<number>) => void;
 }
 export default VaryMesh;

@@ -34,21 +34,21 @@ class StaticMesh extends Mesh {
         return this.vao;
     }
 
-    drawWithAVO = (uniforms: Array<UniformLocationObj>, texture?: WebGLTexture) => {
+    drawWithAVO = (uniforms: Array<UniformLocationObj>) => {
         const gl = this.gl;
         gl.useProgram(this.shaderProgram);
         gl.bindVertexArray(this.vao);
         this.setUniformLocation(uniforms);
-        if (texture) {
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.activeTexture(gl.TEXTURE0 + 0);
-        }
         if (this.elementEnable) {
             gl.drawElements(gl.TRIANGLES, this.vertexCount, gl.UNSIGNED_SHORT, 0);
         } else {
             gl.drawArrays(gl.TRIANGLES, 0, this.vertexCount);
         }
         gl.bindVertexArray(null);
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, null);
     }
 }
 

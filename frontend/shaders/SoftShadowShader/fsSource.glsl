@@ -3,7 +3,7 @@
 precision mediump float;
 
 in vec4 v_ABposition;
-in vec2 v_texCoord;
+// in vec2 v_texCoord;
 in vec2 v_pos;
 
 //0：正常情况
@@ -51,7 +51,7 @@ float angle(vec2 aVector, vec2 bVector) {
 }
 
 void main() {
-    float alpha = texture(u_map, v_texCoord).a;
+    // float alpha = texture(u_map, v_texCoord).a;
     vec2 P = v_pos;
     vec4 color = vec4(0.0);
 
@@ -138,9 +138,9 @@ void main() {
     }
 
     //除去障碍物部分
-    if(alpha == 1.0) {
-        color = vec4(0.0);
-    }
+    // if(alpha == 1.0) {
+    //     color = vec4(0.0);
+    // }
 
     outPutColor = color;
 }

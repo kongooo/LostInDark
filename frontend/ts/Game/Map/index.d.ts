@@ -12,18 +12,20 @@ declare class PerlinMap {
     private union;
     fBufferInfo: FrameBufferInfo;
     texture: WebGLTexture;
-    constructor(gl: WebGL2RenderingContext, seed: number, size: number, img: HTMLImageElement, defaultUniformName: Array<string>);
+    constructor(gl: WebGL2RenderingContext, seed: number, size: number, img: HTMLImageElement, mapCount: Coord);
     private vertics;
     private indices;
+    private gridPos;
     simpleVertices: Array<Coord>;
     lineVertices: Array<Coord>;
     private noiseValue;
     size: number;
+    generateVerticesAndLines: (mapPos: Coord) => void;
     /**
      *
      * @param cameraWorldPos 摄像机左下角世界坐标
      */
-    draw: (cameraWorldPos: Coord, defaultUniform: Array<UniformLocationObj>, obstacleColor: Array<number>) => void;
+    draw: (defaultUniform: Array<UniformLocationObj>) => void;
     getEmptyPos: (startX: number, startY: number) => {
         x: number;
         y: number;

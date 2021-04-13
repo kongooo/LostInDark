@@ -21,17 +21,13 @@ class VaryMesh extends Mesh {
         return this.buffer;
     }
 
-    drawWithBuffer = (vertics: Array<number>, uniforms: Array<UniformLocationObj>, indices?: Array<number>, texture?: WebGLTexture) => {
+    drawWithBuffer = (vertics: Array<number>, uniforms: Array<UniformLocationObj>, indices?: Array<number>) => {
         const gl = this.gl;
         gl.useProgram(this.shaderProgram);
         gl.bindBuffer(gl.ARRAY_BUFFER, this.buffer);
 
-        this.setUniformLocation(uniforms);
-        if (texture) {
-            gl.bindTexture(gl.TEXTURE_2D, texture);
-            gl.activeTexture(gl.TEXTURE0 + 0);
-        }
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertics), gl.DYNAMIC_DRAW);
+        this.setUniformLocation(uniforms);
         this.setAttribPointer();
         if (indices) {
             gl.bindBuffer(gl.ELEMENT_ARRAY_BUFFER, this.indexBuffer);
@@ -40,6 +36,10 @@ class VaryMesh extends Mesh {
         } else {
             gl.drawArrays(gl.TRIANGLES, 0, vertics.length / this.vertexSize);
         }
+        gl.activeTexture(gl.TEXTURE0);
+        gl.bindTexture(gl.TEXTURE_2D, null);
+        gl.activeTexture(gl.TEXTURE1);
+        gl.bindTexture(gl.TEXTURE_2D, null);
     }
 }
 

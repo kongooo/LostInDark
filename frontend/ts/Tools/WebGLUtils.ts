@@ -1,3 +1,5 @@
+import { UniformLocationObj } from "./interface";
+
 export { WebGL }
 
 class WebGL {
@@ -36,19 +38,32 @@ class WebGL {
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array(index), gl.STATIC_DRAW);
     }
 
-    static setUniform = (gl: WebGL2RenderingContext, uniformLocation: WebGLUniformLocation, data: Array<number>) => {
-        const size = data.length;
-        switch (size) {
-            case 1:
-                gl.uniform1f(uniformLocation, data[0]);
+    static setUniform = (gl: WebGL2RenderingContext, uniformLocation: WebGLUniformLocation, uniformObj: UniformLocationObj) => {
+
+        let data;
+        switch (uniformObj.type) {
+            case 'matrix':
+                gl.uniformMatrix4fv(uniformLocation, false, uniformObj.data as Float32Array);
                 break;
-            case 2:
+            case 'number':
+                gl.uniform1f(uniformLocation, (uniformObj.data as Array<number>)[0]);
+                break;
+            case 'texture':
+                const index = (uniformObj.data as Array<number>)[0];
+                gl.activeTexture(gl.TEXTURE0 + index);
+                gl.bindTexture(gl.TEXTURE_2D, uniformObj.texture);
+                gl.uniform1i(uniformLocation, index);
+                break;
+            case 'vec2':
+                data = (uniformObj.data as Array<number>);
                 gl.uniform2f(uniformLocation, data[0], data[1]);
                 break;
-            case 3:
+            case 'vec3':
+                data = (uniformObj.data as Array<number>);
                 gl.uniform3f(uniformLocation, data[0], data[1], data[2]);
                 break;
-            case 4:
+            case 'vec4':
+                data = (uniformObj.data as Array<number>);
                 gl.uniform4f(uniformLocation, data[0], data[1], data[2], data[3]);
                 break;
         }

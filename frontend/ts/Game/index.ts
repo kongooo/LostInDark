@@ -13,17 +13,20 @@ import rectFsSource from '../../shaders/RectShader/fsSource.glsl';
 
 import mapCanvasVsSource from '../../shaders/MapCanvasShader/vsSource.glsl';
 import mapCanvasFsSource from '../../shaders/MapCanvasShader/fsSource.glsl';
+import Camera from './Camera';
+import { UniformLocationObj } from '../Tools/interface';
 
 const PLAYER_SPEED = 3;
 const CAMERA_SPEED = 1;
 const BACK_COLOR = [244, 249, 249];
 const WALL_COLOR = [170, 170, 170];
-const PLAYER_LIGHT_RADIUS = 13;
+const PLAYER_LIGHT_RADIUS = 20;
 const PLAYER_COLOR = [164, 235, 243];
-const MAP_SIZE = 50;
+const MAP_SIZE = 1;
 const PLAYER_SIZE = 0.9;
 const LIGHT_SIZE = 0.44;
 const ANIMA_SPEED = 8;
+const MAP_COUNT = { x: 50, y: 30 };
 
 const DEFAULT_UNIFORM_NAME = ['u_resolution', 'u_cameraWorldPos', 'u_mapSize'];
 
@@ -42,37 +45,41 @@ class Game {
     private softShadow2: SoftShadow;
     private ws: any;
     private imgs: Array<HTMLImageElement>;
+    private camera: Camera;
 
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Array<HTMLImageElement>, ws?: any) {
         this.gl = gl;
-        this.map = new PerlinMap(gl, seed, MAP_SIZE, imgs[2], DEFAULT_UNIFORM_NAME);
+        this.map = new PerlinMap(gl, seed, MAP_SIZE, imgs[2], MAP_COUNT);
         this.player = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME, imgs[0]);
         this.player2 = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME, imgs[0]);
-        this.cameraWorldPos = center;
+        // this.cameraWorldPos = center;
         this.playerLight = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
         this.playerLight2 = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
         this.hardShadow = new HardShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
         this.softShadow = new SoftShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
         this.softShadow2 = new SoftShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
-        this.lightCanvas = new Canvas(gl, rectVsSource, rectFsSource);
+        this.lightCanvas = new Canvas(gl, MAP_COUNT);
         this.groundCanvas = new GroundCanvas(gl, imgs[1]);
-        this.mapCanvas = new Canvas(gl, mapCanvasVsSource, mapCanvasFsSource);
+        // this.mapCanvas = new Canvas(gl, mapCanvasVsSource, mapCanvasFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
-        this.playerWorldPos = { x: emptyPos.x, y: emptyPos.y };
+        // this.playerWorldPos = { x: emptyPos.x, y: emptyPos.y };
+        this.playerWorldPos = { x: 1686, y: 1516 };
         this.ws = ws;
         this.imgs = imgs;
+        this.camera = new Camera();
     }
 
     private deltaTime: number = 0;
     private lastTime: number = 0;
-    private playerWorldPos: Coord;
+    private playerWorldPos: Coord = { x: 0, y: 0 };
     private player2WorldPos: Coord;
-    private cameraWorldPos: Coord;
+    // private cameraWorldPos: Coord;
     private playerDirLevel: number = 3;
     private player2DirLevel: number = 3;
     private playerAnimaFrame: number = 0;
     private player2AnimaFrame: number = 0;
     private count: number = 0;
+    private mapPos: Coord;
 
     start = () => {
         if (this.ws)
@@ -92,11 +99,16 @@ class Game {
 
         this.playerController();
         this.CollisionDetection();
-        this.cameraController();
+        // this.cameraController();
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
-        this.drawMapTexture();
+
+        this.camera.position[0] = this.playerWorldPos.x;
+        this.camera.position[2] = this.playerWorldPos.y + 10;
+
+        this.map.generateVerticesAndLines(this.mapPos);
+
         //shadow必须在light前绘制
         // this.drawHardShadowTexture();
         this.drawSoftShadowTexture();
@@ -104,7 +116,7 @@ class Game {
 
         this.drawScene();
 
-        this.drawLightToScene();
+        // this.drawLightToScene();
     }
 
     private drawHardShadowTexture = () => {
@@ -132,6 +144,7 @@ class Game {
         //1 - 遮挡率 = 亮度
         gl.blendEquation(gl.FUNC_REVERSE_SUBTRACT);
         gl.blendFunc(gl.ONE, gl.ONE);
+        gl.disable(gl.CULL_FACE);
 
         //draw player shadow
         {
@@ -153,12 +166,13 @@ class Game {
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
+        gl.disable(gl.DEPTH_TEST);
         gl.clearColor(1, 1, 1, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const playerCenterPos = CoordUtils.add(playerPos, PLAYER_SIZE / 2)
         //draw with min line
-        shadow.drawSoftShadow(this.map.lineVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+        shadow.drawSoftShadow(this.map.lineVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform());
 
         //draw with vertices
         // shadow.drawSoftShadow(this.map.simpleVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
@@ -167,14 +181,18 @@ class Game {
 
     private drawLightTexture = () => {
         const gl = this.gl;
-        gl.disable(gl.BLEND);
 
         const { renderFrameBuffer, textureFrameBuffer } = this.playerLight.fBufferInfo;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
+        gl.disable(gl.DEPTH_TEST);
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
+
+        gl.disable(gl.BLEND);
+        gl.blendEquation(gl.FUNC_ADD);
+        gl.blendFunc(gl.ONE, gl.ONE);
 
         //draw player shadow
         const lightCenter = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2);
@@ -183,9 +201,6 @@ class Game {
         //soft shadow
         this.playerLight.draw(lightCenter, this.softShadow.fBufferInfo.targetTexture, this.getDefaultUniform());
 
-        gl.enable(gl.BLEND);
-        gl.blendEquation(gl.FUNC_ADD);
-        gl.blendFunc(gl.ONE, gl.ONE);
 
         //draw player2 shadow
         if (this.player2WorldPos) {
@@ -196,44 +211,32 @@ class Game {
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
 
-    /**
-     * 绘制map贴图，a=1为障碍物，a=0为背景
-     */
-    private drawMapTexture = () => {
-        const gl = this.gl;
-        gl.disable(gl.BLEND);
-
-        const { renderFrameBuffer, textureFrameBuffer } = this.map.fBufferInfo;
-
-        gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
-
-        gl.clearColor(0, 0, 0, 0);
-        gl.clear(gl.COLOR_BUFFER_BIT);
-
-        this.map.draw(this.cameraWorldPos, this.getDefaultUniform(), [0, 0, 0, 1]);
-
-        // this.blit(renderFrameBuffer, textureFrameBuffer);
-    }
 
     private drawScene = () => {
         const gl = this.gl;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.disable(gl.BLEND);
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        const lefDownPos = { x: this.cameraWorldPos.x / this.map.mapCount.x, y: this.cameraWorldPos.y / this.map.mapCount.y };
-        this.groundCanvas.draw(lefDownPos);
+
+        gl.enable(gl.CULL_FACE);
+        gl.enable(gl.DEPTH_TEST);
+        gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
+
 
         gl.enable(gl.BLEND);
         gl.blendEquation(gl.FUNC_ADD);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        this.mapCanvas.draw(this.map.fBufferInfo.targetTexture, BACK_COLOR, WALL_COLOR);
+        // this.mapCanvas.draw(this.map.fBufferInfo.targetTexture, BACK_COLOR, WALL_COLOR);
+
+        const lefDownPos = { x: this.mapPos.x / this.map.mapCount.x, y: this.mapPos.y / this.map.mapCount.y };
+        this.groundCanvas.draw(this.mapPos, lefDownPos, MAP_COUNT, this.getDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
+        this.map.draw(this.getDefaultUniform());
 
         this.player.draw(this.playerWorldPos, this.getDefaultUniform(), this.playerDirLevel, this.playerAnimaFrame);
-        if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.getDefaultUniform(), this.player2DirLevel, this.player2AnimaFrame);
+        // if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.getDefaultUniform(), this.player2DirLevel, this.player2AnimaFrame);
     }
 
     private drawLightToScene = () => {
@@ -242,14 +245,14 @@ class Game {
         gl.enable(gl.BLEND);
         gl.blendEquation(gl.FUNC_ADD);
         gl.blendFunc(gl.DST_COLOR, 0);
-        this.lightCanvas.draw(this.playerLight.fBufferInfo.targetTexture);
+        this.lightCanvas.draw(this.mapPos, this.getDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
     }
 
     private playerController = () => {
         const distance = PLAYER_SPEED * this.deltaTime;
 
         if (KeyPress.get('S')) {
-            this.playerWorldPos.y -= distance;
+            this.playerWorldPos.y += distance;
             this.playerDirLevel = 3;
         }
         if (KeyPress.get('A')) {
@@ -261,7 +264,7 @@ class Game {
             this.playerDirLevel = 2;
         }
         if (KeyPress.get('W')) {
-            this.playerWorldPos.y += distance;
+            this.playerWorldPos.y -= distance;
             this.playerDirLevel = 1;
         }
 
@@ -270,14 +273,15 @@ class Game {
         if (!KeyPress.get('S') && !KeyPress.get('A') && !KeyPress.get('D') && !KeyPress.get('W')) {
             this.playerAnimaFrame = 0;
         }
+        this.mapPos = CoordUtils.sub(this.playerWorldPos, { x: MAP_COUNT.x / 2, y: (MAP_COUNT.y * 2) / 3 });
     }
 
-    private cameraController = () => {
-        const cameraCenterPos = this.cameraCornerToCenter(this.cameraWorldPos);
-        const cameraToPlayer = CoordUtils.sub(this.playerWorldPos, cameraCenterPos);
-        this.cameraWorldPos.x += cameraToPlayer.x * this.deltaTime * CAMERA_SPEED;
-        this.cameraWorldPos.y += cameraToPlayer.y * this.deltaTime * CAMERA_SPEED;
-    }
+    // private cameraController = () => {
+    //     const cameraCenterPos = this.cameraCornerToCenter(this.cameraWorldPos);
+    //     const cameraToPlayer = CoordUtils.sub(this.playerWorldPos, cameraCenterPos);
+    //     this.cameraWorldPos.x += cameraToPlayer.x * this.deltaTime * CAMERA_SPEED;
+    //     this.cameraWorldPos.y += cameraToPlayer.y * this.deltaTime * CAMERA_SPEED;
+    // }
 
     //碰撞检测
     private CollisionDetection = () => {
@@ -293,21 +297,21 @@ class Game {
                         let offset = { x: 0, y: 0 };
                         const threshold = 0.1;
 
-                        if ((KeyPress.get('D') || KeyPress.get('A')) && (KeyPress.get('W') || KeyPress.get('S'))) {
+                        if ((KeyPress.get('D') || KeyPress.get('A')) && (KeyPress.get('S') || KeyPress.get('W'))) {
 
-                            if (KeyPress.get('D') && KeyPress.get('W')) {
-                                if (this.playerWorldPos.y + PLAYER_SIZE - threshold < obstacleRealPos.y) offset.y = intersectRect.c0.y - intersectRect.c1.y;
-                                else offset.x = intersectRect.c0.x - intersectRect.c1.x;
-                            }
-                            if (KeyPress.get('A') && KeyPress.get('W')) {
-                                if (this.playerWorldPos.y + PLAYER_SIZE - threshold < obstacleRealPos.y) offset.y = intersectRect.c0.y - intersectRect.c1.y;
-                                else offset.x = intersectRect.c1.x - intersectRect.c0.x;
-                            }
                             if (KeyPress.get('D') && KeyPress.get('S')) {
-                                if (this.playerWorldPos.y - 1 + threshold > obstacleRealPos.y) offset.y = intersectRect.c1.y - intersectRect.c0.y;
+                                if (this.playerWorldPos.y + PLAYER_SIZE - threshold < obstacleRealPos.y) offset.y = intersectRect.c0.y - intersectRect.c1.y;
                                 else offset.x = intersectRect.c0.x - intersectRect.c1.x;
                             }
                             if (KeyPress.get('A') && KeyPress.get('S')) {
+                                if (this.playerWorldPos.y + PLAYER_SIZE - threshold < obstacleRealPos.y) offset.y = intersectRect.c0.y - intersectRect.c1.y;
+                                else offset.x = intersectRect.c1.x - intersectRect.c0.x;
+                            }
+                            if (KeyPress.get('D') && KeyPress.get('W')) {
+                                if (this.playerWorldPos.y - 1 + threshold > obstacleRealPos.y) offset.y = intersectRect.c1.y - intersectRect.c0.y;
+                                else offset.x = intersectRect.c0.x - intersectRect.c1.x;
+                            }
+                            if (KeyPress.get('A') && KeyPress.get('W')) {
                                 if (this.playerWorldPos.y - 1 + threshold > obstacleRealPos.y) offset.y = intersectRect.c1.y - intersectRect.c0.y;
                                 else offset.x = intersectRect.c1.x - intersectRect.c0.x;
                             }
@@ -315,8 +319,8 @@ class Game {
                         } else {
                             if (KeyPress.get('D')) offset.x = intersectRect.c0.x - intersectRect.c1.x;
                             if (KeyPress.get('A')) offset.x = intersectRect.c1.x - intersectRect.c0.x;
-                            if (KeyPress.get('W')) offset.y = intersectRect.c0.y - intersectRect.c1.y;
-                            if (KeyPress.get('S')) offset.y = intersectRect.c1.y - intersectRect.c0.y;
+                            if (KeyPress.get('S')) offset.y = intersectRect.c0.y - intersectRect.c1.y;
+                            if (KeyPress.get('W')) offset.y = intersectRect.c1.y - intersectRect.c0.y;
 
                         }
                         this.playerWorldPos = CoordUtils.add(this.playerWorldPos, offset);
@@ -348,9 +352,9 @@ class Game {
         return { c0, c1 };
     }
 
-    private worldToScreenPos = (worldPos: Coord) => {
-        return CoordUtils.sub(worldPos, this.cameraWorldPos);
-    }
+    // private worldToScreenPos = (worldPos: Coord) => {
+    //     return CoordUtils.sub(worldPos, this.cameraWorldPos);
+    // }
 
     private cameraCornerToCenter = (cornerPos: Coord) => {
         const xCount = this.gl.canvas.width / (this.map.size * 2);
@@ -398,10 +402,12 @@ class Game {
         }
     }
 
-    private getDefaultUniform = () => ([
-        { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height] },
-        { name: 'u_cameraWorldPos', data: [this.cameraWorldPos.x, this.cameraWorldPos.y] },
-        { name: 'u_mapSize', data: [MAP_SIZE] },
+    private getDefaultUniform = (): Array<UniformLocationObj> => ([
+        { name: 'u_resolution', data: [MAP_COUNT.x, MAP_COUNT.y], type: 'vec2' },
+        { name: 'u_cameraWorldPos', data: [this.mapPos.x, this.mapPos.y], type: 'vec2' },
+        { name: 'u_mapSize', data: [MAP_SIZE], type: 'number' },
+        { name: 'u_projectionMatrix', data: this.camera.getProjectionMatrix(this.gl), type: 'matrix' },
+        { name: 'u_viewMatrix', data: this.camera.getViewMatrix(), type: 'matrix' }
     ])
 
     private arrayToColor = (array: Array<number>) => (array.map(a => a / 255));

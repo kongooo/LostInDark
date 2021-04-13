@@ -46,13 +46,13 @@ class Mesh {
      * @param uniforms uniform object array
      * @returns uniform object array
      */
-    getUniformLocations = (uniforms: Array<string>) => {
-        uniforms.forEach((uniform) => {
-            const uniformLocation = this.gl.getUniformLocation(this.shaderProgram, uniform);
-            this.uniformLocations.set(uniform, uniformLocation);
-        })
-        return this.uniformLocations;
-    }
+    // getUniformLocations = (uniforms: Array<string>) => {
+    //     uniforms.forEach((uniform) => {
+    //         const uniformLocation = this.gl.getUniformLocation(this.shaderProgram, uniform);
+    //         this.uniformLocations.set(uniform, uniformLocation);
+    //     })
+    //     return this.uniformLocations;
+    // }
 
     protected setAttribPointer = () => {
         const gl = this.gl;
@@ -66,7 +66,9 @@ class Mesh {
 
     protected setUniformLocation = (uniforms: Array<UniformLocationObj>) => {
         uniforms.forEach((uniformObj) => {
-            WebGL.setUniform(this.gl, this.uniformLocations.get(uniformObj.name), uniformObj.data);
+            if (!this.uniformLocations.get(uniformObj.name)) this.uniformLocations.set(uniformObj.name, this.gl.getUniformLocation(this.shaderProgram, uniformObj.name));
+            // console.log(uniformObj.name, uniformObj.data);
+            WebGL.setUniform(this.gl, this.uniformLocations.get(uniformObj.name), uniformObj);
         })
     }
 

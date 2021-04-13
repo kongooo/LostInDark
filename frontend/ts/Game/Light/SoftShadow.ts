@@ -23,7 +23,7 @@ class SoftShadow {
             { name: 'a_ABposition', size: 4 },
             { name: 'a_situation', size: 1 }
         ]);
-        shadowMesh.getUniformLocations(['u_map', 'u_lightPos', 'u_lightSize', ...defaultUniformName]);
+        // shadowMesh.getUniformLocations(['u_map', 'u_lightPos', 'u_lightSize', ...defaultUniformName]);
         shadowMesh.getBuffer();
 
         this.fBufferInfo = fBufferInfo;
@@ -32,7 +32,7 @@ class SoftShadow {
         this.mapSize = mapSize;
     }
 
-    drawSoftShadow = (lineVertics: Array<Coord>, lightPos: Coord, sLightRadius: number, bLightRadius: number, defaultUniform: Array<UniformLocationObj>, texture: WebGLTexture) => {
+    drawSoftShadow = (lineVertics: Array<Coord>, lightPos: Coord, sLightRadius: number, bLightRadius: number, defaultUniform: Array<UniformLocationObj>) => {
         let vertices = [];
 
         for (let i = 0; i < lineVertics.length - 1; i += 2) {
@@ -149,11 +149,10 @@ class SoftShadow {
 
         // console.log(vertices);
         this.shadowMesh.drawWithBuffer(vertices, [
-            { name: 'u_map', data: [0] },
-            { name: 'u_lightPos', data: [lightPos.x, lightPos.y] },
-            { name: 'u_lightSize', data: [sLightRadius] },
+            { name: 'u_lightPos', data: [lightPos.x, lightPos.y], type: 'vec2' },
+            { name: 'u_lightSize', data: [sLightRadius], type: 'number' },
             ...defaultUniform
-        ], undefined, texture);
+        ]);
     }
 
 
