@@ -7,7 +7,7 @@ class Camera {
     FOV: number = 60;
     zNear: number = 0.3;
     zFar: number = 1000;
-    position: vec3 = vec3.fromValues(0, 10, 20);
+    position: vec3 = vec3.fromValues(0, 8, 20);
     rotation: quat = quat.create();
 
     constructor() {

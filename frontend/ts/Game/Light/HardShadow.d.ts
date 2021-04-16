@@ -5,7 +5,7 @@ declare class HardShadow {
     private gl;
     fBufferInfo: FrameBufferInfo;
     private mapSize;
-    constructor(gl: WebGL2RenderingContext, mapSize: number, defaultUniformName: Array<string>);
+    constructor(gl: WebGL2RenderingContext, mapSize: number);
     /**
      *
      * @param obstacleVertics 障碍物世界坐标

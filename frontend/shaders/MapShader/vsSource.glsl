@@ -3,28 +3,22 @@
 in vec3 a_position;
 in vec2 a_texCoord;
 in vec2 a_offset;
-
-uniform vec2 u_resolution;
-
-uniform vec2 u_cameraWorldPos;
-
-uniform float u_mapSize;
+in vec3 a_normal;
 
 uniform mat4 u_projectionMatrix;
 
 uniform mat4 u_viewMatrix;
 
 out vec2 v_texCoord;
+out vec3 v_normal;
+out vec3 v_fragPos;
 
 void main() {
-    // vec2 screenPos = (a_position - u_cameraWorldPos) * u_mapSize;
-    // vec2 zeroToOne = screenPos / vec2(u_resolution);
-    // vec2 zeroToTwo = zeroToOne * 2.0;
-    // vec2 clipSpace = zeroToTwo - 1.0;
-    // gl_Position = vec4(clipSpace, 0.0, 1.0);
 
     vec4 pos = vec4(a_position.x + a_offset.x, a_position.y, a_position.z + a_offset.y, 1);
     gl_Position = u_projectionMatrix * u_viewMatrix * pos;
 
-    v_texCoord = a_texCoord;
+    v_texCoord = vec2(a_texCoord.x, 1.0 - a_texCoord.y);
+    v_normal = a_normal;
+    v_fragPos = pos.xyz;
 }

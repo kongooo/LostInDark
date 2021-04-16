@@ -8,27 +8,23 @@ import GroundCanvas from './Map/GroundCanvas';
 import KeyPress from '../Tools/Event/KeyEvent';
 import { Coord, CoordUtils } from '../Tools/Tool';
 
-import rectVsSource from '../../shaders/RectShader/vsSource.glsl';
-import rectFsSource from '../../shaders/RectShader/fsSource.glsl';
-
-import mapCanvasVsSource from '../../shaders/MapCanvasShader/vsSource.glsl';
-import mapCanvasFsSource from '../../shaders/MapCanvasShader/fsSource.glsl';
 import Camera from './Camera';
-import { UniformLocationObj } from '../Tools/interface';
+import { LightInfo, UniformLocationObj } from '../Tools/interface';
+import { vec3 } from 'gl-matrix';
 
 const PLAYER_SPEED = 3;
-const CAMERA_SPEED = 1;
-const BACK_COLOR = [244, 249, 249];
-const WALL_COLOR = [170, 170, 170];
 const PLAYER_LIGHT_RADIUS = 20;
-const PLAYER_COLOR = [164, 235, 243];
 const MAP_SIZE = 1;
 const PLAYER_SIZE = 0.9;
+const PLAYER_DRAW_SIZE = { x: 0.9, y: 1.7 };
 const LIGHT_SIZE = 0.44;
-const ANIMA_SPEED = 8;
+const ANIMA_SPEED = 6;
 const MAP_COUNT = { x: 50, y: 30 };
+const CAMERA_OFFSET_Y = 8;
+const LIGHT_COLOR = [255, 255, 255];
+const PLAYER_LIGHT_INFO = [
 
-const DEFAULT_UNIFORM_NAME = ['u_resolution', 'u_cameraWorldPos', 'u_mapSize'];
+]
 
 class Game {
     private gl: WebGL2RenderingContext;
@@ -39,31 +35,30 @@ class Game {
     private playerLight2: Light;
     private lightCanvas: Canvas;
     private groundCanvas: GroundCanvas;
-    private mapCanvas: Canvas;
     private hardShadow: HardShadow;
     private softShadow: SoftShadow;
     private softShadow2: SoftShadow;
     private ws: any;
     private imgs: Array<HTMLImageElement>;
     private camera: Camera;
+    private lights: Array<LightInfo> = [];
 
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Array<HTMLImageElement>, ws?: any) {
         this.gl = gl;
         this.map = new PerlinMap(gl, seed, MAP_SIZE, imgs[2], MAP_COUNT);
-        this.player = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME, imgs[0]);
-        this.player2 = new Player(gl, PLAYER_SIZE, DEFAULT_UNIFORM_NAME, imgs[0]);
+        this.player = new Player(gl, PLAYER_DRAW_SIZE, imgs[0]);
+        this.player2 = new Player(gl, PLAYER_DRAW_SIZE, imgs[0]);
         // this.cameraWorldPos = center;
-        this.playerLight = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
-        this.playerLight2 = new Light(gl, PLAYER_LIGHT_RADIUS, DEFAULT_UNIFORM_NAME);
-        this.hardShadow = new HardShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
-        this.softShadow = new SoftShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
-        this.softShadow2 = new SoftShadow(gl, this.map.size, DEFAULT_UNIFORM_NAME);
+        this.playerLight = new Light(gl, PLAYER_LIGHT_RADIUS);
+        this.playerLight2 = new Light(gl, PLAYER_LIGHT_RADIUS);
+        // this.hardShadow = new HardShadow(gl, this.map.size);
+        this.softShadow = new SoftShadow(gl);
+        this.softShadow2 = new SoftShadow(gl);
         this.lightCanvas = new Canvas(gl, MAP_COUNT);
         this.groundCanvas = new GroundCanvas(gl, imgs[1]);
         // this.mapCanvas = new Canvas(gl, mapCanvasVsSource, mapCanvasFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
-        // this.playerWorldPos = { x: emptyPos.x, y: emptyPos.y };
-        this.playerWorldPos = { x: 1686, y: 1516 };
+        this.playerWorldPos = { x: emptyPos.x, y: emptyPos.y };
         this.ws = ws;
         this.imgs = imgs;
         this.camera = new Camera();
@@ -99,13 +94,9 @@ class Game {
 
         this.playerController();
         this.CollisionDetection();
-        // this.cameraController();
+        this.cameraController();
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
-
-        this.camera.position[0] = this.playerWorldPos.x;
-        this.camera.position[2] = this.playerWorldPos.y + 10;
 
         this.map.generateVerticesAndLines(this.mapPos);
 
@@ -115,8 +106,6 @@ class Game {
         this.drawLightTexture();
 
         this.drawScene();
-
-        // this.drawLightToScene();
     }
 
     private drawHardShadowTexture = () => {
@@ -132,7 +121,7 @@ class Game {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
-        this.hardShadow.drawHardShadow(this.map.lineVertices, centerPos, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+        this.hardShadow.drawHardShadow(this.map.lineVertices, centerPos, PLAYER_LIGHT_RADIUS, this.get2DDefaultUniform(), this.map.fBufferInfo.targetTexture);
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
@@ -172,7 +161,7 @@ class Game {
 
         const playerCenterPos = CoordUtils.add(playerPos, PLAYER_SIZE / 2)
         //draw with min line
-        shadow.drawSoftShadow(this.map.lineVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform());
+        shadow.drawSoftShadow(this.map.lineVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.get2DDefaultUniform());
 
         //draw with vertices
         // shadow.drawSoftShadow(this.map.simpleVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
@@ -190,7 +179,7 @@ class Game {
         gl.clearColor(0, 0, 0, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        gl.disable(gl.BLEND);
+        gl.enable(gl.BLEND);
         gl.blendEquation(gl.FUNC_ADD);
         gl.blendFunc(gl.ONE, gl.ONE);
 
@@ -199,13 +188,13 @@ class Game {
         //hard shadow
         // this.playerLight.draw(lightCenter, this.hardShadow.fBufferInfo.targetTexture, this.getDefaultUniform());
         //soft shadow
-        this.playerLight.draw(lightCenter, this.softShadow.fBufferInfo.targetTexture, this.getDefaultUniform());
+        this.playerLight.draw(lightCenter, this.softShadow.fBufferInfo.targetTexture, this.get2DDefaultUniform());
 
 
         //draw player2 shadow
         if (this.player2WorldPos) {
             const light2Center = CoordUtils.add(this.player2WorldPos, PLAYER_SIZE / 2);
-            this.playerLight2.draw(light2Center, this.softShadow2.fBufferInfo.targetTexture, this.getDefaultUniform());
+            this.playerLight2.draw(light2Center, this.softShadow2.fBufferInfo.targetTexture, this.get2DDefaultUniform());
         }
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
@@ -229,23 +218,13 @@ class Game {
         gl.blendEquation(gl.FUNC_ADD);
         gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
-        // this.mapCanvas.draw(this.map.fBufferInfo.targetTexture, BACK_COLOR, WALL_COLOR);
 
         const lefDownPos = { x: this.mapPos.x / this.map.mapCount.x, y: this.mapPos.y / this.map.mapCount.y };
-        this.groundCanvas.draw(this.mapPos, lefDownPos, MAP_COUNT, this.getDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
-        this.map.draw(this.getDefaultUniform());
+        this.groundCanvas.draw(this.mapPos, lefDownPos, MAP_COUNT, this.get3DDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
+        this.map.draw(this.get3DDefaultLightUniform());
 
-        this.player.draw(this.playerWorldPos, this.getDefaultUniform(), this.playerDirLevel, this.playerAnimaFrame);
-        // if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.getDefaultUniform(), this.player2DirLevel, this.player2AnimaFrame);
-    }
-
-    private drawLightToScene = () => {
-        const gl = this.gl;
-        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
-        gl.enable(gl.BLEND);
-        gl.blendEquation(gl.FUNC_ADD);
-        gl.blendFunc(gl.DST_COLOR, 0);
-        this.lightCanvas.draw(this.mapPos, this.getDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
+        this.player.draw(this.playerWorldPos, this.get3DDefaultLightUniform(), this.playerDirLevel, this.playerAnimaFrame);
+        if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.get3DDefaultLightUniform(), this.player2DirLevel, this.player2AnimaFrame);
     }
 
     private playerController = () => {
@@ -273,15 +252,12 @@ class Game {
         if (!KeyPress.get('S') && !KeyPress.get('A') && !KeyPress.get('D') && !KeyPress.get('W')) {
             this.playerAnimaFrame = 0;
         }
-        this.mapPos = CoordUtils.sub(this.playerWorldPos, { x: MAP_COUNT.x / 2, y: (MAP_COUNT.y * 2) / 3 });
     }
 
-    // private cameraController = () => {
-    //     const cameraCenterPos = this.cameraCornerToCenter(this.cameraWorldPos);
-    //     const cameraToPlayer = CoordUtils.sub(this.playerWorldPos, cameraCenterPos);
-    //     this.cameraWorldPos.x += cameraToPlayer.x * this.deltaTime * CAMERA_SPEED;
-    //     this.cameraWorldPos.y += cameraToPlayer.y * this.deltaTime * CAMERA_SPEED;
-    // }
+    private cameraController = () => {
+        this.camera.position[0] = this.playerWorldPos.x;
+        this.camera.position[2] = this.playerWorldPos.y + CAMERA_OFFSET_Y;
+    }
 
     //碰撞检测
     private CollisionDetection = () => {
@@ -331,6 +307,14 @@ class Game {
 
         if (this.ws && this.ws.readyState === 1)
             this.ws.send(JSON.stringify({ type: 'player', pos: this.playerWorldPos, dir: this.playerDirLevel, frame: this.playerAnimaFrame }));
+
+        this.lights[0] = {
+            position: [this.playerWorldPos.x + PLAYER_SIZE / 2, 1.5, this.playerWorldPos.y + PLAYER_SIZE / 2],
+            color: LIGHT_COLOR,
+            linear: 0.35,
+            quadratic: 0.44
+        }
+        this.mapPos = CoordUtils.sub(this.playerWorldPos, { x: MAP_COUNT.x / 2, y: (MAP_COUNT.y * 2) / 3 });
     }
 
     //判断两个矩形是否相交，a0、a1分别为左下角、右上角坐标
@@ -350,24 +334,6 @@ class Game {
         const c1 = { x: Math.min(a1.x, b1.x), y: Math.min(a1.y, b1.y) };
 
         return { c0, c1 };
-    }
-
-    // private worldToScreenPos = (worldPos: Coord) => {
-    //     return CoordUtils.sub(worldPos, this.cameraWorldPos);
-    // }
-
-    private cameraCornerToCenter = (cornerPos: Coord) => {
-        const xCount = this.gl.canvas.width / (this.map.size * 2);
-        const yCount = this.gl.canvas.height / (this.map.size * 2);
-        const cameraCenterPos = CoordUtils.add(cornerPos, { x: xCount, y: yCount });
-        return cameraCenterPos;
-    }
-
-    private cameraCenterToConrner = (centerPos: Coord) => {
-        const xCount = this.gl.canvas.width / (this.map.size * 2);
-        const yCount = this.gl.canvas.height / (this.map.size * 2);
-        const cameraCornerPos = CoordUtils.sub(centerPos, { x: xCount, y: yCount });
-        return cameraCornerPos;
     }
 
     private blit = (renderFrameBuffer: WebGLFramebuffer, textureFrameBuffer: WebGLFramebuffer) => {
@@ -396,18 +362,47 @@ class Game {
                     this.player2WorldPos = data.pos;
                     this.player2DirLevel = data.dir;
                     this.player2AnimaFrame = data.frame;
+                    this.lights[1] = {
+                        position: [this.player2WorldPos.x + PLAYER_SIZE / 2, 1.5, this.player2WorldPos.y + PLAYER_SIZE / 2],
+                        color: LIGHT_COLOR,
+                        linear: 0.35,
+                        quadratic: 0.44
+                    }
                     // console.log(this.player2WorldPos);
                     break;
             }
         }
     }
 
-    private getDefaultUniform = (): Array<UniformLocationObj> => ([
-        { name: 'u_resolution', data: [MAP_COUNT.x, MAP_COUNT.y], type: 'vec2' },
-        { name: 'u_cameraWorldPos', data: [this.mapPos.x, this.mapPos.y], type: 'vec2' },
-        { name: 'u_mapSize', data: [MAP_SIZE], type: 'number' },
+    private get3DDefaultUniform = (): Array<UniformLocationObj> => ([
         { name: 'u_projectionMatrix', data: this.camera.getProjectionMatrix(this.gl), type: 'matrix' },
-        { name: 'u_viewMatrix', data: this.camera.getViewMatrix(), type: 'matrix' }
+        { name: 'u_viewMatrix', data: this.camera.getViewMatrix(), type: 'matrix' },
+    ])
+
+    private get2DDefaultUniform = (): Array<UniformLocationObj> => ([
+        { name: 'u_resolution', data: [MAP_COUNT.x, MAP_COUNT.y], type: 'vec2' },
+        { name: 'u_cameraWorldPos', data: [this.mapPos.x, this.mapPos.y], type: 'vec2' }
+    ]);
+
+    private get3DDefaultLightUniform = (): Array<UniformLocationObj> => {
+        const lightCount = this.lights.length;
+        const defaultUniforms: Array<UniformLocationObj> = [
+            { name: 'u_projectionMatrix', data: this.camera.getProjectionMatrix(this.gl), type: 'matrix' },
+            { name: 'u_viewMatrix', data: this.camera.getViewMatrix(), type: 'matrix' },
+            { name: 'u_lightCount', data: [lightCount], type: 'int' },
+            { name: 'u_viewPos', data: this.camera.position, type: 'vec3' },
+        ];
+        this.lights.forEach((light, index) => {
+            defaultUniforms.push(...this.getLight(light, index))
+        })
+        return defaultUniforms;
+    }
+
+    private getLight = (light: LightInfo, index: number): Array<UniformLocationObj> => ([
+        { name: `pointLights[${index}].position`, data: light.position, type: 'vec3' },
+        { name: `pointLights[${index}].color`, data: light.color, type: 'vec3' },
+        { name: `pointLights[${index}].linear`, data: [light.linear], type: 'float' },
+        { name: `pointLights[${index}].quadratic`, data: [light.quadratic], type: 'float' },
     ])
 
     private arrayToColor = (array: Array<number>) => (array.map(a => a / 255));

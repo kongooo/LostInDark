@@ -8,13 +8,13 @@ declare class Game {
     private playerLight2;
     private lightCanvas;
     private groundCanvas;
-    private mapCanvas;
     private hardShadow;
     private softShadow;
     private softShadow2;
     private ws;
     private imgs;
     private camera;
+    private lights;
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Array<HTMLImageElement>, ws?: any);
     private deltaTime;
     private lastTime;
@@ -34,16 +34,17 @@ declare class Game {
     private drawSoftShadow;
     private drawLightTexture;
     private drawScene;
-    private drawLightToScene;
     private playerController;
+    private cameraController;
     private CollisionDetection;
     private intersected;
     private getInterSectedRect;
-    private cameraCornerToCenter;
-    private cameraCenterToConrner;
     private blit;
     private initWs;
-    private getDefaultUniform;
+    private get3DDefaultUniform;
+    private get2DDefaultUniform;
+    private get3DDefaultLightUniform;
+    private getLight;
     private arrayToColor;
 }
 export default Game;

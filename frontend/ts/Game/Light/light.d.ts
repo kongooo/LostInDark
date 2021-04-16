@@ -5,7 +5,7 @@ declare class Light {
     private gl;
     lightRadius: number;
     fBufferInfo: FrameBufferInfo;
-    constructor(gl: WebGL2RenderingContext, lightRadius: number, defaultUniformName: Array<string>);
+    constructor(gl: WebGL2RenderingContext, lightRadius: number);
     /**
      *
      * @param worldPos 光源世界坐标

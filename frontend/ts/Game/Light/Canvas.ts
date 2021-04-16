@@ -18,7 +18,6 @@ class Canvas {
             { name: 'a_position', size: 2 },
             { name: 'a_texCoord', size: 2 }
         ])
-        // mesh.getUniformLocations(['u_resolution', 'u_image', 'u_backColor', 'u_obstacleColor']);
         mesh.getVAO([
             0, 0, 0, 0,
             0, mapCount.y, 0, 1,
@@ -31,7 +30,6 @@ class Canvas {
 
     draw = (worldPos: Coord, defaultUniform: Array<UniformLocationObj>, texture?: WebGLTexture,) => {
         this.canvasMesh.drawWithAVO([
-            { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height], type: 'vec2' },
             { name: 'u_image', data: [0], texture, type: 'texture' },
             { name: 'u_worldPos', data: [worldPos.x, worldPos.y], type: 'vec2' },
             ...defaultUniform

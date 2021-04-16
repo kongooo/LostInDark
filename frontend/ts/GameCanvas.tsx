@@ -7,9 +7,9 @@ import { randomInt } from "./Tools/Tool";
 import Loading from "./Loading";
 import { LoadImage } from "./Tools/LoadImage";
 
-import playerImg from "../../image/slime.png";
-import backImg from "../../image/back.png";
-import groundImg from "../../image/ground1.png";
+import playerImg from "../../image/mikasa.png";
+import backImg from "../../image/back1.png";
+import groundImg from "../../image/free.png";
 import mat4 from "gl-mat4";
 
 export { GameCanvas };
@@ -41,8 +41,8 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       console.error("can't init webgl");
       return;
     }
-    // this.initWithWs(gl);
-    this.init(gl);
+    this.initWithWs(gl);
+    // this.init(gl);
   }
 
   private loadImages = async () => {

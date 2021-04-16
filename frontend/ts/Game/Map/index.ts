@@ -12,7 +12,6 @@ import { UniformLocationObj } from '../../Tools/interface';
 import Union from './Union';
 
 const ZOOM = 5;
-const RECT_VERTEX_COUNT = 4;
 const THRESHOLD = 0.6;
 const SPREAD_SIZE = 0;
 
@@ -37,7 +36,8 @@ class PerlinMap {
         const MapMesh = new InstanceMesh(gl, mapVsSource, mapFsSource);
         MapMesh.getAttributeLocations([
             { name: 'a_position', size: 3 },
-            { name: 'a_texCoord', size: 2 }
+            { name: 'a_texCoord', size: 2 },
+            { name: 'a_normal', size: 3 }
         ])
         MapMesh.getInstanceAttribLocations([
             { name: 'a_offset', size: 2 }
@@ -46,28 +46,28 @@ class PerlinMap {
         MapMesh.getBufferAndVAO([
 
             //right
-            1, 0, 0, 0, 0,
-            1, 1, 0, 1, 0,
-            1, 1, 1, 1, 1,
-            1, 0, 1, 0, 1,
+            1, 0, 0, 0, 0, 1, 0, 0,
+            1, 1, 0, 1, 0, 1, 0, 0,
+            1, 1, 1, 1, 1, 1, 0, 0,
+            1, 0, 1, 0, 1, 1, 0, 0,
 
             //left
-            0, 0, 0, 0, 0,
-            0, 0, 1, 1, 0,
-            0, 1, 1, 1, 1,
-            0, 1, 0, 0, 1,
+            0, 0, 0, 0, 0, -1, 0, 0,
+            0, 0, 1, 1, 0, -1, 0, 0,
+            0, 1, 1, 1, 1, -1, 0, 0,
+            0, 1, 0, 0, 1, -1, 0, 0,
 
             //front
-            0, 0, 1, 0, 0,
-            1, 0, 1, 1, 0,
-            1, 1, 1, 1, 1,
-            0, 1, 1, 0, 1,
+            0, 0, 1, 0, 0, 0, 0, 1,
+            1, 0, 1, 1, 0, 0, 0, 1,
+            1, 1, 1, 1, 1, 0, 0, 1,
+            0, 1, 1, 0, 1, 0, 0, 1,
 
             //top
-            0, 1, 0, 0, 0,
-            0, 1, 1, 1, 0,
-            1, 1, 1, 1, 1,
-            1, 1, 0, 0, 1
+            0, 1, 0, 0, 0, 0, 1, 0,
+            0, 1, 1, 1, 0, 0, 1, 0,
+            1, 1, 1, 1, 1, 0, 1, 0,
+            1, 1, 0, 0, 10, 1, 0,
         ], [
             0, 1, 2, 0, 2, 3,
             4, 5, 6, 4, 6, 7,
@@ -85,8 +85,6 @@ class PerlinMap {
         this.texture = WebGL.getTexture(gl, img);
     }
 
-    private vertics: Array<number> = [];
-    private indices: Array<number> = [];
     private gridPos: Array<number> = [];
     simpleVertices: Array<Coord> = [];
     lineVertices: Array<Coord> = [];
@@ -120,8 +118,8 @@ class PerlinMap {
 
     //得到没有障碍物的坐标
     getEmptyPos = (startX: number, startY: number) => {
-        const xCount = this.gl.canvas.width / this.size;
-        const yCount = this.gl.canvas.height / this.size;
+        const xCount = this.mapCount.x;
+        const yCount = this.mapCount.y;
         const xMin = xCount / 3, xMax = (xCount / 3) * 2;
         const yMin = yCount / 3, yMax = (yCount / 3) * 2;
         let xIndex = randomInt(xMin, xMax), yIndex = randomInt(yMin, yMax);
@@ -142,9 +140,6 @@ class PerlinMap {
 
         this.union.init({ x: Math.floor(startX), y: Math.floor(startY) });
 
-        let count = 0;
-        this.vertics = [];
-        this.indices = [];
         this.simpleVertices = [];
         this.gridPos = [];
 
@@ -158,21 +153,8 @@ class PerlinMap {
                     this.gridPos.push(
                         xWorldPos, yWorldPos
                     )
-                    // this.vertics.push(...[
-                    //     xWorldPos, yWorldPos, 0, 0,
-                    //     xWorldPos + 1, yWorldPos, 1, 0,
-                    //     xWorldPos + 1, yWorldPos + 1, 1, 1,
-                    //     xWorldPos, yWorldPos + 1, 0, 1
-                    // ]);
-                    // this.indices.push(...[
-                    //     count * RECT_VERTEX_COUNT,
-                    //     count * RECT_VERTEX_COUNT + 1,
-                    //     count * RECT_VERTEX_COUNT + 2,
-                    //     count * RECT_VERTEX_COUNT,
-                    //     count * RECT_VERTEX_COUNT + 2,
-                    //     count * RECT_VERTEX_COUNT + 3,
-                    // ]);
-                    // this.simpleVertices.push(...[
+
+                    // this.simpleVertices.push(
                     //     { x: xWorldPos, y: yWorldPos },
                     //     { x: xWorldPos + 1, y: yWorldPos },
                     //     { x: xWorldPos + 1, y: yWorldPos },
@@ -181,8 +163,8 @@ class PerlinMap {
                     //     { x: xWorldPos, y: yWorldPos + 1 },
                     //     { x: xWorldPos, y: yWorldPos + 1 },
                     //     { x: xWorldPos, y: yWorldPos },
-                    // ])
-                    count++;
+                    // );
+
                     //将-SPREAD_SIZE，size+SPREAD_SIZE映射到0，size+SPREAD_SIZE
                     this.union.setBlock(x + SPREAD_SIZE, y + SPREAD_SIZE);
                 }

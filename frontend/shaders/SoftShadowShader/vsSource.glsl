@@ -8,9 +8,6 @@ uniform vec2 u_resolution;
 
 uniform vec2 u_cameraWorldPos;
 
-uniform float u_mapSize;
-
-
 uniform mat4 u_projectionMatrix;
 
 uniform mat4 u_viewMatrix;
@@ -21,13 +18,11 @@ out vec2 v_pos;
 out float v_situation;
 
 void main() {
-    vec2 screenPos = (a_position - u_cameraWorldPos) * vec2(u_mapSize);
+    vec2 screenPos = (a_position - u_cameraWorldPos);
     vec2 zeroToOne = screenPos / u_resolution;
     vec2 zeroToTwo = zeroToOne * 2.0;
     vec2 clipSpace = zeroToTwo - 1.0;
     gl_Position = vec4(clipSpace, 0, 1);
-
-    // gl_Position = u_projectionMatrix * u_viewMatrix * vec4(a_position.x, 0, a_position.y, 1.0);
 
     v_ABposition = a_ABposition;
     v_texCoord = zeroToOne;

@@ -5,7 +5,7 @@ declare class Player {
     private gl;
     private playerTexture;
     private size;
-    constructor(gl: WebGL2RenderingContext, size: number, defaultUniformName: Array<string>, img: HTMLImageElement);
+    constructor(gl: WebGL2RenderingContext, size: Coord, img: HTMLImageElement);
     /**
      *
      * @param playerWorldPos

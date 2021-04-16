@@ -45,7 +45,7 @@ class WebGL {
             case 'matrix':
                 gl.uniformMatrix4fv(uniformLocation, false, uniformObj.data as Float32Array);
                 break;
-            case 'number':
+            case 'float':
                 gl.uniform1f(uniformLocation, (uniformObj.data as Array<number>)[0]);
                 break;
             case 'texture':
@@ -65,6 +65,9 @@ class WebGL {
             case 'vec4':
                 data = (uniformObj.data as Array<number>);
                 gl.uniform4f(uniformLocation, data[0], data[1], data[2], data[3]);
+                break;
+            case 'int':
+                gl.uniform1i(uniformLocation, (uniformObj.data as Array<number>)[0]);
                 break;
         }
     }

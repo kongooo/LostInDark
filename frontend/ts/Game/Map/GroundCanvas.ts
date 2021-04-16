@@ -1,7 +1,7 @@
 import { WebGL } from '../../Tools/WebGLUtils';
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
-import rectVsSource from '../../../shaders/RectShader/vsSource.glsl';
-import rectFsSource from '../../../shaders/RectShader/fsSource.glsl';
+import groundVsSource from '../../../shaders/GroundShader/vsSource.glsl';
+import groundFsSource from '../../../shaders/GroundShader/fsSource.glsl';
 import { Coord, CoordUtils } from '../../Tools/Tool';
 import Camera from '../Camera';
 import { UniformLocationObj } from '../../Tools/interface';
@@ -14,7 +14,7 @@ class GroundCanvas {
 
     constructor(gl: WebGL2RenderingContext, img: HTMLImageElement) {
 
-        const mesh = new VaryMesh(gl, rectVsSource, rectFsSource);
+        const mesh = new VaryMesh(gl, groundVsSource, groundFsSource);
         mesh.getAttributeLocations([
             { name: 'a_position', size: 2 },
             { name: 'a_texCoord', size: 2 },
@@ -29,7 +29,6 @@ class GroundCanvas {
 
 
     draw = (worldPos: Coord, leftDownPos: Coord, mapCount: Coord, defaultUniform: Array<UniformLocationObj>, lightShadowTexture: WebGLTexture) => {
-        const gl = this.gl;
         // mapCount = CoordUtils.add(mapCount, 5);
         this.canvasMesh.drawWithBuffer([
             worldPos.x, worldPos.y, leftDownPos.x, leftDownPos.y, 0, 0,
@@ -37,7 +36,6 @@ class GroundCanvas {
             worldPos.x + mapCount.x, worldPos.y + mapCount.y, leftDownPos.x + 1, leftDownPos.y + 1, 1, 1,
             worldPos.x + mapCount.x, worldPos.y, leftDownPos.x + 1, leftDownPos.y, 1, 0
         ], [
-            { name: 'u_resolution', data: [this.gl.canvas.width, this.gl.canvas.height], type: 'vec2' },
             { name: 'u_image', data: [0], texture: this.texture, type: 'texture' },
             { name: 'u_shadow', data: [1], texture: lightShadowTexture, type: 'texture' },
             ...defaultUniform

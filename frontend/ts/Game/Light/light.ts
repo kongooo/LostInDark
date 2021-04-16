@@ -14,7 +14,7 @@ class Light {
     lightRadius: number;
     fBufferInfo: FrameBufferInfo;
 
-    constructor(gl: WebGL2RenderingContext, lightRadius: number, defaultUniformName: Array<string>) {
+    constructor(gl: WebGL2RenderingContext, lightRadius: number) {
         const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         const LightMesh = new StaticMesh(gl, lightVsSource, lightFsSource);
 
@@ -22,21 +22,13 @@ class Light {
             { name: 'a_position', size: 2 },
             { name: 'a_texCoord', size: 2 }
         ])
-        // lightRadius = 0;
-        // LightMesh.getUniformLocations(['u_shadow', 'u_worldPos', ...defaultUniformName]);
+
         LightMesh.getVAO([
             - lightRadius, - lightRadius, 0, 0,
             - lightRadius, lightRadius, 0, 1,
             lightRadius, lightRadius, 1, 1,
             lightRadius, - lightRadius, 1, 0,
         ], [0, 2, 1, 0, 3, 2]);
-
-        // LightMesh.getVAO([
-        //     0, 0, 0, 0,
-        //     0, 0, 0, 1,
-        //     0, 0, 1, 1,
-        //     0, 0, 1, 0,
-        // ], [0, 2, 1, 0, 3, 2]);
 
         this.lightMesh = LightMesh;
         this.fBufferInfo = fBufferInfo;

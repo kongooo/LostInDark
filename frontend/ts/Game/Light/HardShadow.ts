@@ -15,7 +15,7 @@ class HardShadow {
     fBufferInfo: FrameBufferInfo;
     private mapSize: number;
 
-    constructor(gl: WebGL2RenderingContext, mapSize: number, defaultUniformName: Array<string>) {
+    constructor(gl: WebGL2RenderingContext, mapSize: number) {
         const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         const shadowMesh = new VaryMesh(gl, shadowVsSource, shadowFsSource);
         shadowMesh.getAttributeLocations([

@@ -27,7 +27,7 @@ class ClientSocket {
     private init = () => {
 
         const pos1 = { x: GetRandomNum(1000, 1010), y: GetRandomNum(1000, 1010) };
-        const pos2 = { x: pos1.x + 5, y: pos1.y + 5 };
+        const pos2 = { x: pos1.x, y: pos1.y };
         this.player1.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos1 }));
         this.player2.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos2 }));
         this.player1.getWs().on('message', async (mes: any) => {

@@ -13,9 +13,8 @@ class SoftShadow {
     private shadowMesh: VaryMesh;
     private gl: WebGL2RenderingContext;
     fBufferInfo: FrameBufferInfo;
-    private mapSize: number;
 
-    constructor(gl: WebGL2RenderingContext, mapSize: number, defaultUniformName: Array<string>) {
+    constructor(gl: WebGL2RenderingContext) {
         const fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
         const shadowMesh = new VaryMesh(gl, shadowVsSource, shadowFsSource);
         shadowMesh.getAttributeLocations([
@@ -23,13 +22,12 @@ class SoftShadow {
             { name: 'a_ABposition', size: 4 },
             { name: 'a_situation', size: 1 }
         ]);
-        // shadowMesh.getUniformLocations(['u_map', 'u_lightPos', 'u_lightSize', ...defaultUniformName]);
+
         shadowMesh.getBuffer();
 
         this.fBufferInfo = fBufferInfo;
         this.shadowMesh = shadowMesh;
         this.gl = gl;
-        this.mapSize = mapSize;
     }
 
     drawSoftShadow = (lineVertics: Array<Coord>, lightPos: Coord, sLightRadius: number, bLightRadius: number, defaultUniform: Array<UniformLocationObj>) => {
@@ -150,7 +148,7 @@ class SoftShadow {
         // console.log(vertices);
         this.shadowMesh.drawWithBuffer(vertices, [
             { name: 'u_lightPos', data: [lightPos.x, lightPos.y], type: 'vec2' },
-            { name: 'u_lightSize', data: [sLightRadius], type: 'number' },
+            { name: 'u_lightSize', data: [sLightRadius], type: 'float' },
             ...defaultUniform
         ]);
     }

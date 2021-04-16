@@ -13,8 +13,6 @@ declare class PerlinMap {
     fBufferInfo: FrameBufferInfo;
     texture: WebGLTexture;
     constructor(gl: WebGL2RenderingContext, seed: number, size: number, img: HTMLImageElement, mapCount: Coord);
-    private vertics;
-    private indices;
     private gridPos;
     simpleVertices: Array<Coord>;
     lineVertices: Array<Coord>;
