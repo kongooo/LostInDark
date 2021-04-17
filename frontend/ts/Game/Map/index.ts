@@ -7,7 +7,7 @@ import mapFsSource from '../../../shaders/MapShader/fsSource.glsl';
 import { WebGL } from '../../Tools/WebGLUtils';
 
 import { CoordUtils, FrameBufferInfo } from '../../Tools/Tool';
-import { UniformLocationObj } from '../../Tools/interface';
+import { ItemInfo, UniformLocationObj } from '../../Tools/interface';
 
 import Union from './Union';
 
@@ -25,11 +25,12 @@ class PerlinMap {
     private gl: WebGL2RenderingContext;
     private MapMesh: InstanceMesh;
     mapCount: Coord;
+    mapPos: Coord;
     private union: Union;
     fBufferInfo: FrameBufferInfo;
     texture: WebGLTexture;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, size: number, img: HTMLImageElement, mapCount: Coord) {
+    constructor(gl: WebGL2RenderingContext, seed: number, img: HTMLImageElement, mapCount: Coord) {
         const noise = new perlinNoise3d();
         noise.noiseSeed(seed);
 
@@ -79,7 +80,6 @@ class PerlinMap {
         this.gl = gl;
         this.noise = noise;
         this.fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
-        this.size = size;
         this.mapCount = mapCount;
         this.union = new Union(noise, CoordUtils.add(this.mapCount, SPREAD_SIZE * 2), THRESHOLD, ZOOM, SPREAD_SIZE);
         this.texture = WebGL.getTexture(gl, img);
@@ -91,9 +91,9 @@ class PerlinMap {
     private noiseValue: number = 0;
     // vertexWorldPos: Array<number> = [];
 
-    size: number;
 
     generateVerticesAndLines = (mapPos: Coord) => {
+        this.mapPos = mapPos;
         const noiseValue = this.noise.get(Math.floor(mapPos.x) / ZOOM, Math.floor(mapPos.y) / ZOOM);
 
         //边界重新得到地图顶点数据
@@ -103,10 +103,6 @@ class PerlinMap {
         }
     }
 
-    /**
-     * 
-     * @param cameraWorldPos 摄像机左下角世界坐标
-     */
     draw = (defaultUniform: Array<UniformLocationObj>) => {
 
         // console.log(this.vertics);
@@ -134,6 +130,7 @@ class PerlinMap {
     obstacled = (x: number, y: number) => {
         return this.noise.get(Math.floor(x) / ZOOM, Math.floor(y) / ZOOM) > THRESHOLD;
     }
+
 
     //生成地图顶点坐标
     private generateVertics = (startX: number, startY: number) => {

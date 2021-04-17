@@ -1,5 +1,6 @@
+import { Coord } from "./Tool";
 
-export { Attrib, AttribLocationObj, UniformLocationObj, LightInfo }
+export { Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType }
 
 interface Attrib {
     name: string;
@@ -23,4 +24,37 @@ interface LightInfo {
     color: Array<number>;
     linear: number;
     quadratic: number;
+}
+
+interface ItemInfo {
+    pos: Coord;
+    type: ItemType;
+    img?: Array<HTMLImageElement>;
+    draw?: (defaultUniforms: Array<UniformLocationObj>) => void;
+}
+
+enum ItemType {
+    match,
+    wood,
+    woodPile,
+    fire,
+    torches,
+    powderBox
+}
+
+enum ImgType {
+    player,
+    player1,
+    ground,
+    obstable,
+
+    matchFront,
+    matchUp,
+
+    woodFront,
+    woodUp,
+
+    powderFront,
+    powderUp,
+    powderSide
 }

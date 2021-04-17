@@ -11,9 +11,11 @@ struct PointLight {
     float quadratic;
 };
 
-uniform sampler2D u_image;
-// uniform vec3 u_lightColor;
-// uniform vec3 u_lightPos;
+uniform sampler2D u_image_up;
+uniform sampler2D u_image_front;
+uniform sampler2D u_image_side;
+
+
 uniform vec3 u_viewPos;
 uniform int u_lightCount;
 uniform PointLight pointLights[POINT_LIGHT_COUNT];
@@ -32,16 +34,13 @@ vec3 calPointLight(PointLight light, vec3 norm, vec3 fragPos, vec3 viewPos) {
     vec3 viewDir = normalize(viewPos - fragPos);
     vec3 reflectDir = reflect(-lightDir, norm);
 
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 32.0);
-    float specular = 0.8 * spec;
-
     float diff = max(dot(norm, lightDir), 0.0);
 
     float distance = length(light.position - fragPos);
 
     float attenuation = 1.0 / (1.0 + light.linear * distance + light.quadratic * distance * distance);
     
-    vec3 color = (0.1 + diff + specular) * attenuation * lightColor;
+    vec3 color = (0.7 + diff) * attenuation * lightColor;
 
     return color;
 }
@@ -55,7 +54,16 @@ void main() {
         color += calPointLight(pointLights[i], norm, v_fragPos, u_viewPos);
     }
 
-    vec3 result = texture(u_image, v_texCoord).rgb * color;
+    vec3 result;
 
-    outPutColor = vec4(result, 1.0);
+    if(norm.x == 0.0 && norm.y == 0.0) {
+        result = texture(u_image_up, v_texCoord).rgb;
+    } else if(norm.x == 0.0 && norm.z == 0.0) {
+        result = texture(u_image_front, v_texCoord).rgb;
+    } else if(norm.y == 0.0 && norm.z == 0.0) {
+        result = texture(u_image_side, v_texCoord).rgb;
+    }
+    
+
+    outPutColor = vec4(result * color, 1.0);
 }

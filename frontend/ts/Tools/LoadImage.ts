@@ -1,10 +1,13 @@
-const LoadImage = (images: Array<any>) => {
+import { ImgType } from "./interface";
+
+const LoadImage = (images: Map<ImgType, string | HTMLImageElement>, imageMap: Map<ImgType, HTMLImageElement>) => {
     const promises: Array<Promise<HTMLImageElement>> = [];
-    images.forEach(src => {
+    images.forEach((value, key) => {
         const promise: Promise<HTMLImageElement> = new Promise((resolve, reject) => {
             const img = new Image();
-            img.src = src;
+            img.src = value as string;
             img.onload = () => {
+                imageMap.set(key, img);
                 resolve(img);
             }
         })

@@ -9,8 +9,9 @@ import KeyPress from '../Tools/Event/KeyEvent';
 import { Coord, CoordUtils } from '../Tools/Tool';
 
 import Camera from './Camera';
-import { LightInfo, UniformLocationObj } from '../Tools/interface';
-import { vec3 } from 'gl-matrix';
+import { ImgType, LightInfo, UniformLocationObj } from '../Tools/interface';
+
+import ItemManager from './Item/ItemManager';
 
 const PLAYER_SPEED = 3;
 const PLAYER_LIGHT_RADIUS = 20;
@@ -22,9 +23,6 @@ const ANIMA_SPEED = 6;
 const MAP_COUNT = { x: 50, y: 30 };
 const CAMERA_OFFSET_Y = 8;
 const LIGHT_COLOR = [255, 255, 255];
-const PLAYER_LIGHT_INFO = [
-
-]
 
 class Game {
     private gl: WebGL2RenderingContext;
@@ -33,35 +31,35 @@ class Game {
     private map: PerlinMap;
     private playerLight: Light;
     private playerLight2: Light;
-    private lightCanvas: Canvas;
     private groundCanvas: GroundCanvas;
     private hardShadow: HardShadow;
     private softShadow: SoftShadow;
     private softShadow2: SoftShadow;
     private ws: any;
-    private imgs: Array<HTMLImageElement>;
+    private imgs: Map<ImgType, HTMLImageElement>;
     private camera: Camera;
     private lights: Array<LightInfo> = [];
+    private itemManager: ItemManager;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Array<HTMLImageElement>, ws?: any) {
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, ws?: any) {
         this.gl = gl;
-        this.map = new PerlinMap(gl, seed, MAP_SIZE, imgs[2], MAP_COUNT);
-        this.player = new Player(gl, PLAYER_DRAW_SIZE, imgs[0]);
-        this.player2 = new Player(gl, PLAYER_DRAW_SIZE, imgs[0]);
+        this.map = new PerlinMap(gl, seed, imgs.get(ImgType.obstable), MAP_COUNT);
+        this.player = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
+        this.player2 = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
         // this.cameraWorldPos = center;
         this.playerLight = new Light(gl, PLAYER_LIGHT_RADIUS);
         this.playerLight2 = new Light(gl, PLAYER_LIGHT_RADIUS);
         // this.hardShadow = new HardShadow(gl, this.map.size);
         this.softShadow = new SoftShadow(gl);
         this.softShadow2 = new SoftShadow(gl);
-        this.lightCanvas = new Canvas(gl, MAP_COUNT);
-        this.groundCanvas = new GroundCanvas(gl, imgs[1]);
+        this.groundCanvas = new GroundCanvas(gl, imgs.get(ImgType.ground));
         // this.mapCanvas = new Canvas(gl, mapCanvasVsSource, mapCanvasFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
         this.playerWorldPos = { x: emptyPos.x, y: emptyPos.y };
         this.ws = ws;
         this.imgs = imgs;
         this.camera = new Camera();
+        this.itemManager = ItemManager.getInstance(gl, this.map, imgs);
     }
 
     private deltaTime: number = 0;
@@ -222,6 +220,7 @@ class Game {
         const lefDownPos = { x: this.mapPos.x / this.map.mapCount.x, y: this.mapPos.y / this.map.mapCount.y };
         this.groundCanvas.draw(this.mapPos, lefDownPos, MAP_COUNT, this.get3DDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
         this.map.draw(this.get3DDefaultLightUniform());
+        this.itemManager.drawItems(this.get3DDefaultLightUniform());
 
         this.player.draw(this.playerWorldPos, this.get3DDefaultLightUniform(), this.playerDirLevel, this.playerAnimaFrame);
         if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.get3DDefaultLightUniform(), this.player2DirLevel, this.player2AnimaFrame);

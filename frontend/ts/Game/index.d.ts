@@ -1,4 +1,5 @@
 import { Coord } from '../Tools/Tool';
+import { ImgType } from '../Tools/interface';
 declare class Game {
     private gl;
     private player;
@@ -6,7 +7,6 @@ declare class Game {
     private map;
     private playerLight;
     private playerLight2;
-    private lightCanvas;
     private groundCanvas;
     private hardShadow;
     private softShadow;
@@ -15,7 +15,8 @@ declare class Game {
     private imgs;
     private camera;
     private lights;
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Array<HTMLImageElement>, ws?: any);
+    private itemManager;
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, ws?: any);
     private deltaTime;
     private lastTime;
     private playerWorldPos;

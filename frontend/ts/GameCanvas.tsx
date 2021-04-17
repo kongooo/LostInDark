@@ -8,9 +8,20 @@ import Loading from "./Loading";
 import { LoadImage } from "./Tools/LoadImage";
 
 import playerImg from "../../image/mikasa.png";
-import backImg from "../../image/back1.png";
-import groundImg from "../../image/free.png";
-import mat4 from "gl-mat4";
+import obstacleImg from "../../image/free.png";
+import groundImg from "../../image/back1.png";
+
+import matchFront from "../../image/match/front.png";
+import matchUp from "../../image/match/up.png";
+
+import woodFront from "../../image/wood/front.png";
+import woodUp from "../../image/wood/up.png";
+
+import powderBoxFront from "../../image/powderBox/front.png";
+import powderBoxUp from "../../image/powderBox/up.png";
+import powderBoxSide from "../../image/powderBox/side.png";
+
+import { ImgType } from "./Tools/interface";
 
 export { GameCanvas };
 
@@ -41,17 +52,30 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       console.error("can't init webgl");
       return;
     }
-    this.initWithWs(gl);
-    // this.init(gl);
+    // this.initWithWs(gl);
+    this.init(gl);
   }
 
   private loadImages = async () => {
-    const images: Array<any> = [];
-    images.push(playerImg);
-    images.push(backImg);
-    images.push(groundImg);
-    const imgs = await LoadImage(images);
-    return imgs;
+    const images: Map<ImgType, string | HTMLImageElement> = new Map();
+    const imgMap: Map<ImgType, HTMLImageElement> = new Map();
+    images.set(ImgType.player, playerImg);
+    images.set(ImgType.player1, playerImg);
+    images.set(ImgType.ground, groundImg);
+    images.set(ImgType.obstable, obstacleImg);
+
+    images.set(ImgType.matchFront, matchFront);
+    images.set(ImgType.matchUp, matchUp);
+
+    images.set(ImgType.woodFront, woodFront);
+    images.set(ImgType.woodUp, woodUp);
+
+    images.set(ImgType.powderFront, powderBoxFront);
+    images.set(ImgType.powderSide, powderBoxSide);
+    images.set(ImgType.powderUp, powderBoxUp);
+
+    await LoadImage(images, imgMap);
+    return imgMap;
   };
 
   private initWithWs = (gl: WebGL2RenderingContext) => {

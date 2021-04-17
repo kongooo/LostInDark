@@ -143,6 +143,8 @@ class CoordUtils {
 
     static equal = (a: Coord, b: Coord) => a.x === b.x && a.y === b.y;
 
+    static floor = (pos: Coord) => ({ x: Math.floor(pos.x), y: Math.floor(pos.y) });
+
     /**
      * 
      * @param aVector 
