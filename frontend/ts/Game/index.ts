@@ -9,9 +9,11 @@ import KeyPress from '../Tools/Event/KeyEvent';
 import { Coord, CoordUtils } from '../Tools/Tool';
 
 import Camera from './Camera';
-import { ImgType, LightInfo, UniformLocationObj } from '../Tools/interface';
+import { ImgType, ItemType, LightInfo, UniformLocationObj } from '../Tools/interface';
 
 import ItemManager from './Item/ItemManager';
+import Hint from './UI/Hint';
+import EventBus from '../Tools/Event/EventBus';
 
 const PLAYER_SPEED = 3;
 const PLAYER_LIGHT_RADIUS = 20;
@@ -40,6 +42,7 @@ class Game {
     private camera: Camera;
     private lights: Array<LightInfo> = [];
     private itemManager: ItemManager;
+    private hint: Hint;
 
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, ws?: any) {
         this.gl = gl;
@@ -60,6 +63,7 @@ class Game {
         this.imgs = imgs;
         this.camera = new Camera();
         this.itemManager = ItemManager.getInstance(gl, this.map, imgs);
+        this.hint = new Hint(gl, imgs.get(ImgType.hint));
     }
 
     private deltaTime: number = 0;
@@ -73,6 +77,7 @@ class Game {
     private player2AnimaFrame: number = 0;
     private count: number = 0;
     private mapPos: Coord;
+    private hintPos: Coord;
 
     start = () => {
         if (this.ws)
@@ -93,6 +98,7 @@ class Game {
         this.playerController();
         this.CollisionDetection();
         this.cameraController();
+        this.itemController();
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -222,8 +228,9 @@ class Game {
         this.map.draw(this.get3DDefaultLightUniform());
         this.itemManager.drawItems(this.get3DDefaultLightUniform());
 
-        this.player.draw(this.playerWorldPos, this.get3DDefaultLightUniform(), this.playerDirLevel, this.playerAnimaFrame);
-        if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.get3DDefaultLightUniform(), this.player2DirLevel, this.player2AnimaFrame);
+        this.player.draw(this.playerWorldPos, this.get3DDefaultUniform(), this.playerDirLevel, this.playerAnimaFrame);
+        if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.get3DDefaultUniform(), this.player2DirLevel, this.player2AnimaFrame);
+        if (this.hintPos) this.hint.draw(this.hintPos, this.get3DDefaultUniform());
     }
 
     private playerController = () => {
@@ -258,12 +265,22 @@ class Game {
         this.camera.position[2] = this.playerWorldPos.y + CAMERA_OFFSET_Y;
     }
 
+    private itemController = () => {
+        if (this.hintPos && KeyPress.get('X')) {
+            const itemType = this.itemManager.getItemType(this.hintPos);
+            this.itemManager.deleteItem(this.hintPos);
+            EventBus.dispatch('addItemToBag', itemType);
+        }
+    }
+
     //碰撞检测
     private CollisionDetection = () => {
         let dir = 1;
         if (KeyPress.get('S')) dir = -1;
+        let hint = false;
         for (let x = this.playerWorldPos.x - 1; x <= this.playerWorldPos.x + 1; x++) {
             for (let y = this.playerWorldPos.y - dir; dir === 1 ? y <= this.playerWorldPos.y + dir : y >= this.playerWorldPos.y + dir; y += dir) {
+                //如果碰到障碍物
                 if (this.map.obstacled(x, y)) {
                     const obstacleRealPos = { x: Math.floor(x), y: Math.floor(y) };
                     const intersected = this.intersected(obstacleRealPos, this.playerWorldPos, 1, PLAYER_SIZE);
@@ -301,7 +318,16 @@ class Game {
                         this.playerWorldPos = CoordUtils.add(this.playerWorldPos, offset);
                     }
                 }
+                //如果碰到道具
+                if (this.itemManager.hasItem(CoordUtils.floor({ x, y }))) {
+                    this.hintPos = CoordUtils.floor({ x, y });
+                    hint = true;
+                }
             }
+        }
+
+        if (!hint) {
+            this.hintPos = undefined;
         }
 
         if (this.ws && this.ws.readyState === 1)

@@ -1,3 +1,3 @@
-import { ImgType } from "./interface";
-declare const LoadImage: (images: Map<ImgType, string | HTMLImageElement>, imageMap: Map<ImgType, HTMLImageElement>) => Promise<HTMLImageElement[]>;
+import { ImgType, ItemType } from "./interface";
+declare const LoadImage: (images: Map<ImgType | ItemType, string | HTMLImageElement>, imageMap: Map<ImgType | ItemType, HTMLImageElement>) => Promise<HTMLImageElement[]>;
 export { LoadImage };

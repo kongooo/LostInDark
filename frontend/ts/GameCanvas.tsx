@@ -1,6 +1,7 @@
 import * as React from "react";
 
 import Game from "./Game/index";
+import Bag from "./Game/UI/Bag";
 
 import { randomInt } from "./Tools/Tool";
 
@@ -21,7 +22,11 @@ import powderBoxFront from "../../image/powderBox/front.png";
 import powderBoxUp from "../../image/powderBox/up.png";
 import powderBoxSide from "../../image/powderBox/side.png";
 
-import { ImgType } from "./Tools/interface";
+import hintImg from "../../image/hint.png";
+import bagImg from "../../image/bag.png";
+
+import { ImgType, ItemType } from "./Tools/interface";
+import EventBus from "./Tools/Event/EventBus";
 
 export { GameCanvas };
 
@@ -34,13 +39,22 @@ interface GLProps {
 interface GLState {
   loading: boolean;
   animaDisplay: string;
+  showBag: boolean;
+  hintShow: boolean;
+  hintWord: string;
 }
 
 class GameCanvas extends React.Component<GLProps, GLState> {
   private canvasRef = React.createRef<HTMLCanvasElement>();
   constructor(props: GLProps) {
     super(props);
-    this.state = { loading: true, animaDisplay: "flex" };
+    this.state = {
+      loading: true,
+      animaDisplay: "flex",
+      showBag: false,
+      hintShow: false,
+      hintWord: "",
+    };
   }
 
   componentDidMount() {
@@ -54,6 +68,11 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     }
     // this.initWithWs(gl);
     this.init(gl);
+    EventBus.addEventListener("showHint", this.showHint);
+  }
+
+  componentWillUnmount() {
+    EventBus.removeEventListener("showHint");
   }
 
   private loadImages = async () => {
@@ -73,6 +92,8 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     images.set(ImgType.powderFront, powderBoxFront);
     images.set(ImgType.powderSide, powderBoxSide);
     images.set(ImgType.powderUp, powderBoxUp);
+
+    images.set(ImgType.hint, hintImg);
 
     await LoadImage(images, imgMap);
     return imgMap;
@@ -112,8 +133,26 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     }, 500);
   };
 
+  private bagControl = () => {
+    this.setState({ showBag: !this.state.showBag });
+  };
+
+  private showHint = (word: string) => {
+    this.setState({
+      hintShow: true,
+      hintWord: word,
+    });
+    let timer = setTimeout(() => {
+      this.setState({
+        hintShow: false,
+        // hintWord: "",
+      });
+      clearTimeout(timer);
+    }, 1000);
+  };
+
   render() {
-    const { loading, animaDisplay } = this.state;
+    const { loading, animaDisplay, showBag, hintShow, hintWord } = this.state;
     const { width, height } = this.props;
     return (
       <React.Fragment>
@@ -130,6 +169,15 @@ class GameCanvas extends React.Component<GLProps, GLState> {
           style={{ width, height }}
           ref={this.canvasRef}
         ></canvas>
+        <Bag show={showBag}></Bag>
+        <img src={bagImg} className="bag-icon" onClick={this.bagControl}></img>
+        <div
+          className={`hint-box ${
+            hintShow ? "hint-box-show" : "hint-box-disappear"
+          }`}
+        >
+          <p>{hintWord}</p>
+        </div>
       </React.Fragment>
     );
   }

@@ -1,5 +1,5 @@
 import { Coord } from "../../Tools/Tool";
-import { ImgType, ItemInfo, UniformLocationObj } from "../../Tools/interface";
+import { ImgType, ItemInfo, ItemType, UniformLocationObj } from "../../Tools/interface";
 import PerlinMap from "../Map";
 declare class ItemManager {
     private static instance;
@@ -16,6 +16,9 @@ declare class ItemManager {
      * @returns 随机出该chunck区域内的道具
      */
     private randomChunckItem;
+    private getMatchImgs;
+    private getWoodImgs;
+    private getPowderBoxImgs;
     private randomItem;
     drawItems: (defaultUniform: Array<UniformLocationObj>) => void;
     /**
@@ -24,6 +27,24 @@ declare class ItemManager {
      * @returns
      */
     hasItem: (pos: Coord) => ItemInfo;
+    /**
+     *
+     * @param pos x,y: int
+     * @returns
+     */
+    deleteItem: (pos: Coord) => void;
+    /**
+     *
+     * @param pos x, y: int
+     * @param type
+     */
+    addItem: (pos: Coord, type: ItemType) => void;
+    /**
+     *
+     * @param pos x, y: int
+     * @returns ItemType
+     */
+    getItemType: (pos: Coord) => ItemType;
     private getChunckIndexByPos;
 }
 export default ItemManager;

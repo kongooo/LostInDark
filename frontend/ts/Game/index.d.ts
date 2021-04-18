@@ -16,6 +16,7 @@ declare class Game {
     private camera;
     private lights;
     private itemManager;
+    private hint;
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, ws?: any);
     private deltaTime;
     private lastTime;
@@ -27,6 +28,7 @@ declare class Game {
     private player2AnimaFrame;
     private count;
     private mapPos;
+    private hintPos;
     start: () => void;
     private update;
     private draw;
@@ -37,6 +39,7 @@ declare class Game {
     private drawScene;
     private playerController;
     private cameraController;
+    private itemController;
     private CollisionDetection;
     private intersected;
     private getInterSectedRect;

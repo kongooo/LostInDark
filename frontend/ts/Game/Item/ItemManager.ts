@@ -51,18 +51,20 @@ class ItemManager {
         let woodCount = randomInt(WOOD_MIN_COUNT, WOOD_MAX_COUNT);
         let powderBoxCount = randomInt(POWDERBOX_MIN_COUNT, POWDERBOX_MAX_COUNT);
 
-        this.randomItem(matchCount, map, leftDownPos, rightUpPos, ItemType.match,
-            [this.imgs.get(ImgType.matchUp), this.imgs.get(ImgType.matchFront), this.imgs.get(ImgType.matchFront)]);
+        this.randomItem(matchCount, map, leftDownPos, rightUpPos, ItemType.match, this.getMatchImgs());
 
-        this.randomItem(woodCount, map, leftDownPos, rightUpPos, ItemType.wood,
-            [this.imgs.get(ImgType.woodUp), this.imgs.get(ImgType.woodFront), this.imgs.get(ImgType.woodFront)]);
+        this.randomItem(woodCount, map, leftDownPos, rightUpPos, ItemType.wood, this.getWoodImgs());
 
-        this.randomItem(powderBoxCount, map, leftDownPos, rightUpPos, ItemType.powderBox,
-            [this.imgs.get(ImgType.powderUp), this.imgs.get(ImgType.powderFront), this.imgs.get(ImgType.powderSide)]);
+        this.randomItem(powderBoxCount, map, leftDownPos, rightUpPos, ItemType.powderBox, this.getPowderBoxImgs());
 
         this.itemChuncks.set(chunckIndex, map);
         return map;
     }
+
+    private getMatchImgs = () => [this.imgs.get(ImgType.matchUp), this.imgs.get(ImgType.matchFront), this.imgs.get(ImgType.matchFront)]
+    private getWoodImgs = () => [this.imgs.get(ImgType.woodUp), this.imgs.get(ImgType.woodFront), this.imgs.get(ImgType.woodFront)];
+    private getPowderBoxImgs = () => [this.imgs.get(ImgType.powderUp), this.imgs.get(ImgType.powderFront), this.imgs.get(ImgType.powderSide)];
+
 
     private randomItem = (count: number, map: Map<string, ItemInfo>, leftDownPos: Coord, rightUpPos: Coord, type: ItemType, imgs: Array<HTMLImageElement>) => {
         while (count--) {
@@ -111,6 +113,65 @@ class ItemManager {
     hasItem = (pos: Coord) => {
         const chunckIndex = this.getChunckIndexByPos(pos);
         return this.itemChuncks.get(chunckIndex) && this.itemChuncks.get(chunckIndex).get(`${pos.x},${pos.y}`);
+    }
+
+    /**
+     * 
+     * @param pos x,y: int
+     * @returns 
+     */
+    deleteItem = (pos: Coord) => {
+        const chunckIndex = this.getChunckIndexByPos(pos);
+        this.itemChuncks.get(chunckIndex).delete(`${pos.x},${pos.y}`);
+    }
+
+    /**
+     * 
+     * @param pos x, y: int
+     * @param type 
+     */
+    addItem = (pos: Coord, type: ItemType) => {
+        const chunckIndex = this.getChunckIndexByPos(pos);
+        if (!this.itemChuncks.has(chunckIndex)) {
+            this.itemChuncks.set(chunckIndex, new Map());
+        }
+        const chunck = this.itemChuncks.get(chunckIndex);
+        let item: SimpleItem;
+        switch (type) {
+            case ItemType.match:
+                item = new SimpleItem(this.gl, {
+                    pos,
+                    type,
+                    img: this.getMatchImgs()
+                });
+                break;
+            case ItemType.wood:
+                item = new SimpleItem(this.gl, {
+                    pos,
+                    type,
+                    img: this.getWoodImgs()
+                });
+                break;
+            case ItemType.powderBox:
+                item = new SimpleItem(this.gl, {
+                    pos,
+                    type,
+                    img: this.getPowderBoxImgs()
+                });
+                break;
+        }
+        chunck.set(`${pos.x},${pos.y}`, item);
+    }
+
+    /**
+     * 
+     * @param pos x, y: int
+     * @returns ItemType
+     */
+    getItemType = (pos: Coord) => {
+        const chunckIndex = this.getChunckIndexByPos(pos);
+        const chunck = this.itemChuncks.get(chunckIndex);
+        return chunck.get(`${pos.x},${pos.y}`).type;
     }
 
     private getChunckIndexByPos = (pos: Coord) => {

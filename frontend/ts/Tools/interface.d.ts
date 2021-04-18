@@ -1,5 +1,5 @@
 import { Coord } from "./Tool";
-export { Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType };
+export { Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType, BagItem };
 interface Attrib {
     name: string;
     size: number;
@@ -26,6 +26,12 @@ interface ItemInfo {
     img?: Array<HTMLImageElement>;
     draw?: (defaultUniforms: Array<UniformLocationObj>) => void;
 }
+interface BagItem {
+    imgSrc?: string;
+    count?: number;
+    type?: ItemType;
+    description?: string;
+}
 declare enum ItemType {
     match = 0,
     wood = 1,
@@ -45,5 +51,6 @@ declare enum ImgType {
     woodUp = 7,
     powderFront = 8,
     powderUp = 9,
-    powderSide = 10
+    powderSide = 10,
+    hint = 11
 }
