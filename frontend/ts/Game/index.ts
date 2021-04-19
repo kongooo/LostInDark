@@ -14,6 +14,7 @@ import { ImgType, ItemType, LightInfo, UniformLocationObj } from '../Tools/inter
 import ItemManager from './Item/ItemManager';
 import Hint from './UI/Hint';
 import EventBus from '../Tools/Event/EventBus';
+import PlaceHintRect from './Item/PlaceItem';
 
 const PLAYER_SPEED = 3;
 const PLAYER_LIGHT_RADIUS = 20;
@@ -25,6 +26,8 @@ const ANIMA_SPEED = 6;
 const MAP_COUNT = { x: 50, y: 30 };
 const CAMERA_OFFSET_Y = 8;
 const LIGHT_COLOR = [255, 255, 255];
+const banPlace = [224, 36, 51];
+const canPlace = [27, 208, 66];
 
 class Game {
     private gl: WebGL2RenderingContext;
@@ -43,6 +46,7 @@ class Game {
     private lights: Array<LightInfo> = [];
     private itemManager: ItemManager;
     private hint: Hint;
+    private placeHintRect: PlaceHintRect;
 
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, ws?: any) {
         this.gl = gl;
@@ -64,6 +68,7 @@ class Game {
         this.camera = new Camera();
         this.itemManager = ItemManager.getInstance(gl, this.map, imgs);
         this.hint = new Hint(gl, imgs.get(ImgType.hint));
+        this.placeHintRect = new PlaceHintRect(gl);
     }
 
     private deltaTime: number = 0;
@@ -78,11 +83,13 @@ class Game {
     private count: number = 0;
     private mapPos: Coord;
     private hintPos: Coord;
+    private placeItem: ItemType;
 
     start = () => {
         if (this.ws)
             this.initWs();
         this.update(0);
+        EventBus.addEventListener('placeItemToScene', this.enablePlaceState);
     }
 
     private update = (now: number) => {
@@ -228,9 +235,22 @@ class Game {
         this.map.draw(this.get3DDefaultLightUniform());
         this.itemManager.drawItems(this.get3DDefaultLightUniform());
 
+        if (this.placeItem !== undefined) {
+            // console.log('')
+            this.placeHintRect.draw(CoordUtils.floor(this.playerWorldPos), this.getPlaceColor(), this.get3DDefaultUniform());
+        }
+
         this.player.draw(this.playerWorldPos, this.get3DDefaultUniform(), this.playerDirLevel, this.playerAnimaFrame);
         if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.get3DDefaultUniform(), this.player2DirLevel, this.player2AnimaFrame);
-        if (this.hintPos) this.hint.draw(this.hintPos, this.get3DDefaultUniform());
+        if (this.hintPos && this.placeItem === undefined) this.hint.draw(this.hintPos, this.get3DDefaultUniform());
+    }
+
+    private getPlaceColor = () => {
+        const pos = CoordUtils.floor(this.playerWorldPos);
+        if (!this.map.obstacled(pos.x, pos.y) && !this.itemManager.hasItem(pos)) {
+            return canPlace;
+        }
+        return banPlace;
     }
 
     private playerController = () => {
@@ -266,11 +286,33 @@ class Game {
     }
 
     private itemController = () => {
-        if (this.hintPos && KeyPress.get('X')) {
+        if (!this.placeItem && this.hintPos && KeyPress.get('X')) {
             const itemType = this.itemManager.getItemType(this.hintPos);
             this.itemManager.deleteItem(this.hintPos);
             EventBus.dispatch('addItemToBag', itemType);
+        } else if (this.placeItem !== undefined) {
+            if (KeyPress.get('E')) {
+                if (this.getPlaceColor() === canPlace) {
+                    this.itemManager.addItem(CoordUtils.floor(this.playerWorldPos), this.placeItem);
+                    this.disablePlaceState();
+                    EventBus.dispatch('deleteItemFromBag');
+                } else {
+                    EventBus.dispatch("showHint", "这里不可以放置哦，换一个位置试试吧~");
+                }
+            } else if (KeyPress.get('Escape')) {
+                this.disablePlaceState();
+            }
         }
+    }
+
+    private enablePlaceState = (itemType: ItemType) => {
+        this.placeItem = itemType;
+        EventBus.dispatch('mask', true);
+    }
+
+    private disablePlaceState = () => {
+        this.placeItem = undefined;
+        EventBus.dispatch('mask', false);
     }
 
     //碰撞检测

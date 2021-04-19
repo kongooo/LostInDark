@@ -42,6 +42,7 @@ interface GLState {
   showBag: boolean;
   hintShow: boolean;
   hintWord: string;
+  overlay: boolean;
 }
 
 class GameCanvas extends React.Component<GLProps, GLState> {
@@ -54,6 +55,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       showBag: false,
       hintShow: false,
       hintWord: "",
+      overlay: false,
     };
   }
 
@@ -69,10 +71,14 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     // this.initWithWs(gl);
     this.init(gl);
     EventBus.addEventListener("showHint", this.showHint);
+    EventBus.addEventListener("BagControl", this.bagControl);
+    EventBus.addEventListener("mask", this.controlOverlay);
   }
 
   componentWillUnmount() {
     EventBus.removeEventListener("showHint");
+    EventBus.removeEventListener("BagControl");
+    EventBus.removeEventListener("mask");
   }
 
   private loadImages = async () => {
@@ -151,8 +157,19 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     }, 1000);
   };
 
+  private controlOverlay = (show: boolean) => {
+    this.setState({ overlay: show });
+  };
+
   render() {
-    const { loading, animaDisplay, showBag, hintShow, hintWord } = this.state;
+    const {
+      loading,
+      animaDisplay,
+      showBag,
+      hintShow,
+      hintWord,
+      overlay,
+    } = this.state;
     const { width, height } = this.props;
     return (
       <React.Fragment>
@@ -162,6 +179,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
         >
           <Loading></Loading>
         </div>
+        {overlay && <div className="overlay"></div>}
         <canvas
           className="gl-root"
           width={width * window.devicePixelRatio}

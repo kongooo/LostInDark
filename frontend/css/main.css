@@ -131,3 +131,11 @@ body {
     font-family: cursive;
     font-size: larger;
 }
+
+.overlay {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background-color: transparent;
+    z-index: 1;
+}

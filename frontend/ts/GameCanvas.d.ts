@@ -11,6 +11,7 @@ interface GLState {
     showBag: boolean;
     hintShow: boolean;
     hintWord: string;
+    overlay: boolean;
 }
 declare class GameCanvas extends React.Component<GLProps, GLState> {
     private canvasRef;
@@ -22,5 +23,6 @@ declare class GameCanvas extends React.Component<GLProps, GLState> {
     private init;
     private bagControl;
     private showHint;
+    private controlOverlay;
     render(): JSX.Element;
 }

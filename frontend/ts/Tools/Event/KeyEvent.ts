@@ -14,7 +14,9 @@ class KeyPress {
     }
     static get(code: string) {
         if (!this.inited) this.init();
-        const keyCode = 'Key' + code;
+        let keyCode = code;
+        if (code !== 'Escape')
+            keyCode = 'Key' + code;
         return this.keycode.has(keyCode) && this.keycode.get(keyCode);
     }
 }

@@ -29,10 +29,12 @@ class Bag extends React.Component<BagProps, BagState> {
 
   componentDidMount() {
     EventBus.addEventListener("addItemToBag", this.addItem);
+    EventBus.addEventListener("deleteItemFromBag", this.deleteItem);
   }
 
   componentWillUnmount() {
     EventBus.removeEventListener("addItemToBag");
+    EventBus.removeEventListener("deleteItemFromBag");
   }
 
   addItem = (type: ItemType) => {
@@ -56,6 +58,7 @@ class Bag extends React.Component<BagProps, BagState> {
         item = powderBoxData;
         break;
     }
+
     if (index !== GRID_COUNT - 1) {
       if (item) {
         items[index] = item;
@@ -67,12 +70,36 @@ class Bag extends React.Component<BagProps, BagState> {
     if (item) EventBus.dispatch("showHint", getFailedWord(item.description));
   };
 
+  deleteItem = () => {
+    const { activeIndex, items } = this.state;
+    // console.log(activeIndex);
+    if (activeIndex > -1 && items[activeIndex]) {
+      if (items[activeIndex].count - 1 <= 0) {
+        items[activeIndex] = {};
+      }
+      this.setState({ items });
+    }
+  };
+
   onMouseOver = (e: any) => {
     const index = e.target.dataset.index;
     if (index) {
       this.setState({
         activeIndex: Number(index),
       });
+    } else {
+      this.setState({
+        activeIndex: -1,
+      });
+    }
+  };
+
+  onMouseDown = () => {
+    const { activeIndex, items } = this.state;
+    if (activeIndex > -1 && items[activeIndex].imgSrc) {
+      EventBus.dispatch("BagControl");
+      EventBus.dispatch("placeItemToScene", items[activeIndex].type);
+      EventBus.dispatch("showHint", "按E放置当前选中物体, Esc放弃本次放置。");
     }
   };
 
@@ -83,7 +110,11 @@ class Bag extends React.Component<BagProps, BagState> {
         className="bag-box"
         style={{ display: this.props.show ? "flex" : "none" }}
       >
-        <div className="bag" onMouseOver={this.onMouseOver}>
+        <div
+          className="bag"
+          onMouseOver={this.onMouseOver}
+          onMouseDown={this.onMouseDown}
+        >
           {items.map((item, key) => (
             <BagGrid
               imgSrc={item.imgSrc}

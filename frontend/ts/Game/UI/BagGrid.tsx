@@ -1,3 +1,4 @@
+import { ItemType } from "../../Tools/interface";
 import * as React from "react";
 
 interface BagGridProps {
