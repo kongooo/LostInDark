@@ -41,10 +41,12 @@ class Light {
      * @param worldPos 光源世界坐标
      * @param texture shadow贴图
      */
-    draw = (worldPos: Coord, texture: WebGLTexture, defaultUniform: Array<UniformLocationObj>) => {
+    draw = (worldPos: Coord, texture: WebGLTexture, brightNess: number, lightScale: number, defaultUniform: Array<UniformLocationObj>) => {
         this.lightMesh.drawWithAVO([
             { name: 'u_shadow', data: [0], texture, type: 'texture' },
             { name: 'u_worldPos', data: [worldPos.x, worldPos.y], type: 'vec2' },
+            { name: 'u_brightness', data: [brightNess], type: 'float' },
+            { name: 'u_lightScale', data: [lightScale], type: 'float' },
             ...defaultUniform
         ]);
     }

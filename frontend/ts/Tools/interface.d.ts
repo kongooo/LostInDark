@@ -23,22 +23,25 @@ interface LightInfo {
 interface ItemInfo {
     pos: Coord;
     type: ItemType;
+    move?: boolean;
     img?: Array<HTMLImageElement>;
     draw?: (defaultUniforms: Array<UniformLocationObj>) => void;
 }
 interface BagItem {
     imgSrc?: string;
-    count?: number;
     type?: ItemType;
+    name?: string;
+    useCount?: number;
     description?: string;
 }
 declare enum ItemType {
     match = 0,
     wood = 1,
-    woodPile = 2,
+    firePile = 2,
     fire = 3,
-    torches = 4,
-    powderBox = 5
+    fireWoods = 4,
+    powderBox = 5,
+    powder = 6
 }
 declare enum ImgType {
     player = 0,
@@ -52,5 +55,9 @@ declare enum ImgType {
     powderFront = 8,
     powderUp = 9,
     powderSide = 10,
-    hint = 11
+    hint = 11,
+    powder = 12,
+    fire = 13,
+    fireWood = 14,
+    firePile = 15
 }

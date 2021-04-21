@@ -31,6 +31,11 @@ declare class Game {
     private mapPos;
     private hintPos;
     private placeItem;
+    private brightNess;
+    private fire;
+    private playerLightScale;
+    private playerLight2Scale;
+    private player2BrightNess;
     start: () => void;
     private update;
     private draw;
@@ -40,6 +45,9 @@ declare class Game {
     private drawLightTexture;
     private drawScene;
     private getPlaceColor;
+    private brighten;
+    private dim;
+    private brightNessController;
     private playerController;
     private cameraController;
     private itemController;

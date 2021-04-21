@@ -1,5 +1,5 @@
 import { Coord } from "../../Tools/Tool";
-import { ImgType, ItemInfo, ItemType, UniformLocationObj } from "../../Tools/interface";
+import { ImgType, ItemType, UniformLocationObj } from "../../Tools/interface";
 import PerlinMap from "../Map";
 declare class ItemManager {
     private static instance;
@@ -26,7 +26,7 @@ declare class ItemManager {
      * @param pos x,y: int
      * @returns
      */
-    hasItem: (pos: Coord) => ItemInfo;
+    hasItem: (pos: Coord) => boolean;
     /**
      *
      * @param pos x,y: int

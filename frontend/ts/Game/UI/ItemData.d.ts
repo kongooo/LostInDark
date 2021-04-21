@@ -1,20 +1,9 @@
-import { ItemType } from "../../Tools/interface";
-declare const matchData: {
-    imgSrc: any;
-    count: number;
-    type: ItemType;
-    description: string;
-};
-declare const woodData: {
-    imgSrc: any;
-    count: number;
-    type: ItemType;
-    description: string;
-};
-declare const powderBoxData: {
-    imgSrc: any;
-    count: number;
-    type: ItemType;
-    description: string;
-};
-export { matchData, woodData, powderBoxData };
+import { BagItem } from "../../Tools/interface";
+declare class ItemData {
+    static matchData: () => BagItem;
+    static woodData: () => BagItem;
+    static powderBoxData: () => BagItem;
+    static fireWoodData: () => BagItem;
+    static firePileData: () => BagItem;
+}
+export default ItemData;

@@ -5,7 +5,6 @@ import VaryMesh from '../../Tools/Mesh/VaryMesh';
 import { Coord } from '../../Tools/Tool';
 import { UniformLocationObj } from '../../Tools/interface';
 import { WebGL } from '../../Tools/WebGLUtils';
-import Camera from '../Camera';
 
 
 class Player {

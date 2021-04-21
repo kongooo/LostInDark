@@ -25,6 +25,10 @@ import powderBoxSide from "../../image/powderBox/side.png";
 import hintImg from "../../image/hint.png";
 import bagImg from "../../image/bag.png";
 
+import powderImg from "../../image/powder.png";
+
+import fireImg from "../../image/fire/fire.png";
+
 import { ImgType, ItemType } from "./Tools/interface";
 import EventBus from "./Tools/Event/EventBus";
 
@@ -100,6 +104,9 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     images.set(ImgType.powderUp, powderBoxUp);
 
     images.set(ImgType.hint, hintImg);
+    images.set(ImgType.powder, powderImg);
+
+    images.set(ImgType.fire, fireImg);
 
     await LoadImage(images, imgMap);
     return imgMap;

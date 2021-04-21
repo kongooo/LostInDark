@@ -3,8 +3,8 @@ import * as React from "react";
 
 interface BagGridProps {
   imgSrc?: string;
-  count?: number;
   description?: string;
+  name?: string;
   active: boolean;
   index: number;
 }
@@ -14,6 +14,7 @@ interface BagGridState {
 }
 
 class BagGrid extends React.Component<BagGridProps, BagGridState> {
+  private imgRef = React.createRef<HTMLImageElement>();
   constructor(props: BagGridProps) {
     super(props);
     this.state = { choose: false };
@@ -36,7 +37,7 @@ class BagGrid extends React.Component<BagGridProps, BagGridState> {
   };
 
   render() {
-    const { imgSrc, count, description, active, index } = this.props;
+    const { imgSrc, active, index, description, name } = this.props;
     const { choose } = this.state;
     const show = imgSrc && active && choose;
     return (
@@ -58,12 +59,10 @@ class BagGrid extends React.Component<BagGridProps, BagGridState> {
             height={36}
             onMouseOver={this.stopPubbling}
             onMouseLeave={this.stopPubbling}
+            ref={this.imgRef}
           ></img>
         )}
-        <span onMouseOver={this.stopPubbling} onMouseLeave={this.stopPubbling}>
-          {count}
-        </span>
-        {show && <p>{description}</p>}
+        {show && <p>{name}</p>}
       </div>
     );
   }

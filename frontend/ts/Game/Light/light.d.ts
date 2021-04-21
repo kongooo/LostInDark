@@ -11,6 +11,6 @@ declare class Light {
      * @param worldPos 光源世界坐标
      * @param texture shadow贴图
      */
-    draw: (worldPos: Coord, texture: WebGLTexture, defaultUniform: Array<UniformLocationObj>) => void;
+    draw: (worldPos: Coord, texture: WebGLTexture, brightNess: number, lightScale: number, defaultUniform: Array<UniformLocationObj>) => void;
 }
 export default Light;

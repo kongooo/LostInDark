@@ -10,6 +10,7 @@ import { CoordUtils, FrameBufferInfo } from '../../Tools/Tool';
 import { ItemInfo, UniformLocationObj } from '../../Tools/interface';
 
 import Union from './Union';
+import { ItemVertex } from '../Item/ItemVertex';
 
 const ZOOM = 5;
 const THRESHOLD = 0.6;
@@ -43,38 +44,8 @@ class PerlinMap {
         MapMesh.getInstanceAttribLocations([
             { name: 'a_offset', size: 2 }
         ])
-        // MapMesh.getUniformLocations(['u_image', 'u_projectionMatrix', 'u_viewMatrix', ...defaultUniformName]);
-        MapMesh.getBufferAndVAO([
 
-            //right
-            1, 0, 0, 0, 0, 1, 0, 0,
-            1, 1, 0, 1, 0, 1, 0, 0,
-            1, 1, 1, 1, 1, 1, 0, 0,
-            1, 0, 1, 0, 1, 1, 0, 0,
-
-            //left
-            0, 0, 0, 0, 0, -1, 0, 0,
-            0, 0, 1, 1, 0, -1, 0, 0,
-            0, 1, 1, 1, 1, -1, 0, 0,
-            0, 1, 0, 0, 1, -1, 0, 0,
-
-            //front
-            0, 0, 1, 0, 0, 0, 0, 1,
-            1, 0, 1, 1, 0, 0, 0, 1,
-            1, 1, 1, 1, 1, 0, 0, 1,
-            0, 1, 1, 0, 1, 0, 0, 1,
-
-            //top
-            0, 1, 0, 0, 0, 0, 1, 0,
-            0, 1, 1, 1, 0, 0, 1, 0,
-            1, 1, 1, 1, 1, 0, 1, 0,
-            1, 1, 0, 0, 10, 1, 0,
-        ], [
-            0, 1, 2, 0, 2, 3,
-            4, 5, 6, 4, 6, 7,
-            8, 9, 10, 8, 10, 11,
-            12, 13, 14, 12, 14, 15
-        ]);
+        MapMesh.getBufferAndVAO(ItemVertex.getCubeVertices(1, 1, 1), ItemVertex.cubeIndices);
 
         this.MapMesh = MapMesh;
         this.gl = gl;

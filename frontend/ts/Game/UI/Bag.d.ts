@@ -5,16 +5,21 @@ interface BagProps {
 }
 interface BagState {
     items: Array<BagItem>;
+    conbinaItems: Array<BagItem>;
     activeIndex: number;
+    conbindActiveIndex: number;
 }
 declare class Bag extends React.Component<BagProps, BagState> {
+    private drag;
     constructor(props: BagProps);
     componentDidMount(): void;
     componentWillUnmount(): void;
     addItem: (type: ItemType) => void;
     deleteItem: () => void;
     onMouseOver: (e: any) => void;
-    onMouseDown: () => void;
+    onConbinaMouseOver: (e: any) => void;
+    onClick: () => void;
+    onConbinaClick: () => void;
     render(): JSX.Element;
 }
 export default Bag;

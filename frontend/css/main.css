@@ -106,6 +106,18 @@ body {
     padding: 5px;
 }
 
+.bag-conbina-box {
+    position: absolute;
+    background-color: rgb(233 229 213 / 91%);
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 50px);
+    grid-template-rows: repeat(auto-fill, 50px);
+    row-gap: 10px;
+    column-gap: 10px;
+    border-radius: 5px;
+    padding: 10px;
+}
+
 .hint-box {
     padding: 15px 60px;
     border-radius: 5px;

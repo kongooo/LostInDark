@@ -17,8 +17,7 @@ import EventBus from '../Tools/Event/EventBus';
 import PlaceHintRect from './Item/PlaceItem';
 
 const PLAYER_SPEED = 3;
-const PLAYER_LIGHT_RADIUS = 20;
-const MAP_SIZE = 1;
+const DEFAULT_LIGHT_RADIUS = 10;
 const PLAYER_SIZE = 0.9;
 const PLAYER_DRAW_SIZE = { x: 0.9, y: 1.7 };
 const LIGHT_SIZE = 0.44;
@@ -28,6 +27,7 @@ const CAMERA_OFFSET_Y = 8;
 const LIGHT_COLOR = [255, 255, 255];
 const banPlace = [224, 36, 51];
 const canPlace = [27, 208, 66];
+const putOutTime = 60000;
 
 class Game {
     private gl: WebGL2RenderingContext;
@@ -54,8 +54,8 @@ class Game {
         this.player = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
         this.player2 = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
         // this.cameraWorldPos = center;
-        this.playerLight = new Light(gl, PLAYER_LIGHT_RADIUS);
-        this.playerLight2 = new Light(gl, PLAYER_LIGHT_RADIUS);
+        this.playerLight = new Light(gl, DEFAULT_LIGHT_RADIUS);
+        this.playerLight2 = new Light(gl, DEFAULT_LIGHT_RADIUS);
         // this.hardShadow = new HardShadow(gl, this.map.size);
         this.softShadow = new SoftShadow(gl);
         this.softShadow2 = new SoftShadow(gl);
@@ -84,6 +84,11 @@ class Game {
     private mapPos: Coord;
     private hintPos: Coord;
     private placeItem: ItemType;
+    private brightNess: number = 0.7;
+    private fire: boolean = false;
+    private playerLightScale: number = 1;
+    private playerLight2Scale: number;
+    private player2BrightNess: number;
 
     start = () => {
         if (this.ws)
@@ -106,6 +111,7 @@ class Game {
         this.CollisionDetection();
         this.cameraController();
         this.itemController();
+        this.brightNessController();
 
         gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
@@ -132,7 +138,7 @@ class Game {
         gl.clear(gl.COLOR_BUFFER_BIT);
 
         const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
-        this.hardShadow.drawHardShadow(this.map.lineVertices, centerPos, PLAYER_LIGHT_RADIUS, this.get2DDefaultUniform(), this.map.fBufferInfo.targetTexture);
+        this.hardShadow.drawHardShadow(this.map.lineVertices, centerPos, DEFAULT_LIGHT_RADIUS, this.get2DDefaultUniform(), this.map.fBufferInfo.targetTexture);
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
@@ -148,19 +154,19 @@ class Game {
 
         //draw player shadow
         {
-            this.drawSoftShadow(this.softShadow, this.playerWorldPos);
+            this.drawSoftShadow(this.softShadow, this.playerWorldPos, DEFAULT_LIGHT_RADIUS * this.playerLightScale);
         }
 
         //draw player2shadow
         {
             if (this.player2WorldPos)
-                this.drawSoftShadow(this.softShadow2, this.player2WorldPos);
+                this.drawSoftShadow(this.softShadow2, this.player2WorldPos, DEFAULT_LIGHT_RADIUS * this.playerLight2Scale);
         }
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
 
-    private drawSoftShadow = (shadow: SoftShadow, playerPos: Coord) => {
+    private drawSoftShadow = (shadow: SoftShadow, playerPos: Coord, radius: number) => {
         const gl = this.gl;
         const { renderFrameBuffer, textureFrameBuffer } = shadow.fBufferInfo;
 
@@ -172,10 +178,10 @@ class Game {
 
         const playerCenterPos = CoordUtils.add(playerPos, PLAYER_SIZE / 2)
         //draw with min line
-        shadow.drawSoftShadow(this.map.lineVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.get2DDefaultUniform());
+        shadow.drawSoftShadow(this.map.lineVertices, playerCenterPos, LIGHT_SIZE, radius, this.get2DDefaultUniform());
 
         //draw with vertices
-        // shadow.drawSoftShadow(this.map.simpleVertices, playerCenterPos, LIGHT_SIZE, PLAYER_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
+        // shadow.drawSoftShadow(this.map.simpleVertices, playerCenterPos, LIGHT_SIZE, DEFAULT_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
     }
 
 
@@ -199,13 +205,13 @@ class Game {
         //hard shadow
         // this.playerLight.draw(lightCenter, this.hardShadow.fBufferInfo.targetTexture, this.getDefaultUniform());
         //soft shadow
-        this.playerLight.draw(lightCenter, this.softShadow.fBufferInfo.targetTexture, this.get2DDefaultUniform());
+        this.playerLight.draw(lightCenter, this.softShadow.fBufferInfo.targetTexture, this.brightNess, this.playerLightScale, this.get2DDefaultUniform());
 
 
         //draw player2 shadow
         if (this.player2WorldPos) {
             const light2Center = CoordUtils.add(this.player2WorldPos, PLAYER_SIZE / 2);
-            this.playerLight2.draw(light2Center, this.softShadow2.fBufferInfo.targetTexture, this.get2DDefaultUniform());
+            this.playerLight2.draw(light2Center, this.softShadow2.fBufferInfo.targetTexture, this.player2BrightNess, this.playerLight2Scale, this.get2DDefaultUniform());
         }
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
@@ -253,6 +259,36 @@ class Game {
         return banPlace;
     }
 
+    private brighten = () => {
+        this.playerLightScale = 1.8;
+        this.brightNess = 1;
+        this.lights[0] = {
+            position: [this.playerWorldPos.x + PLAYER_SIZE / 2, 1.5, this.playerWorldPos.y + PLAYER_SIZE / 2],
+            color: LIGHT_COLOR,
+            linear: 0.14,
+            quadratic: 0.07
+        }
+    }
+
+    private dim = () => {
+        this.playerLightScale = 1;
+        this.brightNess = 0.7;
+        this.lights[0] = {
+            position: [this.playerWorldPos.x + PLAYER_SIZE / 2, 1.5, this.playerWorldPos.y + PLAYER_SIZE / 2],
+            color: LIGHT_COLOR,
+            linear: 0.35,
+            quadratic: 0.44
+        }
+    }
+
+    private brightNessController = () => {
+        if (this.fire) {
+            this.brighten();
+        } else {
+            this.dim();
+        }
+    }
+
     private playerController = () => {
         const distance = PLAYER_SPEED * this.deltaTime;
 
@@ -291,9 +327,27 @@ class Game {
             this.itemManager.deleteItem(this.hintPos);
             EventBus.dispatch('addItemToBag', itemType);
         } else if (this.placeItem !== undefined) {
+            if (this.placeItem === ItemType.fireWoods) {
+                this.fire = true;
+                console.log('fire');
+                this.disablePlaceState();
+                EventBus.dispatch('deleteItemFromBag');
+                const timer = setTimeout(() => {
+                    this.fire = false;
+                    EventBus.dispatch('showHint', '火把熄灭了');
+                    clearTimeout(timer);
+                }, putOutTime);
+            }
             if (KeyPress.get('E')) {
                 if (this.getPlaceColor() === canPlace) {
-                    this.itemManager.addItem(CoordUtils.floor(this.playerWorldPos), this.placeItem);
+                    switch (this.placeItem) {
+                        case ItemType.powderBox:
+                            this.itemManager.addItem(CoordUtils.floor(this.playerWorldPos), ItemType.powder);
+                            break;
+                        default:
+                            this.itemManager.addItem(CoordUtils.floor(this.playerWorldPos), this.placeItem);
+                            break;
+                    }
                     this.disablePlaceState();
                     EventBus.dispatch('deleteItemFromBag');
                 } else {
@@ -375,12 +429,6 @@ class Game {
         if (this.ws && this.ws.readyState === 1)
             this.ws.send(JSON.stringify({ type: 'player', pos: this.playerWorldPos, dir: this.playerDirLevel, frame: this.playerAnimaFrame }));
 
-        this.lights[0] = {
-            position: [this.playerWorldPos.x + PLAYER_SIZE / 2, 1.5, this.playerWorldPos.y + PLAYER_SIZE / 2],
-            color: LIGHT_COLOR,
-            linear: 0.35,
-            quadratic: 0.44
-        }
         this.mapPos = CoordUtils.sub(this.playerWorldPos, { x: MAP_COUNT.x / 2, y: (MAP_COUNT.y * 2) / 3 });
     }
 

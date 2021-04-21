@@ -13,12 +13,14 @@ uniform mat4 u_projectionMatrix;
 
 uniform mat4 u_viewMatrix;
 
+uniform float u_lightScale;
+
 out vec4 v_color;
 out vec2 v_texCoord;
 out vec2 v_samplePos;
 
 void main() {
-    vec2 screenPos = (a_position + u_worldPos - u_cameraWorldPos);
+    vec2 screenPos = (a_position * vec2(u_lightScale) + u_worldPos - u_cameraWorldPos);
     vec2 zeroToOne = screenPos / u_resolution;
     vec2 zeroToTwo = zeroToOne * 2.0;
     vec2 clipSpace = zeroToTwo - 1.0;

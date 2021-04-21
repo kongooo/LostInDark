@@ -2,13 +2,14 @@ import { Coord, CoordUtils, randomInt } from "../../Tools/Tool";
 import { ImgType, ItemInfo, ItemType, UniformLocationObj } from "../../Tools/interface";
 import PerlinMap from "../Map";
 import { SimpleItem } from "./SimpleItem";
+import { Powder } from "./Powder";
 
-const MATCH_MIN_COUNT = 5;
-const MATCH_MAX_COUNT = 10;
-const WOOD_MIN_COUNT = 3;
-const WOOD_MAX_COUNT = 10;
+const MATCH_MIN_COUNT = 20;
+const MATCH_MAX_COUNT = 30;
+const WOOD_MIN_COUNT = 20;
+const WOOD_MAX_COUNT = 30;
 const POWDERBOX_MIN_COUNT = 2;
-const POWDERBOX_MAX_COUNT = 10;
+const POWDERBOX_MAX_COUNT = 5;
 
 const CHUNCK_SIZE = 2;
 
@@ -65,7 +66,6 @@ class ItemManager {
     private getWoodImgs = () => [this.imgs.get(ImgType.woodUp), this.imgs.get(ImgType.woodFront), this.imgs.get(ImgType.woodFront)];
     private getPowderBoxImgs = () => [this.imgs.get(ImgType.powderUp), this.imgs.get(ImgType.powderFront), this.imgs.get(ImgType.powderSide)];
 
-
     private randomItem = (count: number, map: Map<string, ItemInfo>, leftDownPos: Coord, rightUpPos: Coord, type: ItemType, imgs: Array<HTMLImageElement>) => {
         while (count--) {
             const randomX = randomInt(leftDownPos.x, rightUpPos.x);
@@ -112,7 +112,12 @@ class ItemManager {
      */
     hasItem = (pos: Coord) => {
         const chunckIndex = this.getChunckIndexByPos(pos);
-        return this.itemChuncks.get(chunckIndex) && this.itemChuncks.get(chunckIndex).get(`${pos.x},${pos.y}`);
+        const chunck = this.itemChuncks.get(chunckIndex);
+        if (chunck) {
+            const item = chunck.get(`${pos.x},${pos.y}`);
+            return item && item.move;
+        }
+        return false;
     }
 
     /**
@@ -136,7 +141,7 @@ class ItemManager {
             this.itemChuncks.set(chunckIndex, new Map());
         }
         const chunck = this.itemChuncks.get(chunckIndex);
-        let item: SimpleItem;
+        let item: SimpleItem | Powder;
         switch (type) {
             case ItemType.match:
                 item = new SimpleItem(this.gl, {
@@ -158,6 +163,13 @@ class ItemManager {
                     type,
                     img: this.getPowderBoxImgs()
                 });
+                break;
+            case ItemType.powder:
+                item = new Powder(this.gl, {
+                    pos,
+                    type,
+                    img: [this.imgs.get(ImgType.powder)]
+                })
                 break;
         }
         chunck.set(`${pos.x},${pos.y}`, item);
