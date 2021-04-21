@@ -1,3 +1,5 @@
+const fireDis = 0.1;
+
 class ItemVertex {
     static getCubeVertices = (xLength: number, yLength: number, zLength: number) => [
         //back
@@ -52,7 +54,22 @@ class ItemVertex {
         width, 0, 1, 0
     ]
 
+    static getFirePileVertex = (height: number, fireFrame: number) => [
+
+        //fire 
+        0, height, 0, fireFrame * 0.25, 0,
+        1, height, 1, (fireFrame + 1) * 0.25, 0,
+        1, height + 1, 1, (fireFrame + 1) * 0.25, 1,
+        0, height + 1, 0, fireFrame * 0.25, 1,
+
+        1, height, 0, fireFrame * 0.25, 0,
+        0, height, 1, (fireFrame + 1) * 0.25, 0,
+        0, height + 1, 1, (fireFrame + 1) * 0.25, 1,
+        1, height + 1, 0, fireFrame * 0.25, 1,
+    ]
+
     static squareIndices = [0, 1, 2, 0, 2, 3];
+    static fireIndices = [0, 1, 2, 0, 2, 3, 4, 5, 6, 4, 6, 7,];
 }
 
 

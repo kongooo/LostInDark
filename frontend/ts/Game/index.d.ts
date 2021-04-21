@@ -36,6 +36,8 @@ declare class Game {
     private playerLightScale;
     private playerLight2Scale;
     private player2BrightNess;
+    private fireCount;
+    private fireFrame;
     start: () => void;
     private update;
     private draw;
@@ -49,6 +51,7 @@ declare class Game {
     private dim;
     private brightNessController;
     private playerController;
+    private animaController;
     private cameraController;
     private itemController;
     private enablePlaceState;

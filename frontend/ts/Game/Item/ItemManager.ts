@@ -1,8 +1,9 @@
 import { Coord, CoordUtils, randomInt } from "../../Tools/Tool";
-import { ImgType, ItemInfo, ItemType, UniformLocationObj } from "../../Tools/interface";
+import { ImgType, ItemInfo, ItemType, LightInfo, UniformLocationObj } from "../../Tools/interface";
 import PerlinMap from "../Map";
 import { SimpleItem } from "./SimpleItem";
 import { Powder } from "./Powder";
+import { FirePile } from "./FirePile";
 
 const MATCH_MIN_COUNT = 20;
 const MATCH_MAX_COUNT = 30;
@@ -12,6 +13,7 @@ const POWDERBOX_MIN_COUNT = 2;
 const POWDERBOX_MAX_COUNT = 5;
 
 const CHUNCK_SIZE = 2;
+const FIRE_COLOR = [255, 255, 255];
 
 class ItemManager {
     private static instance: ItemManager;
@@ -81,7 +83,8 @@ class ItemManager {
         }
     }
 
-    drawItems = (defaultUniform: Array<UniformLocationObj>) => {
+    drawItems = (defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number) => {
+        lights.splice(-(lights.length - 1));
         const mapPos = CoordUtils.floor(this.map.mapPos);
         const chunckPos = [
             mapPos,
@@ -98,7 +101,17 @@ class ItemManager {
             itemChunck.forEach((item, key) => {
                 const [x, y] = key.split(',').map(Number);
                 if (x >= mapPos.x && x <= mapPos.x + this.map.mapCount.x && y >= mapPos.y && y <= mapPos.y + this.map.mapCount.y) {
-                    item.draw(defaultUniform);
+                    if (item.type === ItemType.firePile) {
+                        item.draw(defaultUniform, fireFrame);
+                        lights.push({
+                            position: [item.pos.x + 0.5, 1.5, item.pos.y + 0.5],
+                            color: FIRE_COLOR,
+                            linear: 0.14,
+                            quadratic: 0.07
+                        })
+                    } else {
+                        item.draw(defaultUniform);
+                    }
                 }
             })
         })
@@ -141,7 +154,7 @@ class ItemManager {
             this.itemChuncks.set(chunckIndex, new Map());
         }
         const chunck = this.itemChuncks.get(chunckIndex);
-        let item: SimpleItem | Powder;
+        let item: SimpleItem | Powder | FirePile;
         switch (type) {
             case ItemType.match:
                 item = new SimpleItem(this.gl, {
@@ -169,6 +182,13 @@ class ItemManager {
                     pos,
                     type,
                     img: [this.imgs.get(ImgType.powder)]
+                })
+                break;
+            case ItemType.firePile:
+                item = new FirePile(this.gl, {
+                    pos,
+                    type,
+                    img: [this.imgs.get(ImgType.woodUp), this.imgs.get(ImgType.fire)]
                 })
                 break;
         }

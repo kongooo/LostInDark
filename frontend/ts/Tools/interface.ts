@@ -31,7 +31,7 @@ interface ItemInfo {
     type: ItemType;
     move?: boolean;
     img?: Array<HTMLImageElement>;
-    draw?: (defaultUniforms: Array<UniformLocationObj>) => void;
+    draw?: (defaultUniforms: Array<UniformLocationObj>, ...args: Array<any>) => void;
 }
 
 interface BagItem {

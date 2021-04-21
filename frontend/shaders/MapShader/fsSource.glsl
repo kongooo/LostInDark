@@ -41,7 +41,7 @@ vec3 calPointLight(PointLight light, vec3 norm, vec3 fragPos, vec3 viewPos) {
 
     float attenuation = 1.0 / (1.0 + light.linear * distance + light.quadratic * distance * distance);
     
-    vec3 color = (0.1 + diff + specular) * attenuation * lightColor;
+    vec3 color = min((0.1 + diff + specular) * attenuation, 1.0) * lightColor;
 
     return color;
 }

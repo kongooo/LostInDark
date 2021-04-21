@@ -1,5 +1,5 @@
 import { Coord } from "../../Tools/Tool";
-import { ImgType, ItemType, UniformLocationObj } from "../../Tools/interface";
+import { ImgType, ItemType, LightInfo, UniformLocationObj } from "../../Tools/interface";
 import PerlinMap from "../Map";
 declare class ItemManager {
     private static instance;
@@ -20,7 +20,7 @@ declare class ItemManager {
     private getWoodImgs;
     private getPowderBoxImgs;
     private randomItem;
-    drawItems: (defaultUniform: Array<UniformLocationObj>) => void;
+    drawItems: (defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number) => void;
     /**
      *
      * @param pos x,y: int

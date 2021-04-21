@@ -28,6 +28,7 @@ const LIGHT_COLOR = [255, 255, 255];
 const banPlace = [224, 36, 51];
 const canPlace = [27, 208, 66];
 const putOutTime = 60000;
+const FIRE_ANIMA_SPEED = 5;
 
 class Game {
     private gl: WebGL2RenderingContext;
@@ -89,6 +90,8 @@ class Game {
     private playerLightScale: number = 1;
     private playerLight2Scale: number;
     private player2BrightNess: number;
+    private fireCount: number = 0;
+    private fireFrame: number = 0;
 
     start = () => {
         if (this.ws)
@@ -108,6 +111,7 @@ class Game {
         const gl = this.gl;
 
         this.playerController();
+        this.animaController();
         this.CollisionDetection();
         this.cameraController();
         this.itemController();
@@ -239,7 +243,7 @@ class Game {
         const lefDownPos = { x: this.mapPos.x / this.map.mapCount.x, y: this.mapPos.y / this.map.mapCount.y };
         this.groundCanvas.draw(this.mapPos, lefDownPos, MAP_COUNT, this.get3DDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
         this.map.draw(this.get3DDefaultLightUniform());
-        this.itemManager.drawItems(this.get3DDefaultLightUniform());
+        this.itemManager.drawItems(this.get3DDefaultLightUniform(), this.lights, this.fireFrame);
 
         if (this.placeItem !== undefined) {
             // console.log('')
@@ -308,12 +312,16 @@ class Game {
             this.playerWorldPos.y -= distance;
             this.playerDirLevel = 1;
         }
+    }
 
+    private animaController = () => {
         this.count += ANIMA_SPEED * this.deltaTime;
         this.playerAnimaFrame = Math.floor(this.count % 4);
         if (!KeyPress.get('S') && !KeyPress.get('A') && !KeyPress.get('D') && !KeyPress.get('W')) {
             this.playerAnimaFrame = 0;
         }
+        this.fireCount += FIRE_ANIMA_SPEED * this.deltaTime;
+        this.fireFrame = Math.floor(this.count % 4);
     }
 
     private cameraController = () => {
