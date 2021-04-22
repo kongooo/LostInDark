@@ -11,8 +11,6 @@ in vec2 v_pos;
 //1：A在B上方
 in float v_situation; 
 
-uniform sampler2D u_map;
-
 uniform vec2 u_lightPos;
 uniform float u_lightSize;
 
@@ -51,7 +49,7 @@ float angle(vec2 aVector, vec2 bVector) {
 }
 
 void main() {
-    // float alpha = texture(u_map, v_texCoord).a;
+    
     vec2 P = v_pos;
     vec4 color = vec4(0.0);
 

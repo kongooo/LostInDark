@@ -1,4 +1,3 @@
-import { FrameBufferInfo } from '../../Tools/Tool';
 import { UniformLocationObj } from '../../Tools/interface';
 interface Coord {
     x: number;
@@ -11,7 +10,6 @@ declare class PerlinMap {
     mapCount: Coord;
     mapPos: Coord;
     private union;
-    fBufferInfo: FrameBufferInfo;
     texture: WebGLTexture;
     constructor(gl: WebGL2RenderingContext, seed: number, img: HTMLImageElement, mapCount: Coord);
     private gridPos;

@@ -22,13 +22,14 @@ const PLAYER_SIZE = 0.9;
 const PLAYER_DRAW_SIZE = { x: 0.9, y: 1.7 };
 const LIGHT_SIZE = 0.44;
 const ANIMA_SPEED = 6;
-const MAP_COUNT = { x: 50, y: 30 };
+const MAP_COUNT = { x: 70, y: 50 };
 const CAMERA_OFFSET_Y = 8;
 const LIGHT_COLOR = [255, 255, 255];
 const banPlace = [224, 36, 51];
 const canPlace = [27, 208, 66];
 const putOutTime = 60000;
-const FIRE_ANIMA_SPEED = 5;
+const FIRE_RADIUS = 20;
+const FIRE_LIGHT_SCALE = 1;
 
 class Game {
     private gl: WebGL2RenderingContext;
@@ -44,6 +45,7 @@ class Game {
     private ws: any;
     private imgs: Map<ImgType, HTMLImageElement>;
     private camera: Camera;
+    private playerLights: Array<LightInfo> = [];
     private lights: Array<LightInfo> = [];
     private itemManager: ItemManager;
     private hint: Hint;
@@ -55,8 +57,8 @@ class Game {
         this.player = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
         this.player2 = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
         // this.cameraWorldPos = center;
-        this.playerLight = new Light(gl, DEFAULT_LIGHT_RADIUS);
-        this.playerLight2 = new Light(gl, DEFAULT_LIGHT_RADIUS);
+        this.playerLight = new Light(gl, DEFAULT_LIGHT_RADIUS, LIGHT_COLOR);
+        this.playerLight2 = new Light(gl, DEFAULT_LIGHT_RADIUS, LIGHT_COLOR);
         // this.hardShadow = new HardShadow(gl, this.map.size);
         this.softShadow = new SoftShadow(gl);
         this.softShadow2 = new SoftShadow(gl);
@@ -90,8 +92,9 @@ class Game {
     private playerLightScale: number = 1;
     private playerLight2Scale: number;
     private player2BrightNess: number;
-    private fireCount: number = 0;
     private fireFrame: number = 0;
+    private firelights2D: Array<Light> = [];
+    private fireShadowsTexture: Array<WebGLTexture> = [];
 
     start = () => {
         if (this.ws)
@@ -117,9 +120,9 @@ class Game {
         this.itemController();
         this.brightNessController();
 
-        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
-
         this.map.generateVerticesAndLines(this.mapPos);
+
+        gl.viewport(0, 0, gl.canvas.width, gl.canvas.height);
 
         //shadow必须在light前绘制
         // this.drawHardShadowTexture();
@@ -129,23 +132,23 @@ class Game {
         this.drawScene();
     }
 
-    private drawHardShadowTexture = () => {
-        const gl = this.gl;
-        gl.disable(gl.BLEND);
+    // private drawHardShadowTexture = () => {
+    //     const gl = this.gl;
+    //     gl.disable(gl.BLEND);
 
-        const { renderFrameBuffer, textureFrameBuffer } = this.hardShadow.fBufferInfo;
+    //     const { renderFrameBuffer, textureFrameBuffer } = this.hardShadow.fBufferInfo;
 
-        gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
+    //     gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
-        //阴影部分alpha为0，其余部分alpha为1
-        gl.clearColor(0, 0, 0, 1);
-        gl.clear(gl.COLOR_BUFFER_BIT);
+    //     //阴影部分alpha为0，其余部分alpha为1
+    //     gl.clearColor(0, 0, 0, 1);
+    //     gl.clear(gl.COLOR_BUFFER_BIT);
 
-        const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
-        this.hardShadow.drawHardShadow(this.map.lineVertices, centerPos, DEFAULT_LIGHT_RADIUS, this.get2DDefaultUniform(), this.map.fBufferInfo.targetTexture);
+    //     const centerPos = CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2)
+    //     this.hardShadow.drawHardShadow(this.map.lineVertices, centerPos, DEFAULT_LIGHT_RADIUS, this.get2DDefaultUniform(), this.map.fBufferInfo.targetTexture);
 
-        // this.blit(renderFrameBuffer, textureFrameBuffer);
-    }
+    //     // this.blit(renderFrameBuffer, textureFrameBuffer);
+    // }
 
 
     private drawSoftShadowTexture = () => {
@@ -158,21 +161,21 @@ class Game {
 
         //draw player shadow
         {
-            this.drawSoftShadow(this.softShadow, this.playerWorldPos, DEFAULT_LIGHT_RADIUS * this.playerLightScale);
+            this.drawSoftShadow(this.softShadow, CoordUtils.add(this.playerWorldPos, PLAYER_SIZE / 2), DEFAULT_LIGHT_RADIUS * this.playerLightScale);
         }
 
         //draw player2shadow
         {
             if (this.player2WorldPos)
-                this.drawSoftShadow(this.softShadow2, this.player2WorldPos, DEFAULT_LIGHT_RADIUS * this.playerLight2Scale);
+                this.drawSoftShadow(this.softShadow2, CoordUtils.add(this.player2WorldPos, PLAYER_SIZE / 2), DEFAULT_LIGHT_RADIUS * this.playerLight2Scale);
         }
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
 
-    private drawSoftShadow = (shadow: SoftShadow, playerPos: Coord, radius: number) => {
+    private drawSoftShadow = (shadow: SoftShadow, pos: Coord, radius: number) => {
         const gl = this.gl;
-        const { renderFrameBuffer, textureFrameBuffer } = shadow.fBufferInfo;
+        const { textureFrameBuffer } = shadow.fBufferInfo;
 
         gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
 
@@ -180,14 +183,18 @@ class Game {
         gl.clearColor(1, 1, 1, 1);
         gl.clear(gl.COLOR_BUFFER_BIT);
 
-        const playerCenterPos = CoordUtils.add(playerPos, PLAYER_SIZE / 2)
         //draw with min line
-        shadow.drawSoftShadow(this.map.lineVertices, playerCenterPos, LIGHT_SIZE, radius, this.get2DDefaultUniform());
+        shadow.drawSoftShadow(this.map.lineVertices, pos, LIGHT_SIZE, radius, this.get2DDefaultUniform());
 
         //draw with vertices
         // shadow.drawSoftShadow(this.map.simpleVertices, playerCenterPos, LIGHT_SIZE, DEFAULT_LIGHT_RADIUS, this.getDefaultUniform(), this.map.fBufferInfo.targetTexture);
     }
 
+    private drawFireLightsTexture = () => {
+        this.lights.forEach((light, index) => {
+            this.firelights2D[index].draw({ x: light.position[0], y: light.position[2] }, this.fireShadowsTexture[index], 1, FIRE_LIGHT_SCALE, this.get2DDefaultUniform(), 1);
+        })
+    }
 
     private drawLightTexture = () => {
         const gl = this.gl;
@@ -209,14 +216,16 @@ class Game {
         //hard shadow
         // this.playerLight.draw(lightCenter, this.hardShadow.fBufferInfo.targetTexture, this.getDefaultUniform());
         //soft shadow
-        this.playerLight.draw(lightCenter, this.softShadow.fBufferInfo.targetTexture, this.brightNess, this.playerLightScale, this.get2DDefaultUniform());
+        this.playerLight.draw(lightCenter, this.softShadow.fBufferInfo.targetTexture, this.brightNess, this.playerLightScale, this.get2DDefaultUniform(), 0);
 
 
         //draw player2 shadow
         if (this.player2WorldPos) {
             const light2Center = CoordUtils.add(this.player2WorldPos, PLAYER_SIZE / 2);
-            this.playerLight2.draw(light2Center, this.softShadow2.fBufferInfo.targetTexture, this.player2BrightNess, this.playerLight2Scale, this.get2DDefaultUniform());
+            this.playerLight2.draw(light2Center, this.softShadow2.fBufferInfo.targetTexture, this.player2BrightNess, this.playerLight2Scale, this.get2DDefaultUniform(), 0);
         }
+
+        this.drawFireLightsTexture();
 
         // this.blit(renderFrameBuffer, textureFrameBuffer);
     }
@@ -243,12 +252,13 @@ class Game {
         const lefDownPos = { x: this.mapPos.x / this.map.mapCount.x, y: this.mapPos.y / this.map.mapCount.y };
         this.groundCanvas.draw(this.mapPos, lefDownPos, MAP_COUNT, this.get3DDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
         this.map.draw(this.get3DDefaultLightUniform());
-        this.itemManager.drawItems(this.get3DDefaultLightUniform(), this.lights, this.fireFrame);
 
         if (this.placeItem !== undefined) {
             // console.log('')
             this.placeHintRect.draw(CoordUtils.floor(this.playerWorldPos), this.getPlaceColor(), this.get3DDefaultUniform());
         }
+
+        this.itemManager.drawItems(this.get3DDefaultLightUniform(), this.lights, this.fireFrame, this.player2WorldPos ? 2 : 1, this.fireShadowsTexture, this.firelights2D);
 
         this.player.draw(this.playerWorldPos, this.get3DDefaultUniform(), this.playerDirLevel, this.playerAnimaFrame);
         if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.get3DDefaultUniform(), this.player2DirLevel, this.player2AnimaFrame);
@@ -266,7 +276,7 @@ class Game {
     private brighten = () => {
         this.playerLightScale = 1.8;
         this.brightNess = 1;
-        this.lights[0] = {
+        this.playerLights[0] = {
             position: [this.playerWorldPos.x + PLAYER_SIZE / 2, 1.5, this.playerWorldPos.y + PLAYER_SIZE / 2],
             color: LIGHT_COLOR,
             linear: 0.14,
@@ -277,7 +287,7 @@ class Game {
     private dim = () => {
         this.playerLightScale = 1;
         this.brightNess = 0.7;
-        this.lights[0] = {
+        this.playerLights[0] = {
             position: [this.playerWorldPos.x + PLAYER_SIZE / 2, 1.5, this.playerWorldPos.y + PLAYER_SIZE / 2],
             color: LIGHT_COLOR,
             linear: 0.35,
@@ -320,7 +330,6 @@ class Game {
         if (!KeyPress.get('S') && !KeyPress.get('A') && !KeyPress.get('D') && !KeyPress.get('W')) {
             this.playerAnimaFrame = 0;
         }
-        this.fireCount += FIRE_ANIMA_SPEED * this.deltaTime;
         this.fireFrame = Math.floor(this.count % 4);
     }
 
@@ -330,14 +339,17 @@ class Game {
     }
 
     private itemController = () => {
+        //pick up
         if (!this.placeItem && this.hintPos && KeyPress.get('X')) {
             const itemType = this.itemManager.getItemType(this.hintPos);
             this.itemManager.deleteItem(this.hintPos);
             EventBus.dispatch('addItemToBag', itemType);
-        } else if (this.placeItem !== undefined) {
+        }
+        //place
+        else if (this.placeItem !== undefined) {
             if (this.placeItem === ItemType.fireWoods) {
                 this.fire = true;
-                console.log('fire');
+                // console.log('fire');
                 this.disablePlaceState();
                 EventBus.dispatch('deleteItemFromBag');
                 const timer = setTimeout(() => {
@@ -485,7 +497,7 @@ class Game {
                     this.player2WorldPos = data.pos;
                     this.player2DirLevel = data.dir;
                     this.player2AnimaFrame = data.frame;
-                    this.lights[1] = {
+                    this.playerLights[1] = {
                         position: [this.player2WorldPos.x + PLAYER_SIZE / 2, 1.5, this.player2WorldPos.y + PLAYER_SIZE / 2],
                         color: LIGHT_COLOR,
                         linear: 0.35,
@@ -508,14 +520,16 @@ class Game {
     ]);
 
     private get3DDefaultLightUniform = (): Array<UniformLocationObj> => {
-        const lightCount = this.lights.length;
+        const lights = [...this.playerLights, ...this.lights];
+        const lightCount = lights.length;
+        if (KeyPress.get('O')) console.log(lightCount);
         const defaultUniforms: Array<UniformLocationObj> = [
             { name: 'u_projectionMatrix', data: this.camera.getProjectionMatrix(this.gl), type: 'matrix' },
             { name: 'u_viewMatrix', data: this.camera.getViewMatrix(), type: 'matrix' },
             { name: 'u_lightCount', data: [lightCount], type: 'int' },
             { name: 'u_viewPos', data: this.camera.position, type: 'vec3' },
         ];
-        this.lights.forEach((light, index) => {
+        lights.forEach((light, index) => {
             defaultUniforms.push(...this.getLight(light, index))
         })
         return defaultUniforms;

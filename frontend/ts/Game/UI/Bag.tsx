@@ -30,6 +30,7 @@ class Bag extends React.Component<BagProps, BagState> {
       conbindActiveIndex: -1,
       conbinaItems: [ItemData.fireWoodData(), ItemData.firePileData()],
     };
+    this.addItem(ItemType.firePile);
   }
 
   componentDidMount() {

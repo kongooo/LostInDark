@@ -4,16 +4,16 @@ import PerlinMap from "../Map";
 import { SimpleItem } from "./SimpleItem";
 import { Powder } from "./Powder";
 import { FirePile } from "./FirePile";
+import Light from "../Light/light";
 
-const MATCH_MIN_COUNT = 20;
-const MATCH_MAX_COUNT = 30;
-const WOOD_MIN_COUNT = 20;
-const WOOD_MAX_COUNT = 30;
-const POWDERBOX_MIN_COUNT = 2;
-const POWDERBOX_MAX_COUNT = 5;
+const MATCH_MIN_COUNT = 5;
+const MATCH_MAX_COUNT = 20;
+const WOOD_MIN_COUNT = 10;
+const WOOD_MAX_COUNT = 25;
+const POWDERBOX_MIN_COUNT = 3;
+const POWDERBOX_MAX_COUNT = 7;
 
 const CHUNCK_SIZE = 2;
-const FIRE_COLOR = [255, 255, 255];
 
 class ItemManager {
     private static instance: ItemManager;
@@ -83,8 +83,11 @@ class ItemManager {
         }
     }
 
-    drawItems = (defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number) => {
-        lights.splice(-(lights.length - 1));
+    drawItems = (defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number, playerCount: number, fireShadowsTexture: Array<WebGLTexture>, fireLights: Array<Light>) => {
+
+        lights.length = 0;
+        fireShadowsTexture.length = 0;
+        fireLights.length = 0;
         const mapPos = CoordUtils.floor(this.map.mapPos);
         const chunckPos = [
             mapPos,
@@ -92,8 +95,8 @@ class ItemManager {
             CoordUtils.add(mapPos, { x: 0, y: this.map.mapCount.y }),
             CoordUtils.add(mapPos, this.map.mapCount)
         ];
-        chunckPos.forEach(pos => {
-            const chunckIndex = this.getChunckIndexByPos(pos);
+        const chuncksIndex = Array.from(new Set(chunckPos.map(pos => this.getChunckIndexByPos(pos))));
+        chuncksIndex.forEach(chunckIndex => {
             let itemChunck = this.itemChuncks.get(chunckIndex);
             if (!itemChunck) {
                 itemChunck = this.randomChunckItem(chunckIndex);
@@ -105,10 +108,15 @@ class ItemManager {
                         item.draw(defaultUniform, fireFrame);
                         lights.push({
                             position: [item.pos.x + 0.5, 1.5, item.pos.y + 0.5],
-                            color: FIRE_COLOR,
+                            color: (item as FirePile).lightColor,
                             linear: 0.14,
                             quadratic: 0.07
-                        })
+                        });
+                        if (!(item as FirePile).shadowTexture) {
+                            (item as FirePile).getShadowTexture(this.map.lineVertices);
+                        }
+                        fireShadowsTexture.push((item as FirePile).shadowTexture);
+                        fireLights.push((item as FirePile).light);
                     } else {
                         item.draw(defaultUniform);
                     }

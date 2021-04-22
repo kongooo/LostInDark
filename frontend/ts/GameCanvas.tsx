@@ -9,8 +9,8 @@ import Loading from "./Loading";
 import { LoadImage } from "./Tools/LoadImage";
 
 import playerImg from "../../image/mikasa.png";
-import obstacleImg from "../../image/free.png";
-import groundImg from "../../image/back1.png";
+import obstacleImg from "../../image/grass.png";
+import groundImg from "../../image/ground.png";
 
 import matchFront from "../../image/match/front.png";
 import matchUp from "../../image/match/up.png";

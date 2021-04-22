@@ -15,6 +15,10 @@ uniform mat4 u_viewMatrix;
 
 uniform float u_lightScale;
 
+//0: player
+//1: fire
+uniform int u_type;
+
 out vec4 v_color;
 out vec2 v_texCoord;
 out vec2 v_samplePos;
@@ -26,6 +30,8 @@ void main() {
     vec2 clipSpace = zeroToTwo - 1.0;
     gl_Position = vec4(clipSpace, 0, 1);
 
+    if(u_type == 1) v_samplePos = a_texCoord;
+    else v_samplePos = zeroToOne;
+    // v_samplePos = a_texCoord;
     v_texCoord = a_texCoord;
-    v_samplePos = zeroToOne;
 }

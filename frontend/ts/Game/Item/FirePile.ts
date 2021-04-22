@@ -1,4 +1,4 @@
-import { Coord } from "../../Tools/Tool";
+import { Coord, CoordUtils } from "../../Tools/Tool";
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
 import { ItemInfo, ItemType, UniformLocationObj } from '../../Tools/interface';
 
@@ -10,9 +10,14 @@ import { ItemVertex } from "./ItemVertex";
 import { WebGL } from "../../Tools/WebGLUtils";
 import StaticMesh from "../../Tools/Mesh/StaticMesh";
 import { mat4 } from "gl-matrix";
+import SoftShadow from "../Light/SoftShadow";
+import Light from "../Light/light";
 
 
 const WOOD_HEIGHT = 0.3;
+const FIRE_LIGHT_RADIUS = 20;
+const FIRE_COLOR = [254, 254, 204];
+
 class FirePile implements ItemInfo {
     pos: Coord;
     type: ItemType;
@@ -23,6 +28,9 @@ class FirePile implements ItemInfo {
     private woodTexture: WebGLTexture;
     private fireTexture: WebGLTexture;
     private rotateMatrix;
+    shadowTexture: WebGLTexture;
+    light: Light;
+    lightColor: Array<number> = FIRE_COLOR;
 
     constructor(gl: WebGL2RenderingContext, itemInfo: ItemInfo) {
         this.type = itemInfo.type;
@@ -50,6 +58,39 @@ class FirePile implements ItemInfo {
         mat4.rotateY(rotateMatrix, rotateMatrix, 0);
         this.rotateMatrix = rotateMatrix;
     }
+
+    getShadowTexture = (mapLines: Array<Coord>) => {
+        //generate shadow texture
+        const gl = this.gl;
+        const shadow = new SoftShadow(gl);
+        const { textureFrameBuffer } = shadow.fBufferInfo;
+
+        gl.enable(gl.BLEND);
+        //1 - 遮挡率 = 亮度
+        gl.blendEquation(gl.FUNC_REVERSE_SUBTRACT);
+        gl.blendFunc(gl.ONE, gl.ONE);
+        gl.disable(gl.CULL_FACE);
+
+        gl.bindFramebuffer(gl.FRAMEBUFFER, textureFrameBuffer);
+        gl.disable(gl.DEPTH_TEST);
+        gl.clearColor(1, 1, 1, 1);
+        gl.clear(gl.COLOR_BUFFER_BIT);
+
+        shadow.drawSoftShadow(mapLines, this.pos, 0.44, FIRE_LIGHT_RADIUS, [
+            { name: 'u_resolution', data: [FIRE_LIGHT_RADIUS * 2, FIRE_LIGHT_RADIUS * 2], type: 'vec2' },
+            { name: 'u_cameraWorldPos', data: [this.pos.x - FIRE_LIGHT_RADIUS + 0.5, this.pos.y - FIRE_LIGHT_RADIUS + 0.5], type: 'vec2' }
+        ])
+        this.shadowTexture = shadow.fBufferInfo.targetTexture;
+        this.light = new Light(gl, FIRE_LIGHT_RADIUS, FIRE_COLOR);
+
+        gl.blendEquation(gl.FUNC_ADD);
+        gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
+
+        gl.enable(gl.CULL_FACE);
+        gl.enable(gl.DEPTH_TEST);
+        gl.bindFramebuffer(gl.FRAMEBUFFER, null);
+    }
+
 
     draw(defaultUniforms: Array<UniformLocationObj>, fireFrame: number) {
         this.woodMesh.drawWithAVO([

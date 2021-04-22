@@ -144,13 +144,14 @@ class SoftShadow {
             }
 
         }
-
+        this.gl.disable(this.gl.CULL_FACE);
         // console.log(vertices);
         this.shadowMesh.drawWithBuffer(vertices, [
             { name: 'u_lightPos', data: [lightPos.x, lightPos.y], type: 'vec2' },
             { name: 'u_lightSize', data: [sLightRadius], type: 'float' },
             ...defaultUniform
         ]);
+        this.gl.enable(this.gl.CULL_FACE);
     }
 
 

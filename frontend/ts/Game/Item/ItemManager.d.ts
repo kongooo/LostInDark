@@ -1,6 +1,7 @@
 import { Coord } from "../../Tools/Tool";
 import { ImgType, ItemType, LightInfo, UniformLocationObj } from "../../Tools/interface";
 import PerlinMap from "../Map";
+import Light from "../Light/light";
 declare class ItemManager {
     private static instance;
     private itemChuncks;
@@ -20,7 +21,7 @@ declare class ItemManager {
     private getWoodImgs;
     private getPowderBoxImgs;
     private randomItem;
-    drawItems: (defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number) => void;
+    drawItems: (defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number, playerCount: number, fireShadowsTexture: Array<WebGLTexture>, fireLights: Array<Light>) => void;
     /**
      *
      * @param pos x,y: int

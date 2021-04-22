@@ -13,7 +13,7 @@ uniform mat4 u_projectionMatrix;
 uniform mat4 u_viewMatrix;
 
 out vec4 v_ABposition;
-out vec2 v_texCoord;
+// out vec2 v_texCoord;
 out vec2 v_pos;
 out float v_situation;
 
@@ -25,7 +25,7 @@ void main() {
     gl_Position = vec4(clipSpace, 0, 1);
 
     v_ABposition = a_ABposition;
-    v_texCoord = zeroToOne;
+    // v_texCoord = zeroToOne;
     v_pos = a_position;
     v_situation = a_situation;
 }

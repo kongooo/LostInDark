@@ -28,7 +28,7 @@ class PerlinMap {
     mapCount: Coord;
     mapPos: Coord;
     private union: Union;
-    fBufferInfo: FrameBufferInfo;
+    // fBufferInfo: FrameBufferInfo;
     texture: WebGLTexture;
 
     constructor(gl: WebGL2RenderingContext, seed: number, img: HTMLImageElement, mapCount: Coord) {
@@ -50,7 +50,7 @@ class PerlinMap {
         this.MapMesh = MapMesh;
         this.gl = gl;
         this.noise = noise;
-        this.fBufferInfo = WebGL.getFBufferAndTexture(gl, gl.canvas.width, gl.canvas.height);
+        // this.fBufferInfo = WebGL.getFBufferAndTexture(gl, mapCount.x, mapCount.y);
         this.mapCount = mapCount;
         this.union = new Union(noise, CoordUtils.add(this.mapCount, SPREAD_SIZE * 2), THRESHOLD, ZOOM, SPREAD_SIZE);
         this.texture = WebGL.getTexture(gl, img);

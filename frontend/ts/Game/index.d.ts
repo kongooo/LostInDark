@@ -14,6 +14,7 @@ declare class Game {
     private ws;
     private imgs;
     private camera;
+    private playerLights;
     private lights;
     private itemManager;
     private hint;
@@ -36,14 +37,15 @@ declare class Game {
     private playerLightScale;
     private playerLight2Scale;
     private player2BrightNess;
-    private fireCount;
     private fireFrame;
+    private firelights2D;
+    private fireShadowsTexture;
     start: () => void;
     private update;
     private draw;
-    private drawHardShadowTexture;
     private drawSoftShadowTexture;
     private drawSoftShadow;
+    private drawFireLightsTexture;
     private drawLightTexture;
     private drawScene;
     private getPlaceColor;
