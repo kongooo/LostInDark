@@ -19,7 +19,7 @@ declare class Game {
     private itemManager;
     private hint;
     private placeHintRect;
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, ws?: any);
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, mapCount: Coord, ws?: any);
     private deltaTime;
     private lastTime;
     private playerWorldPos;
@@ -40,6 +40,7 @@ declare class Game {
     private fireFrame;
     private firelights2D;
     private fireShadowsTexture;
+    private chuncksIndex;
     start: () => void;
     private update;
     private draw;
@@ -56,6 +57,7 @@ declare class Game {
     private animaController;
     private cameraController;
     private itemController;
+    private addItemToScene;
     private enablePlaceState;
     private disablePlaceState;
     private CollisionDetection;
@@ -63,6 +65,7 @@ declare class Game {
     private getInterSectedRect;
     private blit;
     private initWs;
+    private send;
     private get3DDefaultUniform;
     private get2DDefaultUniform;
     private get3DDefaultLightUniform;

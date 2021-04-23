@@ -1,5 +1,5 @@
 import { Coord } from "../../Tools/Tool";
-import { ImgType, ItemType, LightInfo, UniformLocationObj } from "../../Tools/interface";
+import { ImgType, ItemType, LightInfo, UniformLocationObj, Item } from "../../Tools/interface";
 import PerlinMap from "../Map";
 import Light from "../Light/light";
 declare class ItemManager {
@@ -9,6 +9,7 @@ declare class ItemManager {
     private gl;
     private imgs;
     private chunckSize;
+    private ws;
     private constructor();
     static getInstance(gl: WebGL2RenderingContext, map: PerlinMap, imgs: Map<ImgType, HTMLImageElement>): ItemManager;
     /**
@@ -16,12 +17,11 @@ declare class ItemManager {
      * @param chunckIndex
      * @returns 随机出该chunck区域内的道具
      */
-    private randomChunckItem;
     private getMatchImgs;
     private getWoodImgs;
     private getPowderBoxImgs;
-    private randomItem;
-    drawItems: (defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number, playerCount: number, fireShadowsTexture: Array<WebGLTexture>, fireLights: Array<Light>) => void;
+    addChunck: (chuncksIdnex: Array<string>, chuncks: Array<Array<Item>>) => void;
+    drawItems: (chuncksIndex: Array<string>, defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number, fireShadowsTexture: Array<WebGLTexture>, fireLights: Array<Light>) => void;
     /**
      *
      * @param pos x,y: int
@@ -47,5 +47,6 @@ declare class ItemManager {
      */
     getItemType: (pos: Coord) => ItemType;
     private getChunckIndexByPos;
+    private getChunckPosByIndex;
 }
 export default ItemManager;

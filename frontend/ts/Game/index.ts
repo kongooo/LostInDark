@@ -22,7 +22,6 @@ const PLAYER_SIZE = 0.9;
 const PLAYER_DRAW_SIZE = { x: 0.9, y: 1.7 };
 const LIGHT_SIZE = 0.44;
 const ANIMA_SPEED = 6;
-const MAP_COUNT = { x: 70, y: 50 };
 const CAMERA_OFFSET_Y = 8;
 const LIGHT_COLOR = [255, 255, 255];
 const banPlace = [224, 36, 51];
@@ -51,9 +50,9 @@ class Game {
     private hint: Hint;
     private placeHintRect: PlaceHintRect;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, ws?: any) {
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, mapCount: Coord, ws?: any) {
         this.gl = gl;
-        this.map = new PerlinMap(gl, seed, imgs.get(ImgType.obstable), MAP_COUNT);
+        this.map = new PerlinMap(gl, seed, imgs.get(ImgType.obstable), mapCount);
         this.player = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
         this.player2 = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
         // this.cameraWorldPos = center;
@@ -95,6 +94,7 @@ class Game {
     private fireFrame: number = 0;
     private firelights2D: Array<Light> = [];
     private fireShadowsTexture: Array<WebGLTexture> = [];
+    private chuncksIndex: Array<string> = [];
 
     start = () => {
         if (this.ws)
@@ -250,15 +250,14 @@ class Game {
 
 
         const lefDownPos = { x: this.mapPos.x / this.map.mapCount.x, y: this.mapPos.y / this.map.mapCount.y };
-        this.groundCanvas.draw(this.mapPos, lefDownPos, MAP_COUNT, this.get3DDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
+        this.groundCanvas.draw(this.mapPos, lefDownPos, this.map.mapCount, this.get3DDefaultUniform(), this.playerLight.fBufferInfo.targetTexture);
         this.map.draw(this.get3DDefaultLightUniform());
 
         if (this.placeItem !== undefined) {
-            // console.log('')
             this.placeHintRect.draw(CoordUtils.floor(this.playerWorldPos), this.getPlaceColor(), this.get3DDefaultUniform());
         }
 
-        this.itemManager.drawItems(this.get3DDefaultLightUniform(), this.lights, this.fireFrame, this.player2WorldPos ? 2 : 1, this.fireShadowsTexture, this.firelights2D);
+        this.itemManager.drawItems(this.chuncksIndex, this.get3DDefaultLightUniform(), this.lights, this.fireFrame, this.fireShadowsTexture, this.firelights2D);
 
         this.player.draw(this.playerWorldPos, this.get3DDefaultUniform(), this.playerDirLevel, this.playerAnimaFrame);
         if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.get3DDefaultUniform(), this.player2DirLevel, this.player2AnimaFrame);
@@ -343,6 +342,10 @@ class Game {
         if (!this.placeItem && this.hintPos && KeyPress.get('X')) {
             const itemType = this.itemManager.getItemType(this.hintPos);
             this.itemManager.deleteItem(this.hintPos);
+            this.send({
+                type: 'delete',
+                pos: this.hintPos
+            })
             EventBus.dispatch('addItemToBag', itemType);
         }
         //place
@@ -360,14 +363,13 @@ class Game {
             }
             if (KeyPress.get('E')) {
                 if (this.getPlaceColor() === canPlace) {
-                    switch (this.placeItem) {
-                        case ItemType.powderBox:
-                            this.itemManager.addItem(CoordUtils.floor(this.playerWorldPos), ItemType.powder);
-                            break;
-                        default:
-                            this.itemManager.addItem(CoordUtils.floor(this.playerWorldPos), this.placeItem);
-                            break;
-                    }
+                    const pos = CoordUtils.floor(this.playerWorldPos);
+                    this.addItemToScene(pos, this.placeItem);
+                    this.send({
+                        type: 'add',
+                        itemType: this.placeItem,
+                        pos
+                    })
                     this.disablePlaceState();
                     EventBus.dispatch('deleteItemFromBag');
                 } else {
@@ -376,6 +378,17 @@ class Game {
             } else if (KeyPress.get('Escape')) {
                 this.disablePlaceState();
             }
+        }
+    }
+
+    private addItemToScene = (pos: Coord, type: ItemType) => {
+        switch (type) {
+            case ItemType.powderBox:
+                this.itemManager.addItem(pos, ItemType.powder);
+                break;
+            default:
+                this.itemManager.addItem(pos, type);
+                break;
         }
     }
 
@@ -446,10 +459,18 @@ class Game {
             this.hintPos = undefined;
         }
 
-        if (this.ws && this.ws.readyState === 1)
-            this.ws.send(JSON.stringify({ type: 'player', pos: this.playerWorldPos, dir: this.playerDirLevel, frame: this.playerAnimaFrame }));
+        if (this.ws && this.ws.readyState === 1) {
+            this.send({
+                type: 'player',
+                pos: this.playerWorldPos,
+                dir: this.playerDirLevel,
+                frame: this.playerAnimaFrame,
+                scale: this.playerLightScale,
+                brightness: this.brightNess
+            })
+        }
 
-        this.mapPos = CoordUtils.sub(this.playerWorldPos, { x: MAP_COUNT.x / 2, y: (MAP_COUNT.y * 2) / 3 });
+        this.mapPos = CoordUtils.sub(this.playerWorldPos, { x: this.map.mapCount.x / 2, y: (this.map.mapCount.y * 2) / 3 });
     }
 
     //判断两个矩形是否相交，a0、a1分别为左下角、右上角坐标
@@ -491,7 +512,7 @@ class Game {
     private initWs = () => {
         this.ws.onmessage = (mes: any) => {
             const data = JSON.parse(mes.data);
-
+            // console.log(data);
             switch (data.type) {
                 case 'player':
                     this.player2WorldPos = data.pos;
@@ -503,10 +524,25 @@ class Game {
                         linear: 0.35,
                         quadratic: 0.44
                     }
-                    // console.log(this.player2WorldPos);
+                    this.player2BrightNess = data.brightness;
+                    this.playerLight2Scale = data.scale;
+                    break;
+                case 'items':
+                    this.chuncksIndex = data.chuncksIndex;
+                    this.itemManager.addChunck(data.chuncksIndex, data.chuncks);
+                    break;
+                case 'delete':
+                    this.itemManager.deleteItem(data.pos);
+                    break;
+                case 'add':
+                    this.addItemToScene(data.pos, data.itemType);
                     break;
             }
         }
+    }
+
+    private send = (obj: Object) => {
+        this.ws.send(JSON.stringify(obj));
     }
 
     private get3DDefaultUniform = (): Array<UniformLocationObj> => ([
@@ -515,14 +551,13 @@ class Game {
     ])
 
     private get2DDefaultUniform = (): Array<UniformLocationObj> => ([
-        { name: 'u_resolution', data: [MAP_COUNT.x, MAP_COUNT.y], type: 'vec2' },
+        { name: 'u_resolution', data: [this.map.mapCount.x, this.map.mapCount.y], type: 'vec2' },
         { name: 'u_cameraWorldPos', data: [this.mapPos.x, this.mapPos.y], type: 'vec2' }
     ]);
 
     private get3DDefaultLightUniform = (): Array<UniformLocationObj> => {
         const lights = [...this.playerLights, ...this.lights];
         const lightCount = lights.length;
-        if (KeyPress.get('O')) console.log(lightCount);
         const defaultUniforms: Array<UniformLocationObj> = [
             { name: 'u_projectionMatrix', data: this.camera.getProjectionMatrix(this.gl), type: 'matrix' },
             { name: 'u_viewMatrix', data: this.camera.getViewMatrix(), type: 'matrix' },

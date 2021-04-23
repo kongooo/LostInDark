@@ -1,6 +1,6 @@
 import { Coord } from "./Tool";
 
-export { Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType, BagItem }
+export { Item, Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType, BagItem }
 
 interface Attrib {
     name: string;
@@ -40,6 +40,11 @@ interface BagItem {
     name?: string;
     useCount?: number;
     description?: string;
+}
+
+interface Item {
+    pos: Coord;
+    type: ItemType;
 }
 
 enum ItemType {

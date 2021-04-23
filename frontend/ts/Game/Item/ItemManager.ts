@@ -1,5 +1,5 @@
 import { Coord, CoordUtils, randomInt } from "../../Tools/Tool";
-import { ImgType, ItemInfo, ItemType, LightInfo, UniformLocationObj } from "../../Tools/interface";
+import { ImgType, ItemInfo, ItemType, LightInfo, UniformLocationObj, Item } from "../../Tools/interface";
 import PerlinMap from "../Map";
 import { SimpleItem } from "./SimpleItem";
 import { Powder } from "./Powder";
@@ -23,6 +23,7 @@ class ItemManager {
     private gl: WebGL2RenderingContext;
     private imgs: Map<ImgType, HTMLImageElement>;
     private chunckSize: Coord;
+    private ws: any;
 
     private constructor(gl: WebGL2RenderingContext, map: PerlinMap, imgs: Map<ImgType, HTMLImageElement>) {
         this.map = map;
@@ -44,84 +45,95 @@ class ItemManager {
      * @param chunckIndex 
      * @returns 随机出该chunck区域内的道具
      */
-    private randomChunckItem = (chunckIndex: string) => {
-        const map: Map<string, ItemInfo> = new Map();
-        const [chunckX, chunckY] = chunckIndex.split(',').map(Number);
-        const leftDownPos = CoordUtils.mult({ x: chunckX, y: chunckY }, this.chunckSize);
-        const rightUpPos = CoordUtils.add(leftDownPos, this.chunckSize);
+    // private randomChunckItem = (chunckIndex: string) => {
+    //     const map: Map<string, ItemInfo> = new Map();
+    //     const [chunckX, chunckY] = chunckIndex.split(',').map(Number);
+    //     const leftDownPos = CoordUtils.mult({ x: chunckX, y: chunckY }, this.chunckSize);
+    //     const rightUpPos = CoordUtils.add(leftDownPos, this.chunckSize);
 
-        let matchCount = randomInt(MATCH_MIN_COUNT, MATCH_MAX_COUNT);
-        let woodCount = randomInt(WOOD_MIN_COUNT, WOOD_MAX_COUNT);
-        let powderBoxCount = randomInt(POWDERBOX_MIN_COUNT, POWDERBOX_MAX_COUNT);
+    //     let matchCount = randomInt(MATCH_MIN_COUNT, MATCH_MAX_COUNT);
+    //     let woodCount = randomInt(WOOD_MIN_COUNT, WOOD_MAX_COUNT);
+    //     let powderBoxCount = randomInt(POWDERBOX_MIN_COUNT, POWDERBOX_MAX_COUNT);
 
-        this.randomItem(matchCount, map, leftDownPos, rightUpPos, ItemType.match, this.getMatchImgs());
+    //     this.randomItem(matchCount, map, leftDownPos, rightUpPos, ItemType.match, this.getMatchImgs());
 
-        this.randomItem(woodCount, map, leftDownPos, rightUpPos, ItemType.wood, this.getWoodImgs());
+    //     this.randomItem(woodCount, map, leftDownPos, rightUpPos, ItemType.wood, this.getWoodImgs());
 
-        this.randomItem(powderBoxCount, map, leftDownPos, rightUpPos, ItemType.powderBox, this.getPowderBoxImgs());
+    //     this.randomItem(powderBoxCount, map, leftDownPos, rightUpPos, ItemType.powderBox, this.getPowderBoxImgs());
 
-        this.itemChuncks.set(chunckIndex, map);
-        return map;
-    }
+    //     this.itemChuncks.set(chunckIndex, map);
+    //     return map;
+    // }
 
     private getMatchImgs = () => [this.imgs.get(ImgType.matchUp), this.imgs.get(ImgType.matchFront), this.imgs.get(ImgType.matchFront)]
     private getWoodImgs = () => [this.imgs.get(ImgType.woodUp), this.imgs.get(ImgType.woodFront), this.imgs.get(ImgType.woodFront)];
     private getPowderBoxImgs = () => [this.imgs.get(ImgType.powderUp), this.imgs.get(ImgType.powderFront), this.imgs.get(ImgType.powderSide)];
 
-    private randomItem = (count: number, map: Map<string, ItemInfo>, leftDownPos: Coord, rightUpPos: Coord, type: ItemType, imgs: Array<HTMLImageElement>) => {
-        while (count--) {
-            const randomX = randomInt(leftDownPos.x, rightUpPos.x);
-            const randomY = randomInt(leftDownPos.y, rightUpPos.y);
-            if (!this.map.obstacled(randomX, randomY)) {
-                const item = new SimpleItem(this.gl, {
-                    pos: { x: randomX, y: randomY },
-                    type,
-                    img: imgs
-                });
-                map.set(`${randomX},${randomY}`, item);
+    // private randomItem = (count: number, map: Map<string, ItemInfo>, leftDownPos: Coord, rightUpPos: Coord, type: ItemType, imgs: Array<HTMLImageElement>) => {
+    //     while (count--) {
+    //         const randomX = randomInt(leftDownPos.x, rightUpPos.x);
+    //         const randomY = randomInt(leftDownPos.y, rightUpPos.y);
+    //         if (!this.map.obstacled(randomX, randomY)) {
+    //             const item = new SimpleItem(this.gl, {
+    //                 pos: { x: randomX, y: randomY },
+    //                 type,
+    //                 img: imgs
+    //             });
+    //             map.set(`${randomX},${randomY}`, item);
+    //         }
+    //     }
+    // }
+
+    addChunck = (chuncksIdnex: Array<string>, chuncks: Array<Array<Item>>) => {
+        chuncksIdnex.forEach((chunckIndex, index) => {
+            if (!this.itemChuncks.has(chunckIndex)) {
+                chuncks[index].forEach((item) => {
+                    this.addItem(item.pos, item.type);
+                })
             }
-        }
+        })
     }
 
-    drawItems = (defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number, playerCount: number, fireShadowsTexture: Array<WebGLTexture>, fireLights: Array<Light>) => {
+    drawItems = (chuncksIndex: Array<string>, defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number, fireShadowsTexture: Array<WebGLTexture>, fireLights: Array<Light>) => {
 
         lights.length = 0;
         fireShadowsTexture.length = 0;
         fireLights.length = 0;
         const mapPos = CoordUtils.floor(this.map.mapPos);
-        const chunckPos = [
-            mapPos,
-            CoordUtils.add(mapPos, { x: this.map.mapCount.x, y: 0 }),
-            CoordUtils.add(mapPos, { x: 0, y: this.map.mapCount.y }),
-            CoordUtils.add(mapPos, this.map.mapCount)
-        ];
-        const chuncksIndex = Array.from(new Set(chunckPos.map(pos => this.getChunckIndexByPos(pos))));
+        // const chunckPos = [
+        //     mapPos,
+        //     CoordUtils.add(mapPos, { x: this.map.mapCount.x, y: 0 }),
+        //     CoordUtils.add(mapPos, { x: 0, y: this.map.mapCount.y }),
+        //     CoordUtils.add(mapPos, this.map.mapCount)
+        // ];
+        // const chuncksIndex = Array.from(new Set(chunckPos.map(pos => this.getChunckIndexByPos(pos))));
         chuncksIndex.forEach(chunckIndex => {
             let itemChunck = this.itemChuncks.get(chunckIndex);
-            if (!itemChunck) {
-                itemChunck = this.randomChunckItem(chunckIndex);
-            }
-            itemChunck.forEach((item, key) => {
-                const [x, y] = key.split(',').map(Number);
-                if (x >= mapPos.x && x <= mapPos.x + this.map.mapCount.x && y >= mapPos.y && y <= mapPos.y + this.map.mapCount.y) {
-                    if (item.type === ItemType.firePile) {
-                        item.draw(defaultUniform, fireFrame);
-                        lights.push({
-                            position: [item.pos.x + 0.5, 1.5, item.pos.y + 0.5],
-                            color: (item as FirePile).lightColor,
-                            linear: 0.14,
-                            quadratic: 0.07
-                        });
-                        if (!(item as FirePile).shadowTexture) {
-                            (item as FirePile).getShadowTexture(this.map.lineVertices);
+            // if (!itemChunck) {
+            //     itemChunck = this.randomChunckItem(chunckIndex);
+            // }
+            if (itemChunck)
+                itemChunck.forEach((item, key) => {
+                    const [x, y] = key.split(',').map(Number);
+                    if (x >= mapPos.x && x <= mapPos.x + this.map.mapCount.x && y >= mapPos.y && y <= mapPos.y + this.map.mapCount.y) {
+                        if (item.type === ItemType.firePile) {
+                            item.draw(defaultUniform, fireFrame);
+                            lights.push({
+                                position: [item.pos.x + 0.5, 1.5, item.pos.y + 0.5],
+                                color: (item as FirePile).lightColor,
+                                linear: 0.14,
+                                quadratic: 0.07
+                            });
+                            if (!(item as FirePile).shadowTexture) {
+                                (item as FirePile).getShadowTexture(this.map.lineVertices);
+                            }
+                            fireShadowsTexture.push((item as FirePile).shadowTexture);
+                            fireLights.push((item as FirePile).light);
+                        } else {
+                            item.draw(defaultUniform);
                         }
-                        fireShadowsTexture.push((item as FirePile).shadowTexture);
-                        fireLights.push((item as FirePile).light);
-                    } else {
-                        item.draw(defaultUniform);
                     }
-                }
-            })
+                })
         })
 
     }
@@ -200,7 +212,9 @@ class ItemManager {
                 })
                 break;
         }
-        chunck.set(`${pos.x},${pos.y}`, item);
+        if (item) {
+            chunck.set(`${pos.x},${pos.y}`, item);
+        }
     }
 
     /**
@@ -217,6 +231,11 @@ class ItemManager {
     private getChunckIndexByPos = (pos: Coord) => {
         const chunck = CoordUtils.division(pos, this.chunckSize);
         return `${Math.floor(chunck.x)},${Math.floor(chunck.y)}`;
+    }
+
+    private getChunckPosByIndex = (index: string) => {
+        const [x, y] = index.split(',').map(Number);
+        return { x, y };
     }
 }
 

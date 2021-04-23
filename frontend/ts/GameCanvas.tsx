@@ -72,8 +72,8 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       console.error("can't init webgl");
       return;
     }
-    // this.initWithWs(gl);
-    this.init(gl);
+    this.initWithWs(gl);
+    // this.init(gl);
     EventBus.addEventListener("showHint", this.showHint);
     EventBus.addEventListener("BagControl", this.bagControl);
     EventBus.addEventListener("mask", this.controlOverlay);
@@ -124,7 +124,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       if (data.type === "success") {
         console.log("success");
         const imgs = await this.loadImages();
-        const game = new Game(gl, data.seed, data.pos, imgs, ws);
+        const game = new Game(gl, data.seed, data.pos, imgs, data.mapCount, ws);
         game.start();
         this.setState({ loading: false });
         const timer = setTimeout(() => {
@@ -137,7 +137,10 @@ class GameCanvas extends React.Component<GLProps, GLState> {
 
   private init = async (gl: WebGL2RenderingContext) => {
     const imgs = await this.loadImages();
-    const game = new Game(gl, randomInt(0, 10000), { x: 1000, y: 1000 }, imgs);
+    const game = new Game(gl, randomInt(0, 10000), { x: 1000, y: 1000 }, imgs, {
+      x: 70,
+      y: 50,
+    });
     game.start();
     this.setState({ loading: false });
     const timer = setTimeout(() => {
