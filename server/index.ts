@@ -37,10 +37,43 @@ mainRoute.get('/transfer', async (ctx: any) => {
                         curFreeClient = undefined;
                     }
                     break;
+                case 'reconnect':
+                    const id = data.id;
+                    console.log('reconnect');
+                    if (players.has(id)) {
+                        console.log(id);
+                        const socket = players.get(id);
+                        const client = new Client(ws);
+                        if (!socket.getPlayer1()) {
+                            socket.setPlayer1(client);
+                        }
+                        if (!socket.getPlayer2()) {
+                            socket.setPlayer2(client);
+                        }
+                    }
+                    break;
             }
+            clearPlayers();
         })
     }
 });
+
+const clearPlayers = () => {
+    players.forEach((player, key) => {
+        if (!player.getPlayer1() && !player.getPlayer2()) {
+            const clearTimer = setTimeout(() => {
+                if (!player.getPlayer1() && !player.getPlayer2()) {
+                    players.delete(key);
+                    clearTimeout(clearTimer);
+                }
+            }, 600000);
+        }
+    })
+}
+
+app.on('error', (e: any) => {
+    console.log('app error', e);
+})
 
 app.use(main)
     .use(webSocket())

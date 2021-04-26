@@ -51,6 +51,8 @@ interface GLState {
 
 class GameCanvas extends React.Component<GLProps, GLState> {
   private canvasRef = React.createRef<HTMLCanvasElement>();
+  private id: string;
+  private game: Game;
   constructor(props: GLProps) {
     super(props);
     this.state = {
@@ -122,16 +124,46 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     ws.onmessage = async (mes) => {
       const data = JSON.parse(mes.data);
       if (data.type === "success") {
-        console.log("success");
+        this.id = data.id;
         const imgs = await this.loadImages();
         const game = new Game(gl, data.seed, data.pos, imgs, data.mapCount, ws);
         game.start();
+        this.game = game;
         this.setState({ loading: false });
         const timer = setTimeout(() => {
           this.setState({ animaDisplay: "none" });
           clearTimeout(timer);
         }, 500);
       }
+    };
+    ws.onclose = () => {
+      this.reconnect();
+    };
+    ws.onerror = () => {
+      this.reconnect();
+    };
+  };
+
+  private reconnect = () => {
+    console.log("reconnect");
+    const path = "ws://" + window.location.host + "/transfer";
+    const ws = new WebSocket(path);
+    ws.onopen = () => {
+      ws.send(
+        JSON.stringify({
+          type: "reconnect",
+          id: this.id,
+        })
+      );
+      this.game.setWs(ws);
+      console.log("reconnect success");
+    };
+    ws.onclose = () => {
+      this.reconnect();
+    };
+    ws.onerror = (e) => {
+      ws.close();
+      console.error(e);
     };
   };
 
@@ -164,7 +196,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
         // hintWord: "",
       });
       clearTimeout(timer);
-    }, 1000);
+    }, 2000);
   };
 
   private controlOverlay = (show: boolean) => {

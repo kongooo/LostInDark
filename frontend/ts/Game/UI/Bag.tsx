@@ -21,7 +21,6 @@ interface BagState {
 const GRID_COUNT = 40;
 
 class Bag extends React.Component<BagProps, BagState> {
-  private drag: boolean;
   constructor(props: BagProps) {
     super(props);
     this.state = {
@@ -31,6 +30,8 @@ class Bag extends React.Component<BagProps, BagState> {
       conbinaItems: [ItemData.fireWoodData(), ItemData.firePileData()],
     };
     this.addItem(ItemType.firePile);
+    this.addItem(ItemType.wood);
+    this.addItem(ItemType.powderBox);
   }
 
   componentDidMount() {

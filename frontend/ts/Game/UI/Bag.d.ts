@@ -10,7 +10,6 @@ interface BagState {
     conbindActiveIndex: number;
 }
 declare class Bag extends React.Component<BagProps, BagState> {
-    private drag;
     constructor(props: BagProps);
     componentDidMount(): void;
     componentWillUnmount(): void;

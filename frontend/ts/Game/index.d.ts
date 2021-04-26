@@ -41,7 +41,9 @@ declare class Game {
     private firelights2D;
     private fireShadowsTexture;
     private chuncksIndex;
+    private itemsQueue;
     start: () => void;
+    setWs: (ws: any) => void;
     private update;
     private draw;
     private drawSoftShadowTexture;
@@ -66,6 +68,7 @@ declare class Game {
     private blit;
     private initWs;
     private send;
+    private sendItemsState;
     private get3DDefaultUniform;
     private get2DDefaultUniform;
     private get3DDefaultLightUniform;

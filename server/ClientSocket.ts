@@ -35,13 +35,13 @@ class ClientSocket {
     private noise: any;
 
     constructor(player1: Client, player2: Client, id: string, seed: number) {
-        this.player1 = player1;
-        this.player2 = player2;
         this.id = id;
         this.seed = seed;
         const noise = new perlinNoise3d();
         noise.noiseSeed(seed);
         this.noise = noise;
+        this.setPlayer1(player1);
+        this.setPlayer2(player2);
         this.init();
     }
 
@@ -51,36 +51,84 @@ class ClientSocket {
         const pos2 = { x: pos1.x, y: pos1.y };
         this.player1.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos1, mapCount: MAP_COUNT }));
         this.player2.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos2, mapCount: MAP_COUNT }));
-        this.player1.getWs().on('message', async (mes: any) => {
+    }
 
-            const data = JSON.parse(mes);
-            if (data.type === 'player') {
-                const res = this.generateItems(data.pos);
-                this.player1.getWs().send(JSON.stringify(res));
-            }
+    setPlayer1 = (player: Client) => {
+        this.player1 = player;
+        this.player1WsSetting();
+    }
 
-            if (this.player2.getWs().readyState === 1) {
-                this.player2.getWs().send(mes);
-            } else if (this.player2.getWs().readyState === 2 || this.player2.getWs().readyState === 3) {
+    setPlayer2 = (player: Client) => {
+        this.player2 = player;
+        this.player2WsSetting();
+    }
+
+
+    private player2WsSetting = () => {
+        if (this.player2) {
+            this.player2.getWs().on('message', async (mes: any) => {
+                const data = JSON.parse(mes);
+                if (data.type === 'player') {
+                    const res = this.generateItems(data.pos);
+                    this.player2.getWs().send(JSON.stringify(res));
+                }
+
+                try {
+                    if (this.player1 && this.player1.getWs().readyState === 1) {
+                        this.player1.getWs().send(mes);
+                    }
+                } catch (e) {
+                    console.log('player close', e);
+                }
+
+            });
+            this.player2.getWs().on('close', () => {
                 this.player2.getWs().close();
-                this.player1.getWs().close();
-            }
-        });
-
-        this.player2.getWs().on('message', async (mes: any) => {
-            const data = JSON.parse(mes);
-            if (data.type === 'player') {
-                const res = this.generateItems(data.pos);
-                this.player2.getWs().send(JSON.stringify(res));
-            }
-
-            if (this.player1.getWs().readyState === 1) {
-                this.player1.getWs().send(mes);
-            } else if (this.player1.getWs().readyState === 2 || this.player1.getWs().readyState === 3) {
-                this.player1.getWs().close();
+                this.player2 = null;
+                if (this.player1) {
+                    this.player1.getWs().send(JSON.stringify({
+                        type: 'close'
+                    }))
+                }
+            });
+            this.player2.getWs().on('error', () => {
                 this.player2.getWs().close();
-            }
-        });
+            })
+        }
+    }
+
+    private player1WsSetting = () => {
+        if (this.player1) {
+            this.player1.getWs().on('message', async (mes: any) => {
+                const data = JSON.parse(mes);
+                if (data.type === 'player') {
+                    const res = this.generateItems(data.pos);
+                    this.player1.getWs().send(JSON.stringify(res));
+                }
+
+                try {
+                    if (this.player2 && this.player2.getWs().readyState === 1) {
+                        this.player2.getWs().send(mes);
+                    }
+                } catch (e) {
+                    console.log('player close', e);
+                }
+
+            });
+            this.player1.getWs().on('close', () => {
+                this.player1.getWs().close();
+                this.player1 = null;
+                if (this.player2) {
+                    this.player2.getWs().send(JSON.stringify({
+                        type: 'close'
+                    }))
+                }
+
+            });
+            this.player1.getWs().on('error', () => {
+                this.player1.getWs().close();
+            })
+        }
     }
 
     private generateItems = (playerPos: Coord) => {

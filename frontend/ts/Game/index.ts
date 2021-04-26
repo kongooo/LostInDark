@@ -9,7 +9,7 @@ import KeyPress from '../Tools/Event/KeyEvent';
 import { Coord, CoordUtils } from '../Tools/Tool';
 
 import Camera from './Camera';
-import { ImgType, ItemType, LightInfo, UniformLocationObj } from '../Tools/interface';
+import { ImgType, ItemType, LightInfo, UniformLocationObj, ItemActionInfo } from '../Tools/interface';
 
 import ItemManager from './Item/ItemManager';
 import Hint from './UI/Hint';
@@ -65,12 +65,12 @@ class Game {
         // this.mapCanvas = new Canvas(gl, mapCanvasVsSource, mapCanvasFsSource);
         const emptyPos = this.map.getEmptyPos(center.x, center.y);
         this.playerWorldPos = { x: emptyPos.x, y: emptyPos.y };
-        this.ws = ws;
         this.imgs = imgs;
         this.camera = new Camera();
         this.itemManager = ItemManager.getInstance(gl, this.map, imgs);
         this.hint = new Hint(gl, imgs.get(ImgType.hint));
         this.placeHintRect = new PlaceHintRect(gl);
+        this.setWs(ws);
     }
 
     private deltaTime: number = 0;
@@ -95,12 +95,16 @@ class Game {
     private firelights2D: Array<Light> = [];
     private fireShadowsTexture: Array<WebGLTexture> = [];
     private chuncksIndex: Array<string> = [];
+    private itemsQueue: Array<ItemActionInfo> = [];
 
     start = () => {
-        if (this.ws)
-            this.initWs();
         this.update(0);
         EventBus.addEventListener('placeItemToScene', this.enablePlaceState);
+    }
+
+    setWs = (ws: any) => {
+        this.ws = ws;
+        this.initWs();
     }
 
     private update = (now: number) => {
@@ -342,7 +346,7 @@ class Game {
         if (!this.placeItem && this.hintPos && KeyPress.get('X')) {
             const itemType = this.itemManager.getItemType(this.hintPos);
             this.itemManager.deleteItem(this.hintPos);
-            this.send({
+            this.itemsQueue.push({
                 type: 'delete',
                 pos: this.hintPos
             })
@@ -365,7 +369,7 @@ class Game {
                 if (this.getPlaceColor() === canPlace) {
                     const pos = CoordUtils.floor(this.playerWorldPos);
                     this.addItemToScene(pos, this.placeItem);
-                    this.send({
+                    this.itemsQueue.push({
                         type: 'add',
                         itemType: this.placeItem,
                         pos
@@ -459,16 +463,16 @@ class Game {
             this.hintPos = undefined;
         }
 
-        if (this.ws && this.ws.readyState === 1) {
-            this.send({
-                type: 'player',
-                pos: this.playerWorldPos,
-                dir: this.playerDirLevel,
-                frame: this.playerAnimaFrame,
-                scale: this.playerLightScale,
-                brightness: this.brightNess
-            })
-        }
+        this.send({
+            type: 'player',
+            pos: this.playerWorldPos,
+            dir: this.playerDirLevel,
+            frame: this.playerAnimaFrame,
+            scale: this.playerLightScale,
+            brightness: this.brightNess
+        });
+
+        this.sendItemsState();
 
         this.mapPos = CoordUtils.sub(this.playerWorldPos, { x: this.map.mapCount.x / 2, y: (this.map.mapCount.y * 2) / 3 });
     }
@@ -533,16 +537,38 @@ class Game {
                     break;
                 case 'delete':
                     this.itemManager.deleteItem(data.pos);
+                    this.send({ type: 'ack' });
                     break;
                 case 'add':
                     this.addItemToScene(data.pos, data.itemType);
+                    this.send({ type: 'ack' });
+                    break;
+                case 'close':
+                    EventBus.dispatch('showHint', '另一位玩家掉线了＞﹏＜');
+                    break;
+                case 'ack':
+                    this.itemsQueue.shift();
                     break;
             }
         }
     }
 
     private send = (obj: Object) => {
-        this.ws.send(JSON.stringify(obj));
+        try {
+            if (this.ws && this.ws.readyState === 1) {
+                this.ws.send(JSON.stringify(obj));
+            }
+        } catch (e) {
+            console.error('send error', e);
+        }
+
+    }
+
+    private sendItemsState = () => {
+        const itemInfo = this.itemsQueue[0];
+        if (itemInfo) {
+            this.send(itemInfo);
+        }
     }
 
     private get3DDefaultUniform = (): Array<UniformLocationObj> => ([

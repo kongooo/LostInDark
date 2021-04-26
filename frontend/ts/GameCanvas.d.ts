@@ -15,11 +15,14 @@ interface GLState {
 }
 declare class GameCanvas extends React.Component<GLProps, GLState> {
     private canvasRef;
+    private id;
+    private game;
     constructor(props: GLProps);
     componentDidMount(): void;
     componentWillUnmount(): void;
     private loadImages;
     private initWithWs;
+    private reconnect;
     private init;
     private bagControl;
     private showHint;

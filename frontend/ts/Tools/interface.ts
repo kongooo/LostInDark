@@ -1,6 +1,12 @@
 import { Coord } from "./Tool";
 
-export { Item, Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType, BagItem }
+export { ItemActionInfo, Item, Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType, BagItem }
+
+interface ItemActionInfo {
+    pos: Coord;
+    type: 'add' | 'delete',
+    itemType?: ItemType;
+}
 
 interface Attrib {
     name: string;
