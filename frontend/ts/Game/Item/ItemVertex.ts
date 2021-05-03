@@ -1,42 +1,39 @@
+import { Coord } from "../../Tools/Tool";
+
 const fireDis = 0.1;
 
 class ItemVertex {
-    static getCubeVertices = (xLength: number, yLength: number, zLength: number) => [
+    static getCubeVertices = (xLength: number, yLength: number, zLength: number, startPos: Coord = { x: 0, y: 0 }, height: number = 0) => [
         //back
-        0, 0, 0, 0, 0, 0, 0, -1,
-        0, yLength, 0, 0, 1, 0, 0, -1,
-        xLength, yLength, 0, 1, 1, 0, 0, -1,
-        xLength, 0, 0, 1, 0, 0, 0, -1,
+        startPos.x, height, startPos.y, 0, 0, 0, 0, -1,
+        startPos.x, height + yLength, startPos.y, 0, 1, 0, 0, -1,
+        startPos.x + xLength, height + yLength, startPos.y, 1, 1, 0, 0, -1,
+        startPos.x + xLength, height, startPos.y, 1, 0, 0, 0, -1,
 
         //right
-        xLength, 0, 0, 1, 1, 1, 0, 0,
-        xLength, yLength, 0, 0, 1, 1, 0, 0,
-        xLength, yLength, zLength, 0, 0, 1, 0, 0,
-        xLength, 0, zLength, 1, 0, 1, 0, 0,
+        startPos.x + xLength, height, startPos.y, 1, 1, 1, 0, 0,
+        startPos.x + xLength, height + yLength, startPos.y, 0, 1, 1, 0, 0,
+        startPos.x + xLength, height + yLength, startPos.y + zLength, 0, 0, 1, 0, 0,
+        startPos.x + xLength, height, startPos.y + zLength, 1, 0, 1, 0, 0,
 
         //front
-        0, 0, zLength, 0, 0, 0, 0, 1,
-        xLength, 0, zLength, 1, 0, 0, 0, 1,
-        xLength, yLength, zLength, 1, 1, 0, 0, 1,
-        0, yLength, zLength, 0, 1, 0, 0, 1,
+        startPos.x, height, startPos.y + zLength, 0, 0, 0, 0, 1,
+        startPos.x + xLength, height, startPos.y + zLength, 1, 0, 0, 0, 1,
+        startPos.x + xLength, height + yLength, startPos.y + zLength, 1, 1, 0, 0, 1,
+        startPos.x, height + yLength, startPos.y + zLength, 0, 1, 0, 0, 1,
 
         //left
-        0, 0, 0, 0, 1, -1, 0, 0,
-        0, 0, zLength, 0, 0, -1, 0, 0,
-        0, yLength, zLength, 1, 0, -1, 0, 0,
-        0, yLength, 0, 1, 1, -1, 0, 0,
+        startPos.x, height, startPos.y, 0, 1, -1, 0, 0,
+        startPos.x, height, startPos.y + zLength, 0, 0, -1, 0, 0,
+        startPos.x, height + yLength, startPos.y + zLength, 1, 0, -1, 0, 0,
+        startPos.x, height + yLength, startPos.y, 1, 1, -1, 0, 0,
 
         //up
-        0, yLength, 0, 0, 1, 0, 1, 0,
-        0, yLength, zLength, 0, 0, 0, 1, 0,
-        xLength, yLength, zLength, 1, 0, 0, 1, 0,
-        xLength, yLength, 0, 1, 1, 0, 1, 0,
-
-        //down
-        0, 0, 0, 0, 1, 0, -1, 0,
-        xLength, 0, zLength, 0, 0, 0, -1, 0,
-        xLength, 0, zLength, 1, 0, 0, -1, 0,
-        0, 0, zLength, 1, 1, 0, -1, 0]
+        startPos.x, height + yLength, startPos.y, 0, 1, 0, 1, 0,
+        startPos.x, height + yLength, startPos.y + zLength, 0, 0, 0, 1, 0,
+        startPos.x + xLength, height + yLength, startPos.y + zLength, 1, 0, 0, 1, 0,
+        startPos.x + xLength, height + yLength, startPos.y, 1, 1, 0, 1, 0
+    ]
 
     static cubeIndices = [
         0, 1, 2, 0, 2, 3,
@@ -44,8 +41,18 @@ class ItemVertex {
         8, 9, 10, 8, 10, 11,
         12, 13, 14, 12, 14, 15,
         16, 17, 18, 16, 18, 19,
-        20, 21, 22, 20, 22, 23,
     ]
+
+    static getCubeIndices = (index: number) => ItemVertex.cubeIndices.map(i => i + index * 20)
+
+    static getCubeIndicesByCount = (count: number) => {
+        let indices = [], i = 0;
+        while (i < count) {
+            indices.push(...ItemVertex.getCubeIndices(i));
+            i++;
+        }
+        return indices;
+    }
 
     static getSquareVertices = (width: number, height: number) => [
         0, 0, 0, 0,

@@ -14,9 +14,16 @@ const MATCH_HEIGHT = 0.6;
 const WOOD_WITDH = 0.2;
 const WOOD_HEIGHT = 0.7;
 
+const BATTERY_WITDH = 0.1;
+const BATTERY_HEIGHT = 0.4;
+
 const POWDER_BOX_X = 0.5;
 const POWDER_BOX_Y = 0.3;
 const POWDER_BOX_Z = 0.8;
+
+const CUIRCUIT_BOX_X = 0.8;
+const CUIRCUIT_BOX_Y = 0.1;
+const CUIRCUIT_BOX_Z = 0.8;
 
 class SimpleItem implements ItemInfo {
     pos: Coord;
@@ -52,6 +59,16 @@ class SimpleItem implements ItemInfo {
             case ItemType.powderBox:
                 this.move = true;
                 vertices = ItemVertex.getCubeVertices(POWDER_BOX_X, POWDER_BOX_Y, POWDER_BOX_Z);
+                indices = ItemVertex.cubeIndices;
+                break;
+            case ItemType.battery:
+                this.move = true;
+                vertices = ItemVertex.getCubeVertices(BATTERY_WITDH, BATTERY_WITDH, BATTERY_HEIGHT);
+                indices = ItemVertex.cubeIndices;
+                break;
+            case ItemType.circuitBoard:
+                this.move = true;
+                vertices = ItemVertex.getCubeVertices(CUIRCUIT_BOX_X, CUIRCUIT_BOX_Y, CUIRCUIT_BOX_Z);
                 indices = ItemVertex.cubeIndices;
                 break;
         }

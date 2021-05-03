@@ -74,7 +74,7 @@ class CoordUtils {
     }
 
     static dot = (aVector: Coord, bVector: Coord) => {
-        return aVector.x * bVector.x + aVector.y + bVector.y;
+        return aVector.x * bVector.x + aVector.y * bVector.y;
     }
 
     static calTheta = (vector: Coord) => {

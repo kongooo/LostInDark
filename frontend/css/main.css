@@ -104,6 +104,7 @@ body {
     font-family: cursive;
     font-weight: bold;
     padding: 5px;
+    width: max-content;
 }
 
 .bag-conbina-box {

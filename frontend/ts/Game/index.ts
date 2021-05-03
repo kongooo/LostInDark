@@ -15,6 +15,7 @@ import ItemManager from './Item/ItemManager';
 import Hint from './UI/Hint';
 import EventBus from '../Tools/Event/EventBus';
 import PlaceHintRect from './Item/PlaceItem';
+import { Arrow } from './Item/Arrow';
 
 const PLAYER_SPEED = 3;
 const DEFAULT_LIGHT_RADIUS = 10;
@@ -29,6 +30,7 @@ const canPlace = [27, 208, 66];
 const putOutTime = 60000;
 const FIRE_RADIUS = 20;
 const FIRE_LIGHT_SCALE = 1;
+const RECEIVE_TIME = 300000;
 
 class Game {
     private gl: WebGL2RenderingContext;
@@ -49,11 +51,12 @@ class Game {
     private itemManager: ItemManager;
     private hint: Hint;
     private placeHintRect: PlaceHintRect;
+    private arrow: Arrow;
 
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, mapCount: Coord, ws?: any) {
         this.gl = gl;
         this.map = new PerlinMap(gl, seed, imgs.get(ImgType.obstable), mapCount);
-        this.player = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
+        this.player = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player1));
         this.player2 = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
         // this.cameraWorldPos = center;
         this.playerLight = new Light(gl, DEFAULT_LIGHT_RADIUS, LIGHT_COLOR);
@@ -70,6 +73,7 @@ class Game {
         this.itemManager = ItemManager.getInstance(gl, this.map, imgs);
         this.hint = new Hint(gl, imgs.get(ImgType.hint));
         this.placeHintRect = new PlaceHintRect(gl);
+        this.arrow = new Arrow(gl, imgs.get(ImgType.arrow));
         this.setWs(ws);
     }
 
@@ -96,6 +100,8 @@ class Game {
     private fireShadowsTexture: Array<WebGLTexture> = [];
     private chuncksIndex: Array<string> = [];
     private itemsQueue: Array<ItemActionInfo> = [];
+    private transmitsPos: Array<Coord> = [];
+    private receive: boolean = false;
 
     start = () => {
         this.update(0);
@@ -263,16 +269,35 @@ class Game {
 
         this.itemManager.drawItems(this.chuncksIndex, this.get3DDefaultLightUniform(), this.lights, this.fireFrame, this.fireShadowsTexture, this.firelights2D);
 
+        if (this.receive) {
+            const angle = this.calPlayerToTransmitDir();
+            if (angle) {
+                // console.log(angle);
+                this.arrow.draw(this.playerWorldPos, this.get3DDefaultUniform(), angle);
+            }
+        }
         this.player.draw(this.playerWorldPos, this.get3DDefaultUniform(), this.playerDirLevel, this.playerAnimaFrame);
+
         if (this.player2WorldPos) this.player2.draw(this.player2WorldPos, this.get3DDefaultUniform(), this.player2DirLevel, this.player2AnimaFrame);
         if (this.hintPos && this.placeItem === undefined) this.hint.draw(this.hintPos, this.get3DDefaultUniform());
     }
 
     private getPlaceColor = () => {
         const pos = CoordUtils.floor(this.playerWorldPos);
-        if (!this.map.obstacled(pos.x, pos.y) && !this.itemManager.hasItem(pos)) {
+
+        if (this.placeItem === ItemType.transmit) {
+            for (let x = pos.x; x < pos.x + 2; x++) {
+                for (let y = pos.y; y < pos.y + 2; y++) {
+                    if (this.map.obstacled(x, y) || this.itemManager.hasItem({ x, y })) {
+                        return banPlace;
+                    }
+                }
+            }
+            return canPlace;
+        } else if (!this.map.obstacled(pos.x, pos.y) && !this.itemManager.hasItem(pos)) {
             return canPlace;
         }
+
         return banPlace;
     }
 
@@ -365,6 +390,16 @@ class Game {
                     clearTimeout(timer);
                 }, putOutTime);
             }
+            if (this.placeItem === ItemType.receive) {
+                this.receive = true;
+                this.disablePlaceState();
+                EventBus.dispatch('deleteItemFromBag');
+                const timer = setTimeout(() => {
+                    this.receive = false;
+                    EventBus.dispatch('showHint', '无线电接收器的电池没电了');
+                    clearTimeout(timer);
+                }, RECEIVE_TIME);
+            }
             if (KeyPress.get('E')) {
                 if (this.getPlaceColor() === canPlace) {
                     const pos = CoordUtils.floor(this.playerWorldPos);
@@ -406,6 +441,26 @@ class Game {
         EventBus.dispatch('mask', false);
     }
 
+    private calPlayerToTransmitDir = () => {
+        let nearPos, minDis = 100000, angle;
+        this.transmitsPos.forEach(pos => {
+            let curDis = CoordUtils.calDistance(pos, this.playerWorldPos);
+            if (curDis < minDis) {
+                nearPos = pos;
+                minDis = curDis;
+            }
+        })
+
+        if (nearPos) {
+            const dir = CoordUtils.sub(nearPos, this.playerWorldPos)
+            angle = CoordUtils.angle(dir, { x: 0, y: -1 });
+            if (dir.x > 0) {
+                angle = Math.PI * 2 - angle;
+            }
+        }
+        return angle;
+    }
+
     //碰撞检测
     private CollisionDetection = () => {
         let dir = 1;
@@ -413,7 +468,8 @@ class Game {
         let hint = false;
         for (let x = this.playerWorldPos.x - 1; x <= this.playerWorldPos.x + 1; x++) {
             for (let y = this.playerWorldPos.y - dir; dir === 1 ? y <= this.playerWorldPos.y + dir : y >= this.playerWorldPos.y + dir; y += dir) {
-                //如果碰到障碍物
+                //如果碰到障碍物或者无线电发射装置
+                const pos = CoordUtils.floor({ x, y });
                 if (this.map.obstacled(x, y)) {
                     const obstacleRealPos = { x: Math.floor(x), y: Math.floor(y) };
                     const intersected = this.intersected(obstacleRealPos, this.playerWorldPos, 1, PLAYER_SIZE);
@@ -452,8 +508,8 @@ class Game {
                     }
                 }
                 //如果碰到道具
-                if (this.itemManager.hasItem(CoordUtils.floor({ x, y }))) {
-                    this.hintPos = CoordUtils.floor({ x, y });
+                if (this.itemManager.canPickup(pos)) {
+                    this.hintPos = pos;
                     hint = true;
                 }
             }
@@ -542,6 +598,9 @@ class Game {
                 case 'add':
                     this.addItemToScene(data.pos, data.itemType);
                     this.send({ type: 'ack' });
+                    if (data.itemType === ItemType.transmit) {
+                        this.transmitsPos.push(data.pos);
+                    }
                     break;
                 case 'close':
                     EventBus.dispatch('showHint', '另一位玩家掉线了＞﹏＜');

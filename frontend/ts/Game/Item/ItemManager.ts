@@ -2,9 +2,10 @@ import { Coord, CoordUtils, randomInt } from "../../Tools/Tool";
 import { ImgType, ItemInfo, ItemType, LightInfo, UniformLocationObj, Item } from "../../Tools/interface";
 import PerlinMap from "../Map";
 import { SimpleItem } from "./SimpleItem";
-import { Powder } from "./Powder";
+import { Item2D } from "./Item2D";
 import { FirePile } from "./FirePile";
 import Light from "../Light/light";
+import { Transmit } from "./Transmit";
 
 const MATCH_MIN_COUNT = 5;
 const MATCH_MAX_COUNT = 20;
@@ -13,7 +14,7 @@ const WOOD_MAX_COUNT = 25;
 const POWDERBOX_MIN_COUNT = 3;
 const POWDERBOX_MAX_COUNT = 7;
 
-const CHUNCK_SIZE = 2;
+const CHUNCK_SIZE = 1.5;
 
 class ItemManager {
     private static instance: ItemManager;
@@ -68,6 +69,8 @@ class ItemManager {
     private getMatchImgs = () => [this.imgs.get(ImgType.matchUp), this.imgs.get(ImgType.matchFront), this.imgs.get(ImgType.matchFront)]
     private getWoodImgs = () => [this.imgs.get(ImgType.woodUp), this.imgs.get(ImgType.woodFront), this.imgs.get(ImgType.woodFront)];
     private getPowderBoxImgs = () => [this.imgs.get(ImgType.powderUp), this.imgs.get(ImgType.powderFront), this.imgs.get(ImgType.powderSide)];
+    private getBatteryImgs = () => [this.imgs.get(ImgType.batteryUp), this.imgs.get(ImgType.batteryFront), this.imgs.get(ImgType.batteryFront)];
+    private getCircuitImgs = () => [this.imgs.get(ImgType.powderUp), this.imgs.get(ImgType.circuitBoard), this.imgs.get(ImgType.powderUp)];
 
     // private randomItem = (count: number, map: Map<string, ItemInfo>, leftDownPos: Coord, rightUpPos: Coord, type: ItemType, imgs: Array<HTMLImageElement>) => {
     //     while (count--) {
@@ -119,7 +122,7 @@ class ItemManager {
                         if (item.type === ItemType.firePile) {
                             item.draw(defaultUniform, fireFrame);
                             lights.push({
-                                position: [item.pos.x + 0.5, 1.5, item.pos.y + 0.5],
+                                position: [item.pos.x + 0.5, 2, item.pos.y + 0.5],
                                 color: (item as FirePile).lightColor,
                                 linear: 0.14,
                                 quadratic: 0.07
@@ -129,7 +132,7 @@ class ItemManager {
                             }
                             fireShadowsTexture.push((item as FirePile).shadowTexture);
                             fireLights.push((item as FirePile).light);
-                        } else {
+                        } else if (item.type !== ItemType.placeHolder) {
                             item.draw(defaultUniform);
                         }
                     }
@@ -144,6 +147,16 @@ class ItemManager {
      * @returns 
      */
     hasItem = (pos: Coord) => {
+        const chunckIndex = this.getChunckIndexByPos(pos);
+        const chunck = this.itemChuncks.get(chunckIndex);
+        if (chunck) {
+            const item = chunck.get(`${pos.x},${pos.y}`);
+            return item;
+        }
+        return false;
+    }
+
+    canPickup = (pos: Coord) => {
         const chunckIndex = this.getChunckIndexByPos(pos);
         const chunck = this.itemChuncks.get(chunckIndex);
         if (chunck) {
@@ -174,7 +187,7 @@ class ItemManager {
             this.itemChuncks.set(chunckIndex, new Map());
         }
         const chunck = this.itemChuncks.get(chunckIndex);
-        let item: SimpleItem | Powder | FirePile;
+        let item: SimpleItem | Item2D | FirePile | Transmit | ItemInfo;
         switch (type) {
             case ItemType.match:
                 item = new SimpleItem(this.gl, {
@@ -198,11 +211,11 @@ class ItemManager {
                 });
                 break;
             case ItemType.powder:
-                item = new Powder(this.gl, {
+                item = new Item2D(this.gl, {
                     pos,
                     type,
                     img: [this.imgs.get(ImgType.powder)]
-                })
+                }, false)
                 break;
             case ItemType.firePile:
                 item = new FirePile(this.gl, {
@@ -211,8 +224,46 @@ class ItemManager {
                     img: [this.imgs.get(ImgType.woodUp), this.imgs.get(ImgType.fire)]
                 })
                 break;
+            case ItemType.battery:
+                item = new SimpleItem(this.gl, {
+                    pos,
+                    type,
+                    img: this.getBatteryImgs()
+                });
+                break;
+            case ItemType.wire:
+                item = new Item2D(this.gl, {
+                    pos,
+                    type,
+                    img: [this.imgs.get(ImgType.wire)]
+                })
+                break;
+            case ItemType.circuitBoard:
+                item = new SimpleItem(this.gl, {
+                    pos,
+                    type,
+                    img: this.getCircuitImgs()
+                })
+                break;
+            case ItemType.transmit:
+                item = new Transmit(this.gl, {
+                    pos,
+                    type
+                })
+                chunck.set(`${pos.x},${pos.y}`, item);
+                for (let x = pos.x; x < pos.x + 2; x++) {
+                    for (let y = pos.y; y < pos.y + 2; y++) {
+                        if (x !== pos.x || y !== pos.y) {
+                            chunck.set(`${x},${y}`, {
+                                type: ItemType.placeHolder,
+                                pos: { x, y }
+                            });
+                        }
+                    }
+                }
+                break;
         }
-        if (item) {
+        if (item && type !== ItemType.transmit) {
             chunck.set(`${pos.x},${pos.y}`, item);
         }
     }

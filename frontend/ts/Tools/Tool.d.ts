@@ -112,7 +112,7 @@ declare class CoordUtils {
 }
 declare const clamp: (num: number, min: number, max: number) => number;
 declare const lerp: (a: number, b: number, t: number) => number;
-declare const getDir: (a: number) => 1 | -1 | 0;
+declare const getDir: (a: number) => 0 | 1 | -1;
 declare const swap: (a: Coord, b: Coord) => void;
 declare const randomInt: (min: number, max: number) => number;
 export { Coord, CoordUtils, FrameBufferInfo, clamp, lerp, getDir, swap, randomInt };

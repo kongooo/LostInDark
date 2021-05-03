@@ -20,11 +20,18 @@ const WOOD_MAX_COUNT = 25;
 const POWDERBOX_MIN_COUNT = 3;
 const POWDERBOX_MAX_COUNT = 7;
 
+const WIRE_MIN_COUNT = 2;
+const WIRE_MAX_COUNT = 5;
+const BATTERY_MIN_COUNT = 2;
+const BATTERY_MAX_COUNT = 5;
+const CIRCUIT_MIN_COUNT = 2;
+const CIRCUIT_MAX_COUNT = 5;
+
 const ZOOM = 5;
 const THRESHOLD = 0.6;
 
 const MAP_COUNT = { x: 70, y: 50 };
-const CHUNCK_SIZE = CoordUtils.mult(MAP_COUNT, 2);
+const CHUNCK_SIZE = CoordUtils.mult(MAP_COUNT, 1.5);
 
 class ClientSocket {
     private player1: Client;
@@ -176,12 +183,21 @@ class ClientSocket {
         let matchCount = GetRandomNum(MATCH_MIN_COUNT, MATCH_MAX_COUNT);
         let woodCount = GetRandomNum(WOOD_MIN_COUNT, WOOD_MAX_COUNT);
         let powderBoxCount = GetRandomNum(POWDERBOX_MIN_COUNT, POWDERBOX_MAX_COUNT);
+        let wireCount = GetRandomNum(WIRE_MIN_COUNT, WIRE_MAX_COUNT);
+        let batteryCount = GetRandomNum(BATTERY_MIN_COUNT, BATTERY_MAX_COUNT);
+        let circuitCount = GetRandomNum(CIRCUIT_MIN_COUNT, CIRCUIT_MAX_COUNT);
 
         this.randomItem(matchCount, items, leftDownPos, rightUpPos, ItemType.match);
 
         this.randomItem(woodCount, items, leftDownPos, rightUpPos, ItemType.wood);
 
         this.randomItem(powderBoxCount, items, leftDownPos, rightUpPos, ItemType.powderBox);
+
+        this.randomItem(wireCount, items, leftDownPos, rightUpPos, ItemType.wire);
+
+        this.randomItem(batteryCount, items, leftDownPos, rightUpPos, ItemType.battery);
+
+        this.randomItem(circuitCount, items, leftDownPos, rightUpPos, ItemType.circuitBoard);
 
         this.itemChuncks.set(chunckIndex, items);
         return items;

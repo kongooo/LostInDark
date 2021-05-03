@@ -3,6 +3,11 @@ import wood from "../../../../image/bagImage/wood.png";
 import powderBox from "../../../../image/bagImage/powderBox.png";
 import fireWoodImg from "../../../../image/fire/fireWood.png";
 import firePileImg from "../../../../image/fire/firePile.png";
+import transmitEquip from '../../../../image/transmitEquip.png';
+import receiveEquip from '../../../../image/receiveEquip.png';
+import battery from '../../../../image/battery/battery.png';
+import wire from '../../../../image/wire.png';
+import circuit from '../../../../image/circuitBoard.png';
 
 
 import { BagItem, ItemType } from "../../Tools/interface";
@@ -40,6 +45,36 @@ class ItemData {
         imgSrc: firePileImg,
         type: ItemType.firePile,
         name: '火堆'
+    })
+
+    static transmitData = (): BagItem => ({
+        imgSrc: transmitEquip,
+        type: ItemType.transmit,
+        name: '无线电发射设备'
+    })
+
+    static receiveData = (): BagItem => ({
+        imgSrc: receiveEquip,
+        type: ItemType.receive,
+        name: '无线电接收设备'
+    })
+
+    static batteryData = (): BagItem => ({
+        imgSrc: battery,
+        type: ItemType.battery,
+        name: '电池'
+    })
+
+    static wireData = (): BagItem => ({
+        imgSrc: wire,
+        type: ItemType.wire,
+        name: '电线'
+    })
+
+    static circuitData = (): BagItem => ({
+        imgSrc: circuit,
+        type: ItemType.circuitBoard,
+        name: '电路板'
     })
 }
 

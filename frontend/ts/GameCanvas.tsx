@@ -9,6 +9,7 @@ import Loading from "./Loading";
 import { LoadImage } from "./Tools/LoadImage";
 
 import playerImg from "../../image/mikasa.png";
+import player2Img from "../../image/alen.png";
 import obstacleImg from "../../image/grass.png";
 import groundImg from "../../image/ground.png";
 
@@ -28,6 +29,15 @@ import bagImg from "../../image/bag.png";
 import powderImg from "../../image/powder.png";
 
 import fireImg from "../../image/fire/fire.png";
+
+import batteryImg from "../../image/battery/battery.png";
+import batteryUpImg from "../../image/battery/batteryUp.png";
+import batteryFrontImg from "../../image/battery/batteryFront.png";
+
+import wireImg from "../../image/wire.png";
+import circuitImg from "../../image/circuitBoard.png";
+
+import arrowImg from "../../image/arrow.png";
 
 import { ImgType, ItemType } from "./Tools/interface";
 import EventBus from "./Tools/Event/EventBus";
@@ -91,7 +101,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     const images: Map<ImgType, string | HTMLImageElement> = new Map();
     const imgMap: Map<ImgType, HTMLImageElement> = new Map();
     images.set(ImgType.player, playerImg);
-    images.set(ImgType.player1, playerImg);
+    images.set(ImgType.player1, player2Img);
     images.set(ImgType.ground, groundImg);
     images.set(ImgType.obstable, obstacleImg);
 
@@ -109,6 +119,16 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     images.set(ImgType.powder, powderImg);
 
     images.set(ImgType.fire, fireImg);
+
+    images.set(ImgType.battery, batteryImg);
+    images.set(ImgType.batteryFront, batteryFrontImg);
+    images.set(ImgType.batteryUp, batteryUpImg);
+
+    images.set(ImgType.wire, wireImg);
+
+    images.set(ImgType.circuitBoard, circuitImg);
+
+    images.set(ImgType.arrow, arrowImg);
 
     await LoadImage(images, imgMap);
     return imgMap;

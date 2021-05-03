@@ -1,12 +1,12 @@
 import { Coord } from "../../Tools/Tool";
 import { ItemInfo, ItemType, UniformLocationObj } from '../../Tools/interface';
-declare class Powder implements ItemInfo {
+declare class Transmit implements ItemInfo {
     pos: Coord;
     type: ItemType;
     move: boolean;
     private mesh;
-    private texture;
-    constructor(gl: WebGL2RenderingContext, itemInfo: ItemInfo);
+    private gl;
+    constructor(gl: WebGL2RenderingContext, item: ItemInfo);
     draw(defaultUniforms: Array<UniformLocationObj>): void;
 }
-export { Powder };
+export { Transmit };

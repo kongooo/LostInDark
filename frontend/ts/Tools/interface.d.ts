@@ -1,5 +1,5 @@
 import { Coord } from "./Tool";
-export { ItemActionInfo, Item, Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType, BagItem };
+export { ComposeItem, ItemActionInfo, Item, Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType, BagItem };
 interface ItemActionInfo {
     pos: Coord;
     type: 'add' | 'delete';
@@ -43,6 +43,10 @@ interface Item {
     pos: Coord;
     type: ItemType;
 }
+interface ComposeItem {
+    type: ItemType;
+    count: number;
+}
 declare enum ItemType {
     match = 0,
     wood = 1,
@@ -50,7 +54,13 @@ declare enum ItemType {
     fire = 3,
     fireWoods = 4,
     powderBox = 5,
-    powder = 6
+    powder = 6,
+    transmit = 7,
+    receive = 8,
+    battery = 9,
+    wire = 10,
+    circuitBoard = 11,
+    placeHolder = 12
 }
 declare enum ImgType {
     player = 0,
@@ -68,5 +78,11 @@ declare enum ImgType {
     powder = 12,
     fire = 13,
     fireWood = 14,
-    firePile = 15
+    firePile = 15,
+    battery = 16,
+    batteryUp = 17,
+    batteryFront = 18,
+    wire = 19,
+    circuitBoard = 20,
+    arrow = 21
 }

@@ -7,14 +7,14 @@ import powderFsSource from '../../../shaders/PowderShader/fsSource.glsl';
 import { ItemVertex } from "./ItemVertex";
 import { WebGL } from "../../Tools/WebGLUtils";
 
-class Powder implements ItemInfo {
+class Item2D implements ItemInfo {
     pos: Coord;
     type: ItemType;
     move: boolean;
     private mesh: StaticMesh;
     private texture: WebGLTexture;
 
-    constructor(gl: WebGL2RenderingContext, itemInfo: ItemInfo) {
+    constructor(gl: WebGL2RenderingContext, itemInfo: ItemInfo, move = true) {
         this.type = itemInfo.type;
         this.pos = itemInfo.pos;
         this.mesh = new StaticMesh(gl, powderVsSource, powderFsSource);
@@ -25,6 +25,7 @@ class Powder implements ItemInfo {
 
         this.mesh.getVAO(ItemVertex.getSquareVertices(1, 1), ItemVertex.squareIndices);
         this.texture = WebGL.getTexture(gl, itemInfo.img[0]);
+        this.move = move;
     }
 
     draw(defaultUniforms: Array<UniformLocationObj>) {
@@ -36,4 +37,4 @@ class Powder implements ItemInfo {
     }
 }
 
-export { Powder };
+export { Item2D };

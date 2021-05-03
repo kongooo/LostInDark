@@ -1,5 +1,5 @@
 import { Coord } from "../../Tools/Tool";
-import { ImgType, ItemType, LightInfo, UniformLocationObj, Item } from "../../Tools/interface";
+import { ImgType, ItemInfo, ItemType, LightInfo, UniformLocationObj, Item } from "../../Tools/interface";
 import PerlinMap from "../Map";
 import Light from "../Light/light";
 declare class ItemManager {
@@ -20,6 +20,8 @@ declare class ItemManager {
     private getMatchImgs;
     private getWoodImgs;
     private getPowderBoxImgs;
+    private getBatteryImgs;
+    private getCircuitImgs;
     addChunck: (chuncksIdnex: Array<string>, chuncks: Array<Array<Item>>) => void;
     drawItems: (chuncksIndex: Array<string>, defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number, fireShadowsTexture: Array<WebGLTexture>, fireLights: Array<Light>) => void;
     /**
@@ -27,7 +29,8 @@ declare class ItemManager {
      * @param pos x,y: int
      * @returns
      */
-    hasItem: (pos: Coord) => boolean;
+    hasItem: (pos: Coord) => false | ItemInfo;
+    canPickup: (pos: Coord) => boolean;
     /**
      *
      * @param pos x,y: int

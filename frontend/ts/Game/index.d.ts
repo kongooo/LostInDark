@@ -19,6 +19,7 @@ declare class Game {
     private itemManager;
     private hint;
     private placeHintRect;
+    private arrow;
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, mapCount: Coord, ws?: any);
     private deltaTime;
     private lastTime;
@@ -42,6 +43,8 @@ declare class Game {
     private fireShadowsTexture;
     private chuncksIndex;
     private itemsQueue;
+    private transmitsPos;
+    private receive;
     start: () => void;
     setWs: (ws: any) => void;
     private update;
@@ -62,6 +65,7 @@ declare class Game {
     private addItemToScene;
     private enablePlaceState;
     private disablePlaceState;
+    private calPlayerToTransmitDir;
     private CollisionDetection;
     private intersected;
     private getInterSectedRect;

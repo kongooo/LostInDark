@@ -1,6 +1,6 @@
 import { Coord } from "./Tool";
 
-export { ItemActionInfo, Item, Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType, BagItem }
+export { ComposeItem, ItemActionInfo, Item, Attrib, AttribLocationObj, UniformLocationObj, LightInfo, ItemInfo, ImgType, ItemType, BagItem }
 
 interface ItemActionInfo {
     pos: Coord;
@@ -53,6 +53,11 @@ interface Item {
     type: ItemType;
 }
 
+interface ComposeItem {
+    type: ItemType;
+    count: number;
+}
+
 enum ItemType {
     match,
     wood,
@@ -61,6 +66,12 @@ enum ItemType {
     fireWoods,
     powderBox,
     powder,
+    transmit,
+    receive,
+    battery,
+    wire,
+    circuitBoard,
+    placeHolder
 }
 
 enum ImgType {
@@ -84,6 +95,15 @@ enum ImgType {
 
     fire,
     fireWood,
-    firePile
+    firePile,
+
+    battery,
+    batteryUp,
+    batteryFront,
+
+    wire,
+    circuitBoard,
+
+    arrow
 }
 

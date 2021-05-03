@@ -19,6 +19,14 @@ declare class Bag extends React.Component<BagProps, BagState> {
     onConbinaMouseOver: (e: any) => void;
     onClick: () => void;
     onConbinaClick: () => void;
+    /**
+     *
+     * @param conbinaItems 合成所需材料
+     * @param aimItem 合成目标
+     * @param aimItemName 合成目标名称
+     * @param failedWord 合成所需材料描述
+     */
+    private conbinaItem;
     render(): JSX.Element;
 }
 export default Bag;

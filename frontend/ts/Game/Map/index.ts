@@ -42,7 +42,7 @@ class PerlinMap {
             { name: 'a_normal', size: 3 }
         ])
         MapMesh.getInstanceAttribLocations([
-            { name: 'a_offset', size: 2 }
+            { name: 'a_offset', size: 3 }
         ])
 
         MapMesh.getBufferAndVAO(ItemVertex.getCubeVertices(1, 1, 1), ItemVertex.cubeIndices);
@@ -53,7 +53,7 @@ class PerlinMap {
         // this.fBufferInfo = WebGL.getFBufferAndTexture(gl, mapCount.x, mapCount.y);
         this.mapCount = mapCount;
         this.union = new Union(noise, CoordUtils.add(this.mapCount, SPREAD_SIZE * 2), THRESHOLD, ZOOM, SPREAD_SIZE);
-        this.texture = WebGL.getTexture(gl, img);
+        this.texture = WebGL.getTexture(gl, img, true);
     }
 
     private gridPos: Array<number> = [];
@@ -117,9 +117,10 @@ class PerlinMap {
                 const yWorldPos = Math.floor(y + startY);
                 const num = this.noise.get(xWorldPos / ZOOM, yWorldPos / ZOOM);
                 if (num > THRESHOLD) {
-
+                    const height = Math.max(Math.floor((num - THRESHOLD) * 20) % 10, 1);
+                    // console.log(height);
                     this.gridPos.push(
-                        xWorldPos, yWorldPos
+                        xWorldPos, yWorldPos, height
                     )
 
                     // this.simpleVertices.push(
