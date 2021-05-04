@@ -358,7 +358,7 @@ class Game {
         }
         if (this.player2WorldPos) {
             const dis = CoordUtils.calDistance(this.playerWorldPos, this.player2WorldPos);
-            if (dis < 2) {
+            if (dis < 2 && !this.success) {
                 this.success = true;
                 EventBus.dispatch('end');
             }

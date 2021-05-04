@@ -38,7 +38,7 @@ class Bag extends React.Component<BagProps, BagState> {
     // this.addItem(ItemType.wood);
     // this.addItem(ItemType.powderBox);
     // this.addItem(ItemType.fireWoods);
-    // this.addItem(ItemType.wire);
+    this.addItem(ItemType.wire);
     // this.addItem(ItemType.wire);
     // this.addItem(ItemType.wire);
     // this.addItem(ItemType.wire);
@@ -256,7 +256,7 @@ class Bag extends React.Component<BagProps, BagState> {
               count: 1,
             }
           );
-          materailItemsDescrib = "两节电池、一团电线和一块电路板";
+          materailItemsDescrib = "两节电池、一捆电线和一块电路板";
           break;
 
         case ItemType.transmit:
@@ -274,7 +274,7 @@ class Bag extends React.Component<BagProps, BagState> {
               count: 1,
             }
           );
-          materailItemsDescrib = "两节电池、两团电线和一块电路板";
+          materailItemsDescrib = "两节电池、两捆电线和一块电路板";
           break;
       }
 

@@ -16,6 +16,7 @@ interface GLState {
     success: boolean;
     showLastImg: boolean;
     showLastWord: boolean;
+    showLashWordBox: boolean;
     loadStart: boolean;
 }
 declare class GameCanvas extends React.Component<GLProps, GLState> {

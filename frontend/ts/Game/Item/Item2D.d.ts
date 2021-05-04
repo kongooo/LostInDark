@@ -6,7 +6,7 @@ declare class Item2D implements ItemInfo {
     move: boolean;
     private mesh;
     private texture;
-    constructor(gl: WebGL2RenderingContext, itemInfo: ItemInfo, move?: boolean);
+    constructor(gl: WebGL2RenderingContext, itemInfo: ItemInfo, light: boolean, move?: boolean);
     draw(defaultUniforms: Array<UniformLocationObj>): void;
 }
 export { Item2D };

@@ -210,7 +210,7 @@ progress::-webkit-progress-bar {
     align-items: center;
     justify-content: center;
     opacity: 0;
-    transition: opacity 3s linear;
+    transition: opacity 1s linear;
     background-color: white;
 }
 
@@ -218,10 +218,16 @@ progress::-webkit-progress-bar {
     opacity: 1;
 }
 
-.last-word-box p {
+.last-word {
     font-size: xxx-large;
     font-family: cursive;
     color: black;
+    transition: opacity 1s linear;
+    opacity: 1;
+}
+
+.last-word-dis {
+    opacity: 0;
 }
 
 .load-word {
@@ -229,7 +235,7 @@ progress::-webkit-progress-bar {
     font-family: cursive;
     color: white;
     opacity: 0;
-    transition: opacity 1.5s linear;
+    transition: opacity 1s linear;
     position: absolute;
 }
 

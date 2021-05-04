@@ -67,6 +67,7 @@ interface GLState {
   success: boolean;
   showLastImg: boolean;
   showLastWord: boolean;
+  showLashWordBox: boolean;
   loadStart: boolean;
 }
 
@@ -90,6 +91,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       showLastImg: false,
       showLastWord: false,
       loadStart: false,
+      showLashWordBox: false,
     };
   }
 
@@ -169,18 +171,21 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     word1.style.opacity = "1";
     const word1Timer = setTimeout(() => {
       word1.style.opacity = "0";
-      word2.style.opacity = "1";
       clearTimeout(word1Timer);
       const word2Timer = setTimeout(() => {
-        word2.style.opacity = "0";
-        const loadTimer = setTimeout(() => {
-          this.setState({ loadStart: true });
-          this.initWithWs(gl);
-          clearTimeout(loadTimer);
-        }, 1500);
+        word2.style.opacity = "1";
+        const word2ClearTimer = setTimeout(() => {
+          word2.style.opacity = "0";
+          const loadTimer = setTimeout(() => {
+            this.setState({ loadStart: true });
+            this.initWithWs(gl);
+            clearTimeout(loadTimer);
+          }, 1500);
+          clearTimeout(word2ClearTimer);
+        }, 2000);
         clearTimeout(word2Timer);
-      }, 2000);
-    }, 3000);
+      }, 1000);
+    }, 2000);
   };
 
   private initWithWs = (gl: WebGL2RenderingContext) => {
@@ -275,15 +280,16 @@ class GameCanvas extends React.Component<GLProps, GLState> {
 
   private end = () => {
     this.setState({ success: true });
-    const wordTimer = setTimeout(() => {
-      this.setState({ showLastWord: true });
-      clearTimeout(wordTimer);
-      clearInterval(this.timeInterval);
+    this.setState({ showLastWord: true, showLashWordBox: true });
+    clearInterval(this.timeInterval);
+    const wordClear = setTimeout(() => {
+      this.setState({ showLastWord: false });
       const sceneTimer = setTimeout(() => {
         this.setState({ showLastImg: true });
         clearTimeout(sceneTimer);
-      }, 4000);
-    }, 100);
+      }, 1000);
+      clearTimeout(wordClear);
+    }, 2000);
   };
 
   render() {
@@ -299,6 +305,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       showLastImg,
       showLastWord,
       loadStart,
+      showLashWordBox,
     } = this.state;
     const { width, height } = this.props;
     return (
@@ -341,10 +348,12 @@ class GameCanvas extends React.Component<GLProps, GLState> {
         {success && (
           <div
             className={`last-word-box ${
-              showLastWord ? "last-word-box-show" : ""
+              showLashWordBox ? "last-word-box-show" : ""
             }`}
           >
-            <p>{`从世界诞生到现在经过${this.time}秒，我终于找到你了。`}</p>
+            <p
+              className={`last-word ${showLastWord ? "" : "last-word-dis"}`}
+            >{`从世界诞生到现在经过${this.time}秒，我终于找到你了。`}</p>
           </div>
         )}
         {success && (

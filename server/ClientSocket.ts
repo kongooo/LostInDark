@@ -60,7 +60,7 @@ class ClientSocket {
 
     private init = () => {
         const pos1 = { x: GetRandomNum(1000, 1100), y: GetRandomNum(1000, 1100) };
-        const pos2 = { x: GetRandomNum(1300, 1400), y: GetRandomNum(1300, 1400) };
+        const pos2 = pos1;//{ x: GetRandomNum(1300, 1400), y: GetRandomNum(1300, 1400) };
         const mikasa = Math.random() > 0.5;
         this.player1.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos1, mapCount: MAP_COUNT, mikasa }));
         this.player2.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos2, mapCount: MAP_COUNT, mikasa: !mikasa }));

@@ -231,7 +231,7 @@ class ItemManager {
                     pos,
                     type,
                     img: [this.imgs.get(ImgType.powder)]
-                }, false)
+                }, false, false)
                 break;
             case ItemType.firePile:
                 item = new FirePile(this.gl, {
@@ -251,8 +251,8 @@ class ItemManager {
                 item = new Item2D(this.gl, {
                     pos,
                     type,
-                    img: [this.imgs.get(ImgType.wire)]
-                })
+                    img: [this.imgs.get(ImgType.wire)],
+                }, true)
                 break;
             case ItemType.circuitBoard:
                 item = new SimpleItem(this.gl, {
