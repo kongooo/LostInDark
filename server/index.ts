@@ -1,9 +1,10 @@
 import { Client, ClientSocket } from './ClientSocket';
 import { GetRandomCode, GetRandomNum } from './RandomCode';
 
+import Koa from "koa";
+
 const path = require('path');
 const Server = require('koa-static');
-const Koa = require('koa');
 const Router = require('koa-router');
 const webSocket = require('koa-easy-ws');
 
@@ -80,4 +81,4 @@ app.use(main)
     .use(mainRoute.routes())
     .use(mainRoute.allowedMethods());
 
-app.listen('0.0.0.0:3000');
+app.listen(3000, "0.0.0.0");
