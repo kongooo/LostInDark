@@ -8,6 +8,8 @@ import receiveEquip from '../../../../image/receiveEquip.png';
 import battery from '../../../../image/battery/battery.png';
 import wire from '../../../../image/wire.png';
 import circuit from '../../../../image/circuitBoard.png';
+import toast from '../../../../image/toast/toast.png';
+import sandwich from '../../../../image/sandwich/sandwich.png';
 
 
 import { BagItem, ItemType } from "../../Tools/interface";
@@ -75,6 +77,18 @@ class ItemData {
         imgSrc: circuit,
         type: ItemType.circuitBoard,
         name: '电路板'
+    })
+
+    static toastData = (): BagItem => ({
+        imgSrc: toast,
+        type: ItemType.toast,
+        name: '鸡蛋吐司'
+    })
+
+    static sandwichData = (): BagItem => ({
+        imgSrc: sandwich,
+        type: ItemType.sandwich,
+        name: '鸡肉三明治'
     })
 }
 

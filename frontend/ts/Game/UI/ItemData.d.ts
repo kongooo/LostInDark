@@ -10,5 +10,7 @@ declare class ItemData {
     static batteryData: () => BagItem;
     static wireData: () => BagItem;
     static circuitData: () => BagItem;
+    static toastData: () => BagItem;
+    static sandwichData: () => BagItem;
 }
 export default ItemData;

@@ -39,6 +39,12 @@ import circuitImg from "../../image/circuitBoard.png";
 
 import arrowImg from "../../image/arrow.png";
 
+import toastFront from "../../image/toast/front.png";
+import toastUp from "../../image/toast/side.png";
+
+import sandwichFront from "../../image/sandwich/front.png";
+import sandwichUp from "../../image/sandwich/side.png";
+
 import { ImgType, ItemType } from "./Tools/interface";
 import EventBus from "./Tools/Event/EventBus";
 
@@ -57,12 +63,18 @@ interface GLState {
   hintShow: boolean;
   hintWord: string;
   overlay: boolean;
+  death: boolean;
+  success: boolean;
+  showLastImg: boolean;
+  showLastWord: boolean;
 }
 
 class GameCanvas extends React.Component<GLProps, GLState> {
   private canvasRef = React.createRef<HTMLCanvasElement>();
   private id: string;
   private game: Game;
+  private time: number = 0;
+  private timeInterval: any;
   constructor(props: GLProps) {
     super(props);
     this.state = {
@@ -72,6 +84,10 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       hintShow: false,
       hintWord: "",
       overlay: false,
+      death: false,
+      success: false,
+      showLastImg: false,
+      showLastWord: false,
     };
   }
 
@@ -89,12 +105,16 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     EventBus.addEventListener("showHint", this.showHint);
     EventBus.addEventListener("BagControl", this.bagControl);
     EventBus.addEventListener("mask", this.controlOverlay);
+    EventBus.addEventListener("death", this.showDeathBox);
+    EventBus.addEventListener("end", this.end);
   }
 
   componentWillUnmount() {
     EventBus.removeEventListener("showHint");
     EventBus.removeEventListener("BagControl");
     EventBus.removeEventListener("mask");
+    EventBus.removeEventListener("death");
+    EventBus.removeEventListener("end");
   }
 
   private loadImages = async () => {
@@ -130,6 +150,12 @@ class GameCanvas extends React.Component<GLProps, GLState> {
 
     images.set(ImgType.arrow, arrowImg);
 
+    images.set(ImgType.toastFront, toastFront);
+    images.set(ImgType.toastUp, toastUp);
+
+    images.set(ImgType.sandwichFront, sandwichFront);
+    images.set(ImgType.sandwichUp, sandwichUp);
+
     await LoadImage(images, imgMap);
     return imgMap;
   };
@@ -149,6 +175,9 @@ class GameCanvas extends React.Component<GLProps, GLState> {
         const game = new Game(gl, data.seed, data.pos, imgs, data.mapCount, ws);
         game.start();
         this.game = game;
+        this.timeInterval = setInterval(() => {
+          if (!this.state.death && !this.state.success) this.time += 1;
+        }, 1000);
         this.setState({ loading: false });
         const timer = setTimeout(() => {
           this.setState({ animaDisplay: "none" });
@@ -216,11 +245,28 @@ class GameCanvas extends React.Component<GLProps, GLState> {
         // hintWord: "",
       });
       clearTimeout(timer);
-    }, 2000);
+    }, 1500);
   };
 
   private controlOverlay = (show: boolean) => {
     this.setState({ overlay: show });
+  };
+
+  private showDeathBox = () => {
+    this.setState({ death: true });
+  };
+
+  private end = () => {
+    this.setState({ success: true });
+    const wordTimer = setTimeout(() => {
+      this.setState({ showLastWord: true });
+      clearTimeout(wordTimer);
+      clearInterval(this.timeInterval);
+      const sceneTimer = setTimeout(() => {
+        this.setState({ showLastImg: true });
+        clearTimeout(sceneTimer);
+      }, 4000);
+    }, 100);
   };
 
   render() {
@@ -231,6 +277,10 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       hintShow,
       hintWord,
       overlay,
+      death,
+      success,
+      showLastImg,
+      showLastWord,
     } = this.state;
     const { width, height } = this.props;
     return (
@@ -258,6 +308,26 @@ class GameCanvas extends React.Component<GLProps, GLState> {
         >
           <p>{hintWord}</p>
         </div>
+        <progress id="blood" max="100" value={100} color="red"></progress>
+        {death && (
+          <div id="death-box">
+            <p>{`很遗憾，经过${this.time}秒，你被饿死了`}</p>
+          </div>
+        )}
+        {success && (
+          <div
+            className={`last-word-box ${
+              showLastWord ? "last-word-box-show" : ""
+            }`}
+          >
+            <p>{`从世界诞生到现在经过${this.time}秒，我终于找到你了。`}</p>
+          </div>
+        )}
+        {success && (
+          <div
+            className={`last-scene ${showLastImg ? "last-scene-show" : ""}`}
+          ></div>
+        )}
       </React.Fragment>
     );
   }

@@ -16,6 +16,7 @@ import Hint from './UI/Hint';
 import EventBus from '../Tools/Event/EventBus';
 import PlaceHintRect from './Item/PlaceItem';
 import { Arrow } from './Item/Arrow';
+import NativePlayer from './Player/NativePlayer';
 
 const PLAYER_SPEED = 3;
 const DEFAULT_LIGHT_RADIUS = 10;
@@ -34,7 +35,7 @@ const RECEIVE_TIME = 300000;
 
 class Game {
     private gl: WebGL2RenderingContext;
-    private player: Player;
+    private player: NativePlayer;
     private player2: Player;
     private map: PerlinMap;
     private playerLight: Light;
@@ -56,7 +57,7 @@ class Game {
     constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, mapCount: Coord, ws?: any) {
         this.gl = gl;
         this.map = new PerlinMap(gl, seed, imgs.get(ImgType.obstable), mapCount);
-        this.player = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player1));
+        this.player = new NativePlayer(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player1));
         this.player2 = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
         // this.cameraWorldPos = center;
         this.playerLight = new Light(gl, DEFAULT_LIGHT_RADIUS, LIGHT_COLOR);
@@ -102,6 +103,8 @@ class Game {
     private itemsQueue: Array<ItemActionInfo> = [];
     private transmitsPos: Array<Coord> = [];
     private receive: boolean = false;
+    private death = false;
+    private success = false;
 
     start = () => {
         this.update(0);
@@ -333,30 +336,42 @@ class Game {
 
     private playerController = () => {
         const distance = PLAYER_SPEED * this.deltaTime;
-
-        if (KeyPress.get('S')) {
-            this.playerWorldPos.y += distance;
-            this.playerDirLevel = 3;
+        if (!this.player.death && !this.success) {
+            if (KeyPress.get('S')) {
+                this.playerWorldPos.y += distance;
+                this.playerDirLevel = 3;
+            }
+            if (KeyPress.get('A')) {
+                this.playerWorldPos.x -= distance;
+                this.playerDirLevel = 0;
+            }
+            if (KeyPress.get('D')) {
+                this.playerWorldPos.x += distance;
+                this.playerDirLevel = 2;
+            }
+            if (KeyPress.get('W')) {
+                this.playerWorldPos.y -= distance;
+                this.playerDirLevel = 1;
+            }
+        } else if (!this.death && !this.success) {
+            this.send({ type: 'death' })
         }
-        if (KeyPress.get('A')) {
-            this.playerWorldPos.x -= distance;
-            this.playerDirLevel = 0;
-        }
-        if (KeyPress.get('D')) {
-            this.playerWorldPos.x += distance;
-            this.playerDirLevel = 2;
-        }
-        if (KeyPress.get('W')) {
-            this.playerWorldPos.y -= distance;
-            this.playerDirLevel = 1;
+        if (this.player2WorldPos) {
+            const dis = CoordUtils.calDistance(this.playerWorldPos, this.player2WorldPos);
+            if (dis < 2) {
+                this.success = true;
+                EventBus.dispatch('end');
+            }
         }
     }
 
     private animaController = () => {
         this.count += ANIMA_SPEED * this.deltaTime;
-        this.playerAnimaFrame = Math.floor(this.count % 4);
-        if (!KeyPress.get('S') && !KeyPress.get('A') && !KeyPress.get('D') && !KeyPress.get('W')) {
-            this.playerAnimaFrame = 0;
+        if (!this.player.death && !this.success) {
+            this.playerAnimaFrame = Math.floor(this.count % 4);
+            if (!KeyPress.get('S') && !KeyPress.get('A') && !KeyPress.get('D') && !KeyPress.get('W')) {
+                this.playerAnimaFrame = 0;
+            }
         }
         this.fireFrame = Math.floor(this.count % 4);
     }
@@ -399,6 +414,12 @@ class Game {
                     EventBus.dispatch('showHint', '无线电接收器的电池没电了');
                     clearTimeout(timer);
                 }, RECEIVE_TIME);
+            }
+            if (this.placeItem === ItemType.sandwich || this.placeItem === ItemType.toast) {
+                console.log(this.placeItem);
+                this.player.eat(this.placeItem);
+                this.disablePlaceState();
+                EventBus.dispatch('deleteItemFromBag');
             }
             if (KeyPress.get('E')) {
                 if (this.getPlaceColor() === canPlace) {
@@ -603,10 +624,21 @@ class Game {
                     }
                     break;
                 case 'close':
-                    EventBus.dispatch('showHint', '另一位玩家掉线了＞﹏＜');
+                    if (!this.death && !this.success) {
+                        EventBus.dispatch('showHint', '另一位玩家掉线了＞﹏＜');
+                    }
                     break;
                 case 'ack':
                     this.itemsQueue.shift();
+                    break;
+                case 'death':
+                    if (!this.death && !this.success) {
+                        EventBus.dispatch('showHint', '另一位玩家被饿死了(。﹏。*)');
+                    }
+                    this.send({ type: 'deathAck' });
+                    break;
+                case 'deathAck':
+                    this.death = true;
                     break;
             }
         }

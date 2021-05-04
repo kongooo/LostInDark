@@ -3,9 +3,8 @@ import playerFsSource from '../../../shaders/PlayerShader/fsSource.glsl';
 
 import VaryMesh from '../../Tools/Mesh/VaryMesh';
 import { Coord } from '../../Tools/Tool';
-import { UniformLocationObj } from '../../Tools/interface';
+import { ItemType, UniformLocationObj } from '../../Tools/interface';
 import { WebGL } from '../../Tools/WebGLUtils';
-
 
 class Player {
     private playerMesh: VaryMesh;
@@ -48,6 +47,7 @@ class Player {
             0, 1, 2, 0, 2, 3
         ]);
     }
+
 }
 
 export default Player;

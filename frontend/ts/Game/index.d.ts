@@ -45,6 +45,8 @@ declare class Game {
     private itemsQueue;
     private transmitsPos;
     private receive;
+    private death;
+    private success;
     start: () => void;
     setWs: (ws: any) => void;
     private update;

@@ -60,7 +60,9 @@ declare enum ItemType {
     battery = 9,
     wire = 10,
     circuitBoard = 11,
-    placeHolder = 12
+    placeHolder = 12,
+    toast = 13,
+    sandwich = 14
 }
 declare enum ImgType {
     player = 0,
@@ -84,5 +86,9 @@ declare enum ImgType {
     batteryFront = 18,
     wire = 19,
     circuitBoard = 20,
-    arrow = 21
+    arrow = 21,
+    sandwichFront = 22,
+    sandwichUp = 23,
+    toastFront = 24,
+    toastUp = 25
 }

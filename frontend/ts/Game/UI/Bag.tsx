@@ -45,6 +45,8 @@ class Bag extends React.Component<BagProps, BagState> {
     this.addItem(ItemType.match);
     this.addItem(ItemType.transmit);
     this.addItem(ItemType.receive);
+    this.addItem(ItemType.toast);
+    this.addItem(ItemType.sandwich);
   }
 
   componentDidMount() {
@@ -97,6 +99,12 @@ class Bag extends React.Component<BagProps, BagState> {
         break;
       case ItemType.transmit:
         item = ItemData.transmitData();
+        break;
+      case ItemType.sandwich:
+        item = ItemData.sandwichData();
+        break;
+      case ItemType.toast:
+        item = ItemData.toastData();
         break;
     }
 
@@ -178,6 +186,12 @@ class Bag extends React.Component<BagProps, BagState> {
           break;
         case ItemType.receive:
           hintWord = "装备了无线电接收设备，可以接收到对方发射设备的电波啦~";
+          break;
+        case ItemType.sandwich:
+          hintWord = "吃掉了鸡肉三明治，恢复了50生命值o(*°▽°*)o";
+          break;
+        case ItemType.toast:
+          hintWord = "吃掉了鸡蛋吐司，恢复了30生命值( •̀ ω •́ )✧";
           break;
         default:
           hintWord = "按E放置当前选中物体, Esc放弃本次放置。";

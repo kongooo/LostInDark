@@ -71,7 +71,9 @@ enum ItemType {
     battery,
     wire,
     circuitBoard,
-    placeHolder
+    placeHolder,
+    toast,
+    sandwich
 }
 
 enum ImgType {
@@ -104,6 +106,12 @@ enum ImgType {
     wire,
     circuitBoard,
 
-    arrow
+    arrow,
+
+    sandwichFront,
+    sandwichUp,
+
+    toastFront,
+    toastUp
 }
 

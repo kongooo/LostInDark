@@ -1,6 +1,7 @@
 import { Coord } from "../../Tools/Tool";
 declare class ItemVertex {
     static getCubeVertices: (xLength: number, yLength: number, zLength: number, startPos?: Coord, height?: number) => number[];
+    static getFoodVertices: (xLength: number, yLength: number, zLength: number, startPos?: Coord, height?: number) => number[];
     static cubeIndices: number[];
     static getCubeIndices: (index: number) => number[];
     static getCubeIndicesByCount: (count: number) => number[];

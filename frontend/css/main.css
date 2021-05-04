@@ -152,3 +152,74 @@ body {
     background-color: transparent;
     z-index: 1;
 }
+
+progress {
+    position: fixed;
+    left: 40px;
+    top: 40px;
+    background: transparent;
+}
+
+progress::-webkit-progress-value {
+    background: rgb(133, 1, 1);
+    border-radius: 3px;
+}
+
+progress::-webkit-progress-bar {
+    background: rgba(255, 255, 255, 0.603);
+    border-radius: 3px;
+    height: 10px;
+}
+
+#death-box {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #d4d4d45c;
+}
+
+#death-box p {
+    font-size: xxx-large;
+    color: red;
+    font-family: cursive;
+}
+
+.last-scene {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    background-image: url(../../image/lastScene.png);
+    background-repeat: no-repeat;
+    background-size: cover;
+    opacity: 0;
+    transition: opacity 5s linear;
+}
+
+.last-scene-show {
+    opacity: 1;
+}
+
+.last-word-box {
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    transition: opacity 3s linear;
+    background-color: white;
+}
+
+.last-word-box-show {
+    opacity: 1;
+}
+
+.last-word-box p {
+    font-size: xxx-large;
+    font-family: cursive;
+    color: black;
+}

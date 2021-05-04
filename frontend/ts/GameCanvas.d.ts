@@ -12,11 +12,17 @@ interface GLState {
     hintShow: boolean;
     hintWord: string;
     overlay: boolean;
+    death: boolean;
+    success: boolean;
+    showLastImg: boolean;
+    showLastWord: boolean;
 }
 declare class GameCanvas extends React.Component<GLProps, GLState> {
     private canvasRef;
     private id;
     private game;
+    private time;
+    private timeInterval;
     constructor(props: GLProps);
     componentDidMount(): void;
     componentWillUnmount(): void;
@@ -27,5 +33,7 @@ declare class GameCanvas extends React.Component<GLProps, GLState> {
     private bagControl;
     private showHint;
     private controlOverlay;
+    private showDeathBox;
+    private end;
     render(): JSX.Element;
 }

@@ -27,6 +27,12 @@ const BATTERY_MAX_COUNT = 5;
 const CIRCUIT_MIN_COUNT = 2;
 const CIRCUIT_MAX_COUNT = 5;
 
+const SANDWICH_MIN_COUNT = 2;
+const sANDWICH_MAX_COUNT = 5;
+
+const TOAST_MIN_COUNT = 2;
+const TOAST_MAX_COUNT = 5;
+
 const ZOOM = 5;
 const THRESHOLD = 0.6;
 
@@ -186,6 +192,8 @@ class ClientSocket {
         let wireCount = GetRandomNum(WIRE_MIN_COUNT, WIRE_MAX_COUNT);
         let batteryCount = GetRandomNum(BATTERY_MIN_COUNT, BATTERY_MAX_COUNT);
         let circuitCount = GetRandomNum(CIRCUIT_MIN_COUNT, CIRCUIT_MAX_COUNT);
+        let sandwichCount = GetRandomNum(SANDWICH_MIN_COUNT, sANDWICH_MAX_COUNT);
+        let toastCount = GetRandomNum(TOAST_MIN_COUNT, TOAST_MAX_COUNT);
 
         this.randomItem(matchCount, items, leftDownPos, rightUpPos, ItemType.match);
 
@@ -198,6 +206,10 @@ class ClientSocket {
         this.randomItem(batteryCount, items, leftDownPos, rightUpPos, ItemType.battery);
 
         this.randomItem(circuitCount, items, leftDownPos, rightUpPos, ItemType.circuitBoard);
+
+        this.randomItem(sandwichCount, items, leftDownPos, rightUpPos, ItemType.sandwich);
+
+        this.randomItem(toastCount, items, leftDownPos, rightUpPos, ItemType.toast);
 
         this.itemChuncks.set(chunckIndex, items);
         return items;

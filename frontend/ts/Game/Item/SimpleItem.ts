@@ -25,6 +25,10 @@ const CUIRCUIT_BOX_X = 0.8;
 const CUIRCUIT_BOX_Y = 0.1;
 const CUIRCUIT_BOX_Z = 0.8;
 
+const FOOD_WIDTH = 0.5;
+const SANDWICH_HEIGHT = 0.2;
+const TOAST_HEIGHT = 0.1;
+
 class SimpleItem implements ItemInfo {
     pos: Coord;
     type: ItemType;
@@ -69,6 +73,16 @@ class SimpleItem implements ItemInfo {
             case ItemType.circuitBoard:
                 this.move = true;
                 vertices = ItemVertex.getCubeVertices(CUIRCUIT_BOX_X, CUIRCUIT_BOX_Y, CUIRCUIT_BOX_Z);
+                indices = ItemVertex.cubeIndices;
+                break;
+            case ItemType.sandwich:
+                this.move = true;
+                vertices = ItemVertex.getFoodVertices(FOOD_WIDTH, SANDWICH_HEIGHT, FOOD_WIDTH);
+                indices = ItemVertex.cubeIndices;
+                break;
+            case ItemType.toast:
+                this.move = true;
+                vertices = ItemVertex.getFoodVertices(FOOD_WIDTH, TOAST_HEIGHT, FOOD_WIDTH);
                 indices = ItemVertex.cubeIndices;
                 break;
         }

@@ -71,6 +71,8 @@ class ItemManager {
     private getPowderBoxImgs = () => [this.imgs.get(ImgType.powderUp), this.imgs.get(ImgType.powderFront), this.imgs.get(ImgType.powderSide)];
     private getBatteryImgs = () => [this.imgs.get(ImgType.batteryUp), this.imgs.get(ImgType.batteryFront), this.imgs.get(ImgType.batteryFront)];
     private getCircuitImgs = () => [this.imgs.get(ImgType.powderUp), this.imgs.get(ImgType.circuitBoard), this.imgs.get(ImgType.powderUp)];
+    private getToastImgs = () => [this.imgs.get(ImgType.toastUp), this.imgs.get(ImgType.toastFront), this.imgs.get(ImgType.toastUp)];
+    private getSandwichImgs = () => [this.imgs.get(ImgType.sandwichUp), this.imgs.get(ImgType.sandwichFront), this.imgs.get(ImgType.sandwichUp)];
 
     // private randomItem = (count: number, map: Map<string, ItemInfo>, leftDownPos: Coord, rightUpPos: Coord, type: ItemType, imgs: Array<HTMLImageElement>) => {
     //     while (count--) {
@@ -208,6 +210,20 @@ class ItemManager {
                     pos,
                     type,
                     img: this.getPowderBoxImgs()
+                });
+                break;
+            case ItemType.sandwich:
+                item = new SimpleItem(this.gl, {
+                    pos,
+                    type,
+                    img: this.getSandwichImgs()
+                });
+                break;
+            case ItemType.toast:
+                item = new SimpleItem(this.gl, {
+                    pos,
+                    type,
+                    img: this.getToastImgs()
                 });
                 break;
             case ItemType.powder:

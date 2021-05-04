@@ -35,6 +35,38 @@ class ItemVertex {
         startPos.x + xLength, height + yLength, startPos.y, 1, 1, 0, 1, 0
     ]
 
+    static getFoodVertices = (xLength: number, yLength: number, zLength: number, startPos: Coord = { x: 0, y: 0 }, height: number = 0) => [
+        //back
+        startPos.x, height, startPos.y, 0, 0, 0, 0, -1,
+        startPos.x, height + yLength, startPos.y, 0, 1, 0, 0, -1,
+        startPos.x + xLength, height + yLength, startPos.y, 1, 1, 0, 0, -1,
+        startPos.x + xLength, height, startPos.y, 1, 0, 0, 0, -1,
+
+        //right
+        startPos.x + xLength, height, startPos.y, 1, 0, 1, 0, 0,
+        startPos.x + xLength, height + yLength, startPos.y, 1, 1, 1, 0, 0,
+        startPos.x + xLength, height + yLength, startPos.y + zLength, 0, 1, 1, 0, 0,
+        startPos.x + xLength, height, startPos.y + zLength, 0, 0, 1, 0, 0,
+
+        //front
+        startPos.x, height, startPos.y + zLength, 0, 0, 0, 0, 1,
+        startPos.x + xLength, height, startPos.y + zLength, 1, 0, 0, 0, 1,
+        startPos.x + xLength, height + yLength, startPos.y + zLength, 1, 1, 0, 0, 1,
+        startPos.x, height + yLength, startPos.y + zLength, 0, 1, 0, 0, 1,
+
+        //left
+        startPos.x, height, startPos.y, 0, 0, -1, 0, 0,
+        startPos.x, height, startPos.y + zLength, 1, 0, -1, 0, 0,
+        startPos.x, height + yLength, startPos.y + zLength, 1, 1, -1, 0, 0,
+        startPos.x, height + yLength, startPos.y, 0, 1, -1, 0, 0,
+
+        //up
+        startPos.x, height + yLength, startPos.y, 0, 1, 0, 1, 0,
+        startPos.x, height + yLength, startPos.y + zLength, 0, 0, 0, 1, 0,
+        startPos.x + xLength, height + yLength, startPos.y + zLength, 1, 0, 0, 1, 0,
+        startPos.x + xLength, height + yLength, startPos.y, 1, 1, 0, 1, 0
+    ]
+
     static cubeIndices = [
         0, 1, 2, 0, 2, 3,
         4, 5, 6, 4, 6, 7,

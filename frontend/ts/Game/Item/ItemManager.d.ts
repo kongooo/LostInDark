@@ -22,6 +22,8 @@ declare class ItemManager {
     private getPowderBoxImgs;
     private getBatteryImgs;
     private getCircuitImgs;
+    private getToastImgs;
+    private getSandwichImgs;
     addChunck: (chuncksIdnex: Array<string>, chuncks: Array<Array<Item>>) => void;
     drawItems: (chuncksIndex: Array<string>, defaultUniform: Array<UniformLocationObj>, lights: Array<LightInfo>, fireFrame: number, fireShadowsTexture: Array<WebGLTexture>, fireLights: Array<Light>) => void;
     /**
