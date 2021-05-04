@@ -14,10 +14,12 @@ class EventBus {
     }
 
     static dispatch = (eventName: string, ...args: any[]) => {
+        let res;
         if (EventBus.events.has(eventName)) {
             const callback = EventBus.events.get(eventName);
-            callback(...args);
+            res = callback(...args);
         }
+        return res;
     }
 }
 

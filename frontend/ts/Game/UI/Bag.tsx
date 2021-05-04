@@ -38,7 +38,6 @@ class Bag extends React.Component<BagProps, BagState> {
     // this.addItem(ItemType.wood);
     // this.addItem(ItemType.powderBox);
     // this.addItem(ItemType.fireWoods);
-    this.addItem(ItemType.wire);
     // this.addItem(ItemType.wire);
     // this.addItem(ItemType.wire);
     // this.addItem(ItemType.wire);
@@ -114,16 +113,23 @@ class Bag extends React.Component<BagProps, BagState> {
         break;
     }
 
-    if (index !== GRID_COUNT - 1) {
+    if (index !== GRID_COUNT) {
       if (item) {
         items[index] = item;
         this.setState({ items });
-        if (item.type !== ItemType.firePile && item.type !== ItemType.fireWoods)
+        if (
+          item.type !== ItemType.firePile &&
+          item.type !== ItemType.fireWoods
+        ) {
           EventBus.dispatch("showHint", getSuccessWord(item.name));
-        return;
+        }
+        return true;
       }
     }
-    if (item) EventBus.dispatch("showHint", getFailedWord(item.name));
+    if (item) {
+      EventBus.dispatch("showHint", getFailedWord(item.name));
+      return false;
+    }
   };
 
   deleteItem = () => {
@@ -191,13 +197,18 @@ class Bag extends React.Component<BagProps, BagState> {
           hintWord = "装备了火把，视野更大了~";
           break;
         case ItemType.receive:
-          hintWord = "装备了无线电接收设备，可以接收到对方发射设备的电波啦~";
+          hintWord =
+            "装备了无线电接收设备，从现在开始5分钟内可以接收到对方发射设备的电波啦~";
           break;
         case ItemType.sandwich:
           hintWord = "吃掉了鸡肉三明治，恢复了50生命值o(*°▽°*)o";
           break;
         case ItemType.toast:
           hintWord = "吃掉了鸡蛋吐司，恢复了30生命值( •̀ ω •́ )✧";
+          break;
+        case ItemType.transmit:
+          hintWord =
+            "按E放置无线电发射设备, Esc放弃本次放置，特别注意：设备放置后不可移动哦~";
           break;
         default:
           hintWord = "按E放置当前选中物体, Esc放弃本次放置。";

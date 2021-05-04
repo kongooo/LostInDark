@@ -385,12 +385,14 @@ class Game {
         //pick up
         if (!this.placeItem && this.hintPos && KeyPress.get('X')) {
             const itemType = this.itemManager.getItemType(this.hintPos);
-            this.itemManager.deleteItem(this.hintPos);
-            this.itemsQueue.push({
-                type: 'delete',
-                pos: this.hintPos
-            })
-            EventBus.dispatch('addItemToBag', itemType);
+            const success = EventBus.dispatch('addItemToBag', itemType);
+            if (success) {
+                this.itemManager.deleteItem(this.hintPos);
+                this.itemsQueue.push({
+                    type: 'delete',
+                    pos: this.hintPos
+                })
+            }
         }
         //place
         else if (this.placeItem !== undefined) {

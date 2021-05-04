@@ -13,7 +13,7 @@ declare class Bag extends React.Component<BagProps, BagState> {
     constructor(props: BagProps);
     componentDidMount(): void;
     componentWillUnmount(): void;
-    addItem: (type: ItemType) => void;
+    addItem: (type: ItemType) => boolean;
     deleteItem: () => void;
     onMouseOver: (e: any) => void;
     onConbinaMouseOver: (e: any) => void;

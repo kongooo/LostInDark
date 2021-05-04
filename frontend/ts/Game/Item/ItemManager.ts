@@ -175,7 +175,9 @@ class ItemManager {
      */
     deleteItem = (pos: Coord) => {
         const chunckIndex = this.getChunckIndexByPos(pos);
-        this.itemChuncks.get(chunckIndex).delete(`${pos.x},${pos.y}`);
+        if (this.itemChuncks.has(chunckIndex)) {
+            this.itemChuncks.get(chunckIndex).delete(`${pos.x},${pos.y}`);
+        }
     }
 
     /**
