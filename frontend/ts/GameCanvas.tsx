@@ -189,7 +189,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
   };
 
   private initWithWs = (gl: WebGL2RenderingContext) => {
-    const path = "wss://" + window.location.host + "/transfer";
+    const path = "ws://" + window.location.host + "/transfer";
     const ws = new WebSocket(path);
     const mes = JSON.stringify({ type: "connect" });
     ws.onopen = (e) => {

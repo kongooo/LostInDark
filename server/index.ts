@@ -80,4 +80,4 @@ app.use(main)
     .use(mainRoute.routes())
     .use(mainRoute.allowedMethods());
 
-app.listen(3000);
+app.listen('0.0.0.0:3000');
