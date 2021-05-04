@@ -54,11 +54,11 @@ class Game {
     private placeHintRect: PlaceHintRect;
     private arrow: Arrow;
 
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, mapCount: Coord, ws?: any) {
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, mapCount: Coord, mikasa: boolean, ws?: any) {
         this.gl = gl;
         this.map = new PerlinMap(gl, seed, imgs.get(ImgType.obstable), mapCount);
-        this.player = new NativePlayer(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player1));
-        this.player2 = new Player(gl, PLAYER_DRAW_SIZE, imgs.get(ImgType.player));
+        this.player = new NativePlayer(gl, PLAYER_DRAW_SIZE, mikasa ? imgs.get(ImgType.mikasa) : imgs.get(ImgType.alen));
+        this.player2 = new Player(gl, PLAYER_DRAW_SIZE, mikasa ? imgs.get(ImgType.alen) : imgs.get(ImgType.mikasa));
         // this.cameraWorldPos = center;
         this.playerLight = new Light(gl, DEFAULT_LIGHT_RADIUS, LIGHT_COLOR);
         this.playerLight2 = new Light(gl, DEFAULT_LIGHT_RADIUS, LIGHT_COLOR);
@@ -620,6 +620,7 @@ class Game {
                     this.addItemToScene(data.pos, data.itemType);
                     this.send({ type: 'ack' });
                     if (data.itemType === ItemType.transmit) {
+                        console.log('add');
                         this.transmitsPos.push(data.pos);
                     }
                     break;

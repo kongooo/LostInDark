@@ -77,8 +77,8 @@ enum ItemType {
 }
 
 enum ImgType {
-    player,
-    player1,
+    mikasa,
+    alen,
     ground,
     obstable,
 

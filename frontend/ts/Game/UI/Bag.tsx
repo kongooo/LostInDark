@@ -34,19 +34,25 @@ class Bag extends React.Component<BagProps, BagState> {
         ItemData.receiveData(),
       ],
     };
-    this.addItem(ItemType.firePile);
-    this.addItem(ItemType.wood);
-    this.addItem(ItemType.powderBox);
-    this.addItem(ItemType.fireWoods);
-    this.addItem(ItemType.wire);
-    this.addItem(ItemType.battery);
-    this.addItem(ItemType.battery);
-    this.addItem(ItemType.circuitBoard);
-    this.addItem(ItemType.match);
-    this.addItem(ItemType.transmit);
-    this.addItem(ItemType.receive);
-    this.addItem(ItemType.toast);
-    this.addItem(ItemType.sandwich);
+    // this.addItem(ItemType.firePile);
+    // this.addItem(ItemType.wood);
+    // this.addItem(ItemType.powderBox);
+    // this.addItem(ItemType.fireWoods);
+    // this.addItem(ItemType.wire);
+    // this.addItem(ItemType.wire);
+    // this.addItem(ItemType.wire);
+    // this.addItem(ItemType.wire);
+    // this.addItem(ItemType.battery);
+    // this.addItem(ItemType.battery);
+    // this.addItem(ItemType.battery);
+    // this.addItem(ItemType.battery);
+    // this.addItem(ItemType.circuitBoard);
+    // this.addItem(ItemType.circuitBoard);
+    // this.addItem(ItemType.match);
+    // // this.addItem(ItemType.transmit);
+    // // this.addItem(ItemType.receive);
+    // this.addItem(ItemType.toast);
+    // this.addItem(ItemType.sandwich);
   }
 
   componentDidMount() {

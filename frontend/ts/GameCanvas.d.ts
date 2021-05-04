@@ -16,6 +16,7 @@ interface GLState {
     success: boolean;
     showLastImg: boolean;
     showLastWord: boolean;
+    loadStart: boolean;
 }
 declare class GameCanvas extends React.Component<GLProps, GLState> {
     private canvasRef;
@@ -27,9 +28,9 @@ declare class GameCanvas extends React.Component<GLProps, GLState> {
     componentDidMount(): void;
     componentWillUnmount(): void;
     private loadImages;
+    private showStartPanel;
     private initWithWs;
     private reconnect;
-    private init;
     private bagControl;
     private showHint;
     private controlOverlay;

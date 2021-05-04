@@ -20,7 +20,7 @@ declare class Game {
     private hint;
     private placeHintRect;
     private arrow;
-    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, mapCount: Coord, ws?: any);
+    constructor(gl: WebGL2RenderingContext, seed: number, center: Coord, imgs: Map<ImgType, HTMLImageElement>, mapCount: Coord, mikasa: boolean, ws?: any);
     private deltaTime;
     private lastTime;
     private playerWorldPos;

@@ -65,8 +65,8 @@ declare enum ItemType {
     sandwich = 14
 }
 declare enum ImgType {
-    player = 0,
-    player1 = 1,
+    mikasa = 0,
+    alen = 1,
     ground = 2,
     obstable = 3,
     matchFront = 4,

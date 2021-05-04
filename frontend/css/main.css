@@ -195,7 +195,7 @@ progress::-webkit-progress-bar {
     background-repeat: no-repeat;
     background-size: cover;
     opacity: 0;
-    transition: opacity 5s linear;
+    transition: opacity 3s linear;
 }
 
 .last-scene-show {
@@ -222,4 +222,21 @@ progress::-webkit-progress-bar {
     font-size: xxx-large;
     font-family: cursive;
     color: black;
+}
+
+.load-word {
+    font-size: xxx-large;
+    font-family: cursive;
+    color: white;
+    opacity: 0;
+    transition: opacity 1.5s linear;
+    position: absolute;
+}
+
+.load-word-dis {
+    opacity: 0;
+}
+
+.load-word-show {
+    opacity: 1;
 }

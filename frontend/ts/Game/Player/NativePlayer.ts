@@ -3,7 +3,7 @@ import { Coord } from "../../Tools/Tool";
 import Player from ".";
 import EventBus from "../../Tools/Event/EventBus";
 
-const DEATH_SPEED = 0.02;
+const DEATH_SPEED = 0.2;
 const MAX_BLOOD = 100;
 
 class NativePlayer extends Player {

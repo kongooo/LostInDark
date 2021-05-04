@@ -8,8 +8,8 @@ import { randomInt } from "./Tools/Tool";
 import Loading from "./Loading";
 import { LoadImage } from "./Tools/LoadImage";
 
-import playerImg from "../../image/mikasa.png";
-import player2Img from "../../image/alen.png";
+import mikasaImg from "../../image/mikasa.png";
+import alenImg from "../../image/alen.png";
 import obstacleImg from "../../image/grass.png";
 import groundImg from "../../image/ground.png";
 
@@ -67,6 +67,7 @@ interface GLState {
   success: boolean;
   showLastImg: boolean;
   showLastWord: boolean;
+  loadStart: boolean;
 }
 
 class GameCanvas extends React.Component<GLProps, GLState> {
@@ -88,6 +89,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       success: false,
       showLastImg: false,
       showLastWord: false,
+      loadStart: false,
     };
   }
 
@@ -100,8 +102,9 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       console.error("can't init webgl");
       return;
     }
-    this.initWithWs(gl);
+    // this.initWithWs(gl);
     // this.init(gl);
+    this.showStartPanel(gl);
     EventBus.addEventListener("showHint", this.showHint);
     EventBus.addEventListener("BagControl", this.bagControl);
     EventBus.addEventListener("mask", this.controlOverlay);
@@ -120,8 +123,8 @@ class GameCanvas extends React.Component<GLProps, GLState> {
   private loadImages = async () => {
     const images: Map<ImgType, string | HTMLImageElement> = new Map();
     const imgMap: Map<ImgType, HTMLImageElement> = new Map();
-    images.set(ImgType.player, playerImg);
-    images.set(ImgType.player1, player2Img);
+    images.set(ImgType.mikasa, mikasaImg);
+    images.set(ImgType.alen, alenImg);
     images.set(ImgType.ground, groundImg);
     images.set(ImgType.obstable, obstacleImg);
 
@@ -160,6 +163,26 @@ class GameCanvas extends React.Component<GLProps, GLState> {
     return imgMap;
   };
 
+  private showStartPanel = (gl: WebGL2RenderingContext) => {
+    const word1 = document.querySelector("#load-word-1") as HTMLDivElement;
+    const word2 = document.querySelector("#load-word-2") as HTMLDivElement;
+    word1.style.opacity = "1";
+    const word1Timer = setTimeout(() => {
+      word1.style.opacity = "0";
+      word2.style.opacity = "1";
+      clearTimeout(word1Timer);
+      const word2Timer = setTimeout(() => {
+        word2.style.opacity = "0";
+        const loadTimer = setTimeout(() => {
+          this.setState({ loadStart: true });
+          this.initWithWs(gl);
+          clearTimeout(loadTimer);
+        }, 1500);
+        clearTimeout(word2Timer);
+      }, 2000);
+    }, 3000);
+  };
+
   private initWithWs = (gl: WebGL2RenderingContext) => {
     const path = "ws://" + window.location.host + "/transfer";
     const ws = new WebSocket(path);
@@ -172,7 +195,15 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       if (data.type === "success") {
         this.id = data.id;
         const imgs = await this.loadImages();
-        const game = new Game(gl, data.seed, data.pos, imgs, data.mapCount, ws);
+        const game = new Game(
+          gl,
+          data.seed,
+          data.pos,
+          imgs,
+          data.mapCount,
+          data.mikasa,
+          ws
+        );
         game.start();
         this.game = game;
         this.timeInterval = setInterval(() => {
@@ -214,20 +245,6 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       ws.close();
       console.error(e);
     };
-  };
-
-  private init = async (gl: WebGL2RenderingContext) => {
-    const imgs = await this.loadImages();
-    const game = new Game(gl, randomInt(0, 10000), { x: 1000, y: 1000 }, imgs, {
-      x: 70,
-      y: 50,
-    });
-    game.start();
-    this.setState({ loading: false });
-    const timer = setTimeout(() => {
-      this.setState({ animaDisplay: "none" });
-      clearTimeout(timer);
-    }, 500);
   };
 
   private bagControl = () => {
@@ -281,6 +298,7 @@ class GameCanvas extends React.Component<GLProps, GLState> {
       success,
       showLastImg,
       showLastWord,
+      loadStart,
     } = this.state;
     const { width, height } = this.props;
     return (
@@ -289,7 +307,13 @@ class GameCanvas extends React.Component<GLProps, GLState> {
           className={`load-anima ${loading ? "" : "load-anima-disappear"}`}
           style={{ display: animaDisplay }}
         >
-          <Loading></Loading>
+          <p className={`load-word`} id="load-word-1">
+            在这个无边无际的世界中，你唯一需要做的就是
+          </p>
+          <p className={`load-word`} id="load-word-2">
+            找到对方
+          </p>
+          {loadStart && <Loading></Loading>}
         </div>
         {overlay && <div className="overlay"></div>}
         <canvas

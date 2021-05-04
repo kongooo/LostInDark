@@ -15,23 +15,23 @@ class Client {
 
 const MATCH_MIN_COUNT = 5;
 const MATCH_MAX_COUNT = 20;
-const WOOD_MIN_COUNT = 10;
-const WOOD_MAX_COUNT = 25;
+const WOOD_MIN_COUNT = 15;
+const WOOD_MAX_COUNT = 30;
 const POWDERBOX_MIN_COUNT = 3;
 const POWDERBOX_MAX_COUNT = 7;
 
-const WIRE_MIN_COUNT = 2;
-const WIRE_MAX_COUNT = 5;
-const BATTERY_MIN_COUNT = 2;
-const BATTERY_MAX_COUNT = 5;
+const WIRE_MIN_COUNT = 5;
+const WIRE_MAX_COUNT = 7;
+const BATTERY_MIN_COUNT = 5;
+const BATTERY_MAX_COUNT = 10;
 const CIRCUIT_MIN_COUNT = 2;
 const CIRCUIT_MAX_COUNT = 5;
 
-const SANDWICH_MIN_COUNT = 2;
-const sANDWICH_MAX_COUNT = 5;
+const SANDWICH_MIN_COUNT = 1;
+const sANDWICH_MAX_COUNT = 2;
 
 const TOAST_MIN_COUNT = 2;
-const TOAST_MAX_COUNT = 5;
+const TOAST_MAX_COUNT = 3;
 
 const ZOOM = 5;
 const THRESHOLD = 0.6;
@@ -59,11 +59,11 @@ class ClientSocket {
     }
 
     private init = () => {
-
-        const pos1 = { x: GetRandomNum(1000, 1010), y: GetRandomNum(1000, 1010) };
-        const pos2 = { x: pos1.x, y: pos1.y };
-        this.player1.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos1, mapCount: MAP_COUNT }));
-        this.player2.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos2, mapCount: MAP_COUNT }));
+        const pos1 = { x: GetRandomNum(1000, 1100), y: GetRandomNum(1000, 1100) };
+        const pos2 = { x: GetRandomNum(1300, 1400), y: GetRandomNum(1300, 1400) };
+        const mikasa = Math.random() > 0.5;
+        this.player1.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos1, mapCount: MAP_COUNT, mikasa }));
+        this.player2.getWs().send(JSON.stringify({ type: 'success', id: this.id, seed: this.seed, pos: pos2, mapCount: MAP_COUNT, mikasa: !mikasa }));
     }
 
     setPlayer1 = (player: Client) => {
