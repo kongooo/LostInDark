@@ -47,6 +47,8 @@ declare class Game {
     private receive;
     private death;
     private success;
+    private receiveDeath;
+    private receiveLost;
     start: () => void;
     setWs: (ws: any) => void;
     private showHintWords;

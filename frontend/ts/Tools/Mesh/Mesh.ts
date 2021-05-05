@@ -41,19 +41,6 @@ class Mesh {
         return this.attributeLocationObjs;
     }
 
-    /**
-     * 
-     * @param uniforms uniform object array
-     * @returns uniform object array
-     */
-    // getUniformLocations = (uniforms: Array<string>) => {
-    //     uniforms.forEach((uniform) => {
-    //         const uniformLocation = this.gl.getUniformLocation(this.shaderProgram, uniform);
-    //         this.uniformLocations.set(uniform, uniformLocation);
-    //     })
-    //     return this.uniformLocations;
-    // }
-
     protected setAttribPointer = () => {
         const gl = this.gl;
         let offset = 0;

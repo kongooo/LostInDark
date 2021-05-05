@@ -30,8 +30,8 @@ const CIRCUIT_MAX_COUNT = 5;
 const SANDWICH_MIN_COUNT = 1;
 const sANDWICH_MAX_COUNT = 2;
 
-const TOAST_MIN_COUNT = 2;
-const TOAST_MAX_COUNT = 3;
+const TOAST_MIN_COUNT = 3;
+const TOAST_MAX_COUNT = 5;
 
 const ZOOM = 5;
 const THRESHOLD = 0.6;

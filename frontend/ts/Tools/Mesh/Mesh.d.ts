@@ -19,11 +19,6 @@ declare class Mesh {
      * @returns attribute object array
      */
     getAttributeLocations: (attribs: Array<Attrib>) => AttribLocationObj[];
-    /**
-     *
-     * @param uniforms uniform object array
-     * @returns uniform object array
-     */
     protected setAttribPointer: () => void;
     protected setUniformLocation: (uniforms: Array<UniformLocationObj>) => void;
 }

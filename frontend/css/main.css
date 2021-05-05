@@ -122,7 +122,7 @@ body {
 .hint-box {
     padding: 15px 60px;
     border-radius: 5px;
-    background-color: rgba(59, 59, 59, 0.836);
+    background-color: rgb(253 255 236 / 90%);
     display: flex;
     align-items: center;
     justify-content: center;
@@ -140,8 +140,8 @@ body {
 }
 
 .hint-box p {
-    color: white;
-    font-family: cursive;
+    color: rgb(0, 0, 0);
+    font-family: emoji;
     font-size: larger;
 }
 

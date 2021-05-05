@@ -105,6 +105,8 @@ class Game {
     private receive: boolean = false;
     private death = false;
     private success = false;
+    private receiveDeath = false;
+    private receiveLost = false;
 
     start = () => {
         this.update(0);
@@ -648,16 +650,18 @@ class Game {
                     }
                     break;
                 case 'close':
-                    if (!this.death && !this.success) {
+                    if (!this.death && !this.success && !this.receiveLost) {
                         EventBus.dispatch('showHint', '另一位玩家掉线了＞﹏＜');
+                        this.receiveLost = true;
                     }
                     break;
                 case 'ack':
                     this.itemsQueue.shift();
                     break;
                 case 'death':
-                    if (!this.death && !this.success) {
+                    if (!this.death && !this.success && !this.receiveDeath) {
                         EventBus.dispatch('showHint', '另一位玩家被饿死了(。﹏。*)');
+                        this.receiveDeath = true;
                     }
                     this.send({ type: 'deathAck' });
                     break;
