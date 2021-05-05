@@ -49,6 +49,7 @@ declare class Game {
     private success;
     start: () => void;
     setWs: (ws: any) => void;
+    private showHintWords;
     private update;
     private draw;
     private drawSoftShadowTexture;

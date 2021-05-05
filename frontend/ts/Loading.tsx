@@ -137,6 +137,7 @@ const Loading = () => {
         </div>
         <div className="load-shadow"></div>
       </div>
+      <p className="wait-word">正在等待另一位玩家加入...</p>
     </React.Fragment>
   );
 };

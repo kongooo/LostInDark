@@ -3,14 +3,14 @@ const HtmlWebpackPlugin = require('html-webpack-plugin');
 const { CleanWebpackPlugin } = require('clean-webpack-plugin');
 
 module.exports = {
-    mode: 'development',
+    mode: 'production',
     entry: './frontend/ts/main.tsx',
     output: {
         filename: '[name].bundle.js',
         path: path.resolve(__dirname, 'dist'),
         publicPath: './'
     },
-    devtool: 'inline-source-map',
+    devtool: 'false',
     devServer: {
         contentBase: './dist',
         writeToDisk: true,

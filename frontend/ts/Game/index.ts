@@ -108,12 +108,33 @@ class Game {
 
     start = () => {
         this.update(0);
+        this.showHintWords();
         EventBus.addEventListener('placeItemToScene', this.enablePlaceState);
     }
 
     setWs = (ws: any) => {
         this.ws = ws;
         this.initWs();
+    }
+
+    private showHintWords = () => {
+        const timer0 = setTimeout(() => {
+            EventBus.dispatch('showHint', 'W A S D 移动~');
+            clearTimeout(timer0);
+            const timer1 = setTimeout(() => {
+                EventBus.dispatch('showHint', 'X拾取道具~');
+                clearTimeout(timer1);
+                const timer2 = setTimeout(() => {
+                    EventBus.dispatch('showHint', '注意左上角！长时间不吃东西会被饿死哦~');
+                    clearTimeout(timer2);
+                    const timer3 = setTimeout(() => {
+                        EventBus.dispatch('showHint', '背包栏最右侧是可合成物品哦，点一下试试吧~');
+                        clearTimeout(timer3);
+
+                    }, 3000);
+                }, 3000);
+            }, 3000);
+        }, 1000);
     }
 
     private update = (now: number) => {

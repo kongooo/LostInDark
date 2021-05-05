@@ -246,3 +246,12 @@ progress::-webkit-progress-bar {
 .load-word-show {
     opacity: 1;
 }
+
+.wait-word {
+    color: white;
+    font-family: cursive;
+    font-size: medium;
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+}
